@@ -587,7 +587,7 @@ body.timer-ready #btn-timer{
 /* ---------- Icon row ---------- */
 .icons-row{
   position:absolute;
-  top:calc(20px + env(safe-area-inset-top, 0px));
+  top:calc(10px + env(safe-area-inset-top, 0px));
   right:calc(24px + env(safe-area-inset-right, 0px));
   display:flex;
   gap:10px;
@@ -609,6 +609,97 @@ body.timer-ready #btn-timer{
 }
 .icon-btn:active{ transform:scale(0.86); }
 .icon-btn svg{ width:15px; height:15px; transition:transform .5s ease; }
+
+/* Fold: the function buttons collapse behind a single ⋯ button, with a
+   smooth open AND close (width/opacity/scale transition -- the negative
+   margin swallows the flex gap so collapsed buttons take no space). */
+#btn-fold .fold-close{ display:none; }
+.icons-row.expanded #btn-fold .fold-more{ display:none; }
+.icons-row.expanded #btn-fold .fold-close{ display:block; }
+.icon-btn.fn{
+  transition:opacity .3s var(--soft-ease), transform .3s var(--soft-ease),
+             width .3s var(--soft-ease), margin .3s var(--soft-ease),
+             border-width .3s var(--soft-ease), color .3s ease, background .3s ease;
+}
+.icons-row:not(.expanded) .icon-btn.fn{
+  opacity:0; transform:scale(0.3);
+  width:0; margin-left:-10px; border-width:0;
+  pointer-events:none; overflow:hidden;
+}
+
+/* Screen lock: hide the clock, buttons and date; leave the pill. */
+body.locked .clock-wrap,
+body.locked .date-label,
+body.locked .meridiem,
+body.locked .icons-row{
+  opacity:0; pointer-events:none;
+  transition:opacity .5s ease;
+}
+.lock-slide{
+  position:absolute; left:0; right:0;
+  bottom:calc(64px + env(safe-area-inset-bottom, 0px));
+  display:flex; justify-content:center; z-index:410;
+  opacity:0; pointer-events:none; transition:opacity .35s ease;
+}
+body.lock-slide-open .lock-slide{ opacity:1; pointer-events:auto; }
+.lock-slide-track{
+  position:relative; width:min(80vw, 300px); height:56px;
+  border-radius:28px; background:rgba(255,255,255,0.07);
+  border:1px solid var(--border); overflow:hidden;
+  display:flex; align-items:center;
+}
+.lock-slide-label{
+  position:absolute; left:0; right:0; text-align:center;
+  font-size:12px; color:var(--text-dim); letter-spacing:0.08em;
+  animation:lockShimmer 2s ease-in-out infinite; pointer-events:none;
+}
+@keyframes lockShimmer{ 0%,100%{ opacity:0.4; } 50%{ opacity:1; } }
+.lock-slide-knob{
+  position:absolute; left:4px; top:4px;
+  width:48px; height:48px; border-radius:50%;
+  background:var(--text); color:#0a0a09;
+  display:flex; align-items:center; justify-content:center;
+  cursor:grab; touch-action:none; z-index:2;
+}
+.lock-slide-knob svg{ width:22px; height:22px; }
+
+/* Fullscreen ring alert (timer / alarm) */
+.ring-screen{
+  position:absolute; inset:0; z-index:450;
+  background:#0c0a08;
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none; transition:opacity .4s ease; overflow:hidden;
+}
+body.ring-open .ring-screen{ opacity:1; pointer-events:auto; }
+.ring-screen::before{
+  content:''; position:absolute; inset:0;
+  background:radial-gradient(circle at 50% 38%, rgba(255,155,106,0.28), transparent 62%);
+  animation:ringGlow 1.4s ease-in-out infinite;
+}
+@keyframes ringGlow{ 0%,100%{ opacity:0.35; } 50%{ opacity:1; } }
+.ring-screen-inner{
+  position:relative; z-index:2;
+  display:flex; flex-direction:column; align-items:center; gap:20px;
+  width:min(86vw, 400px);
+}
+.ring-pulse{
+  width:92px; height:92px; border-radius:50%;
+  background:rgba(255,155,106,0.14); color:var(--accent);
+  display:flex; align-items:center; justify-content:center;
+  animation:ringPulse 1s ease-in-out infinite;
+}
+.ring-pulse svg{ width:42px; height:42px; }
+@keyframes ringPulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.14); } }
+.ring-kind{ font-size:13px; letter-spacing:0.22em; color:var(--text-dim); text-transform:uppercase; }
+.ring-time{ font-size:56px; font-weight:200; font-variant-numeric:tabular-nums; color:var(--text); line-height:1; }
+.ring-snooze{
+  background:rgba(255,255,255,0.08); border:1px solid var(--border);
+  color:var(--text); border-radius:14px; padding:12px 28px;
+  font-size:13px; letter-spacing:0.04em; cursor:pointer;
+}
+.ring-snooze:active{ transform:scale(0.96); }
+.ring-stop-track{ margin-top:6px; }
+.ring-stop-knob{ background:var(--accent); color:#1a1008; }
 .icon-btn:hover{ border-color:rgba(242,240,232,0.34); color:var(--text); }
 .icon-btn.on{
   color:var(--accent);
@@ -1505,6 +1596,24 @@ body.music-open .icons-row{ top:calc(242px + env(safe-area-inset-top, 0px)); }
 }
 .track-row.current{ border-color:var(--accent-dim); background:rgba(255,155,106,0.08); }
 .track-row.current .track-name{ color:var(--accent); }
+.track-row.dragging{ opacity:0.5; }
+.track-drag{
+  flex:0 0 auto; width:16px; color:var(--text-faint); cursor:grab;
+  display:flex; align-items:center; justify-content:center;
+}
+.track-drag svg{ width:16px; height:16px; }
+.track-q-badge{
+  margin-left:6px;
+  font-size:9px; color:var(--accent); border:1px solid var(--accent-dim);
+  border-radius:6px; padding:1px 5px; letter-spacing:0.04em; flex:0 0 auto;
+}
+.track-queue-btn{
+  flex:0 0 auto; width:26px; height:26px; border-radius:8px;
+  background:none; border:none; color:var(--text-faint); cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+.track-queue-btn svg{ width:15px; height:15px; }
+.track-queue-btn.on{ color:var(--accent); }
 .track-cover{
   width:34px; height:34px; border-radius:8px; flex-shrink:0;
   background:var(--surface-2) center/cover no-repeat;
@@ -1801,12 +1910,106 @@ body.island-panel-open .icons-row{ opacity:0; pointer-events:none; }
      and the four buttons share one strip, and since the island now
      sits above everything, the settings button would otherwise be
      unclickable underneath it. */
-  .icons-row{ top:calc(84px + env(safe-area-inset-top, 0px)); right:calc(16px + env(safe-area-inset-right, 0px)); gap:8px; }
+  .icons-row{ top:calc(72px + env(safe-area-inset-top, 0px)); right:calc(16px + env(safe-area-inset-right, 0px)); gap:8px; }
   .icon-btn{ width:30px; height:30px; }
   .icon-btn svg{ width:13px; height:13px; }
   .date-label{ bottom:18px; font-size:11px; }
   .meridiem{ font-size:11px; }
 }
+
+/* ---- Fullscreen music player ---- */
+.music-full{
+  position:absolute; inset:0; z-index:250;
+  background:#0a0a0f;
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none;
+  transition:opacity .45s ease;
+  overflow:hidden;
+}
+body.music-full-open .music-full{ opacity:1; pointer-events:auto; }
+body.music-full-open.music-full-closing .music-full{ opacity:0; }
+
+/* Backdrop: a slow-moving blend of colours pulled from the album art
+   (blue/purple when there is none). The blobs bleed past every edge and
+   screen over a dark base so there are no visible seams. */
+.mf-bg{
+  position:absolute; inset:0; overflow:hidden;
+  background:var(--mf-base, #14121f);
+  transition:background .8s ease;
+}
+.mf-bg::after{
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(to bottom, rgba(0,0,0,0.12), rgba(0,0,0,0.5));
+}
+.mf-blob{
+  position:absolute; width:130vw; height:130vw; border-radius:50%;
+  filter:blur(64px); opacity:calc(0.7 + var(--mf-beat, 0) * 0.3);
+  will-change:transform; mix-blend-mode:screen;
+}
+.mf-blob1{ background:radial-gradient(circle, var(--mf-c1,#3b4dd8) 0%, transparent 66%);
+  top:-34vw; left:-30vw; animation:mfDrift1 17s ease-in-out infinite alternate; }
+.mf-blob2{ background:radial-gradient(circle, var(--mf-c2,#7a37d0) 0%, transparent 66%);
+  bottom:-40vw; right:-28vw; animation:mfDrift2 21s ease-in-out infinite alternate; }
+.mf-blob3{ background:radial-gradient(circle, var(--mf-c3,#4a2a6a) 0%, transparent 62%);
+  top:18vh; left:16vw; animation:mfDrift3 25s ease-in-out infinite alternate; }
+@keyframes mfDrift1{ from{transform:translate(0,0) scale(1);}    to{transform:translate(20vw,14vw) scale(1.25);} }
+@keyframes mfDrift2{ from{transform:translate(0,0) scale(1.15);} to{transform:translate(-18vw,-12vw) scale(1);} }
+@keyframes mfDrift3{ from{transform:translate(0,0) scale(1);}    to{transform:translate(-14vw,16vw) scale(1.2);} }
+
+.mf-close{
+  position:absolute; top:calc(16px + env(safe-area-inset-top,0px)); right:16px;
+  width:38px; height:38px; border-radius:50%;
+  background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.14);
+  color:var(--text); cursor:pointer; z-index:3;
+  display:flex; align-items:center; justify-content:center;
+}
+.mf-close svg{ width:20px; height:20px; }
+.mf-inner{
+  position:relative; z-index:2;
+  width:min(86vw, 400px);
+  display:flex; flex-direction:column; align-items:center; gap:26px;
+}
+.mf-cover{
+  width:min(70vw, 300px); aspect-ratio:1;
+  border-radius:28px;
+  background:var(--surface-2) center/cover no-repeat;
+  box-shadow:0 26px 70px rgba(0,0,0,0.55);
+  display:flex; align-items:center; justify-content:center; color:var(--text-faint);
+  will-change:transform;
+}
+.mf-cover svg{ width:58px; height:58px; }
+.mf-meta{ text-align:center; width:100%; }
+.mf-title{
+  font-size:22px; font-weight:600; color:var(--text);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.mf-artist{ font-size:14px; color:var(--text-dim); margin-top:6px; }
+.mf-scrub{ display:flex; align-items:center; gap:12px; width:100%; }
+.mf-time{ font-size:11px; color:var(--text-dim); font-variant-numeric:tabular-nums; min-width:38px; }
+.mf-time:last-child{ text-align:right; }
+.mf-bar{ flex:1; height:5px; border-radius:3px; background:rgba(255,255,255,0.18); cursor:pointer; position:relative; }
+.mf-bar-fill{ position:absolute; left:0; top:0; bottom:0; border-radius:3px; background:var(--text); width:0%; }
+.mf-controls{ display:flex; align-items:center; justify-content:center; gap:22px; }
+.mf-btn{
+  width:52px; height:52px; border-radius:50%;
+  background:transparent; border:none; color:var(--text); cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:transform .2s ease, color .25s ease;
+}
+.mf-btn:active{ transform:scale(0.9); }
+.mf-btn svg{ width:30px; height:30px; }
+.mf-btn.play{ background:var(--text); color:#0a0a09; }
+.mf-btn.play svg{ width:26px; height:26px; }
+.mf-btn.mini{ width:42px; height:42px; color:var(--text-dim); }
+.mf-btn.mini svg{ width:20px; height:20px; }
+.mf-btn.mini.on{ color:#fff; }
+
+/* Minimal island while the fullscreen player is up: present, but no
+   album thumbnail and no spectrum. */
+.island.mf-min{ width:150px; height:40px; }
+.mf-mini-pill{ display:flex; align-items:center; justify-content:center; width:100%; height:100%; gap:7px; }
+.mf-mini-pill .island-icon{ width:16px; height:16px; color:var(--text-dim); }
+.mf-mini-pill .mf-mini-dot{ width:5px; height:5px; border-radius:50%; background:var(--accent); }
 
 ::-webkit-scrollbar{ width:0; height:0; }
 
@@ -1841,37 +2044,46 @@ body.island-panel-open .icons-row{ opacity:0; pointer-events:none; }
   <div class="bg-image-layer" id="bg-image-layer"></div>
 
   <div class="icons-row">
-    <button class="icon-btn" id="btn-settings" title="설정">
+    <button class="icon-btn fn" id="btn-settings" title="설정">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="3"/>
         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
       </svg>
     </button>
-    <button class="icon-btn" id="btn-timer" title="타이머">
+    <button class="icon-btn fn" id="btn-timer" title="타이머">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M10 2h4"/><path d="M12 14v-4"/><circle cx="12" cy="14" r="8"/>
       </svg>
     </button>
-    <button class="icon-btn" id="btn-alarm" title="알람">
+    <button class="icon-btn fn" id="btn-alarm" title="알람">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
         <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
       </svg>
     </button>
-    <button class="icon-btn" id="btn-stopwatch" title="스톱워치">
+    <button class="icon-btn fn" id="btn-stopwatch" title="스톱워치">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2"/><path d="M9 2h6"/><path d="M18 4l1.5 1.5"/>
       </svg>
     </button>
-    <button class="icon-btn" id="btn-music" title="음악">
+    <button class="icon-btn fn" id="btn-music" title="음악">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
       </svg>
     </button>
-    <button class="icon-btn" id="btn-ambient" title="앰비언트">
+    <button class="icon-btn fn" id="btn-ambient" title="앰비언트">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
         <path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 11v2M21 12h1"/>
       </svg>
+    </button>
+    <button class="icon-btn fn" id="btn-lock" title="화면 잠금">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+      </svg>
+    </button>
+    <button class="icon-btn" id="btn-fold" title="메뉴" aria-expanded="false">
+      <svg class="fold-more" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+      <svg class="fold-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
     </button>
   </div>
 
@@ -1888,6 +2100,34 @@ body.island-panel-open .icons-row{ opacity:0; pointer-events:none; }
   <div class="island-wrap">
     <div class="island idle" id="island"></div>
     <div id="island-dot" role="button" tabindex="0" aria-label="다른 활동으로 전환"></div>
+  </div>
+
+  <!-- Fullscreen ring alert (timer / alarm) with slide-to-stop -->
+  <div class="ring-screen" id="ring-screen" aria-hidden="true">
+    <div class="ring-screen-inner">
+      <div class="ring-pulse">
+        <svg id="ring-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </div>
+      <div class="ring-kind" id="ring-kind">알람</div>
+      <div class="ring-time" id="ring-time">00:00</div>
+      <button class="ring-snooze" id="ring-snooze">다시 알림</button>
+      <div class="lock-slide-track ring-stop-track" id="ring-stop-track">
+        <span class="lock-slide-label">밀어서 중지</span>
+        <div class="lock-slide-knob ring-stop-knob" id="ring-stop-knob" role="button" aria-label="밀어서 중지">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide-to-unlock (shown by tapping the island while locked) -->
+  <div class="lock-slide" id="lock-slide" aria-hidden="true">
+    <div class="lock-slide-track" id="lock-slide-track">
+      <span class="lock-slide-label">밀어서 잠금 해제</span>
+      <div class="lock-slide-knob" id="lock-slide-knob" role="button" aria-label="밀어서 잠금 해제">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </div>
+    </div>
   </div>
 
   <div class="sheet-overlay" id="overlay"></div>
@@ -1976,6 +2216,37 @@ body.island-panel-open .icons-row{ opacity:0; pointer-events:none; }
   <input type="file" id="music-input" accept="audio/*,.mp3,.m4a,.aac,.flac,.wav,.ogg,.opus" multiple style="display:none;">
   <input type="file" id="music-folder-input" webkitdirectory directory multiple style="display:none;">
 
+
+  <!-- Fullscreen music player (opened by tapping the cover) -->
+  <div class="music-full" id="music-full" aria-hidden="true">
+    <div class="mf-bg" id="mf-bg">
+      <div class="mf-blob mf-blob1"></div>
+      <div class="mf-blob mf-blob2"></div>
+      <div class="mf-blob mf-blob3"></div>
+    </div>
+    <button class="mf-close" id="mf-close" aria-label="닫기">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
+    <div class="mf-inner">
+      <div class="mf-cover" id="mf-cover"></div>
+      <div class="mf-meta">
+        <div class="mf-title" id="mf-title">—</div>
+        <div class="mf-artist" id="mf-artist"></div>
+      </div>
+      <div class="mf-scrub">
+        <span class="mf-time" id="mf-cur">00:00</span>
+        <div class="mf-bar" id="mf-bar"><div class="mf-bar-fill" id="mf-bar-fill"></div></div>
+        <span class="mf-time" id="mf-dur">00:00</span>
+      </div>
+      <div class="mf-controls">
+        <button class="mf-btn mini" data-mf="shuffle" id="mf-shuffle" aria-label="셔플"></button>
+        <button class="mf-btn" data-mf="prev" aria-label="이전 곡"></button>
+        <button class="mf-btn play" data-mf="toggle" id="mf-play" aria-label="재생"></button>
+        <button class="mf-btn" data-mf="next" aria-label="다음 곡"></button>
+        <button class="mf-btn mini" data-mf="repeat" id="mf-repeat" aria-label="반복"></button>
+      </div>
+    </div>
+  </div>
 
   <!-- Weather screen -->
   <div class="weather-screen" id="weather-screen" data-sky="day" aria-hidden="true">
@@ -2075,6 +2346,7 @@ const state = {
    picked it in -- so only the preferences below are persisted. */
 const music = {
   tracks: [],      // {id, name, url, title, artist, album, art, duration}
+  queue: [],       // track ids queued to play next ("다음 재생")
   index: -1,
   playing: false,
   el: null,
@@ -2712,7 +2984,7 @@ function buildIslandDOM(r){
     const t = music.tracks[music.index] || {};
     cls = 'island expanded music-open';
     html = `<div class="island-content music-content">
-      <div class="music-art" id="music-art" data-action="toggle-art-bg" title="앨범 커버를 배경으로"
+      <div class="music-art" id="music-art" data-action="music-full" title="전체화면으로 열기"
            ${t.art ? `style="background-image:url('${t.art}')"` : ''}>${t.art ? '' : NOTE_SVG}</div>
       <div class="music-right">
         <div class="music-title">${esc(t.title || '재생할 곡 없음')}</div>
@@ -2735,12 +3007,19 @@ function buildIslandDOM(r){
     </div>`;
   } else if(mode === 'music'){
     const t = music.tracks[music.index] || {};
-    cls = 'island active music-pill';
-    html = `<div class="island-content music-pill-content" data-action="expand"
-                 style="cursor:pointer;" role="button" aria-label="${esc(t.title || '음악')} · 플레이어 열기">
-      <div class="music-thumb" ${t.art ? `style="background-image:url('${t.art}')"` : ''}>${t.art ? '' : NOTE_SVG}</div>
-      <div class="music-spectrum" id="music-mini-bars" data-ramp="1">${'<i></i>'.repeat(8)}</div>
-    </div>`;
+    if(musicFullOpen){
+      /* Fullscreen player is up: island stays present but shows nothing —
+         no album thumbnail, no spectrum, no dot. */
+      cls = 'island idle';
+      html = '';
+    } else {
+      cls = 'island active music-pill';
+      html = `<div class="island-content music-pill-content" data-action="expand"
+                   style="cursor:pointer;" role="button" aria-label="${esc(t.title || '음악')} · 플레이어 열기">
+        <div class="music-thumb" ${t.art ? `style="background-image:url('${t.art}')"` : ''}>${t.art ? '' : NOTE_SVG}</div>
+        <div class="music-spectrum" id="music-mini-bars" data-ramp="1">${'<i></i>'.repeat(8)}</div>
+      </div>`;
+    }
   } else if(mode === 'ambient'){
     cls = 'island active';
     html = `<div class="island-content ambient-pill" data-action="open-ambient" style="cursor:pointer;">
@@ -2963,11 +3242,14 @@ function renderIsland(){
     buildDotDOM(dKey === 'none' ? null : r.secondary);
   }
   if(r.secondary && !r.panel) updateDotValues(r.secondary);
+
+  updateRingScreen();
 }
 
 /* Tapping the circle promotes it: the two activities trade places. */
 islandDot.addEventListener('click', (e)=>{
   e.stopPropagation();
+  if(isLocked()) return;
   const r = resolveIsland();
   if(!r.secondary) return;
   islandPreferred = r.secondary.kind;
@@ -2999,6 +3281,7 @@ function cancelTimer(){
 
 islandEl.addEventListener('click', (e)=>{
   e.stopPropagation();
+  if(isLocked()){ if(!suppressNextClick) showUnlock(); suppressNextClick = false; return; }
   if(suppressNextClick){ suppressNextClick = false; return; }
 
   const btn = e.target.closest('[data-action]');
@@ -3024,6 +3307,7 @@ islandEl.addEventListener('click', (e)=>{
       renderIsland(); return;
     }
     if(action==='music-close'){ closeMusic(); return; }
+    if(action==='music-full'){ openMusicFull(); return; }
     if(action==='toggle-art-bg'){
       /* Fired both by the switch in the music panel and by tapping the
          artwork in the expanded player. */
@@ -3058,6 +3342,7 @@ islandEl.addEventListener('click', (e)=>{
     }
     if(action==='play-track'){ playTrack(Number(btn.dataset.index)); return; }
     if(action==='remove-track'){ removeTrack(Number(btn.dataset.index)); return; }
+    if(action==='queue-track'){ queueNext(Number(btn.dataset.index)); return; }
   }
   const r = resolveIsland();
   if(r.panel) return;   // taps inside a panel are handled by its own controls
@@ -3119,6 +3404,112 @@ function closePanel(){
   });
   overlay.classList.remove('open');
 }
+
+/* Fold / unfold the function buttons behind the ⋯ button. */
+const iconsRow = document.querySelector('.icons-row');
+const btnFold = document.getElementById('btn-fold');
+btnFold.addEventListener('click', ()=>{
+  const ex = iconsRow.classList.toggle('expanded');
+  btnFold.setAttribute('aria-expanded', ex ? 'true' : 'false');
+});
+/* Picking a function tidies the row back up. */
+iconsRow.addEventListener('click', (e)=>{
+  if(e.target.closest('.icon-btn.fn')){
+    iconsRow.classList.remove('expanded');
+    btnFold.setAttribute('aria-expanded', 'false');
+  }
+});
+
+/* ---- Screen lock: hide clock + buttons, leave the pill; tap the pill
+   for a slide-to-unlock. ---- */
+const lockSlide = document.getElementById('lock-slide');
+const lockKnob = document.getElementById('lock-slide-knob');
+let lockDrag = null, lockHideTimer = null;
+function isLocked(){ return document.body.classList.contains('locked'); }
+function lockScreen(){
+  closePanel(); closeIslandPanel();
+  iconsRow.classList.remove('expanded');
+  document.body.classList.add('locked');
+}
+function showUnlock(){ clearTimeout(lockHideTimer); document.body.classList.add('lock-slide-open'); lockKnob.style.transform = ''; }
+function hideUnlock(){ document.body.classList.remove('lock-slide-open'); lockKnob.style.transform = ''; }
+function unlockScreen(){ document.body.classList.remove('locked', 'lock-slide-open'); lockKnob.style.transform = ''; }
+document.getElementById('btn-lock').addEventListener('click', lockScreen);
+lockKnob.addEventListener('pointerdown', (e)=>{
+  clearTimeout(lockHideTimer);
+  try{ lockKnob.setPointerCapture(e.pointerId); }catch(_){}
+  const track = lockKnob.parentElement;
+  lockDrag = { startX:e.clientX, max: track.clientWidth - lockKnob.clientWidth - 8 };
+});
+lockKnob.addEventListener('pointermove', (e)=>{
+  if(!lockDrag) return;
+  const x = Math.max(0, Math.min(lockDrag.max, e.clientX - lockDrag.startX));
+  lockKnob.style.transform = `translateX(${x}px)`;
+  if(x >= lockDrag.max - 2){ lockDrag = null; unlockScreen(); }
+});
+function endLockDrag(){
+  if(!lockDrag) return;
+  lockDrag = null;
+  lockKnob.style.transform = '';
+  lockHideTimer = setTimeout(hideUnlock, 2500);
+}
+lockKnob.addEventListener('pointerup', endLockDrag);
+lockKnob.addEventListener('pointercancel', endLockDrag);
+
+/* ---- Fullscreen ring alert (timer / alarm), slide-to-stop ---- */
+const ringScreen = document.getElementById('ring-screen');
+const ringStopKnob = document.getElementById('ring-stop-knob');
+let ringStopDrag = null;
+let ringTarget = null;   // { kind:'timer'|'alarm', id }
+function updateRingScreen(){
+  const urgent = computeActivities().find(a => a.urgent);
+  if(urgent){
+    ringTarget = { kind: urgent.kind === 'alarm-ringing' ? 'alarm' : 'timer', id: urgent.id };
+    document.getElementById('ring-kind').textContent = ringTarget.kind === 'alarm' ? '알람' : '타이머';
+    let ts = '';
+    if(ringTarget.kind === 'alarm'){
+      const a = state.alarms.find(x => x.id === urgent.id);
+      if(a) ts = pad(a.hour) + ':' + pad(a.min);
+    } else {
+      const now = new Date();
+      ts = pad(now.getHours()) + ':' + pad(now.getMinutes());
+    }
+    document.getElementById('ring-time').textContent = ts;
+    if(!document.body.classList.contains('ring-open')){
+      document.body.classList.add('ring-open');
+      ringScreen.setAttribute('aria-hidden', 'false');
+      ringStopKnob.style.transform = '';
+    }
+  } else if(document.body.classList.contains('ring-open')){
+    document.body.classList.remove('ring-open');
+    ringScreen.setAttribute('aria-hidden', 'true');
+    ringTarget = null;
+  }
+}
+function ringStop(){
+  if(!ringTarget) return;
+  if(ringTarget.kind === 'alarm') stopAlarm(ringTarget.id);
+  else stopTimer();
+}
+document.getElementById('ring-snooze').addEventListener('click', ()=>{
+  if(!ringTarget) return;
+  if(ringTarget.kind === 'alarm') snoozeAlarm(ringTarget.id);
+  else snoozeTimer();
+});
+ringStopKnob.addEventListener('pointerdown', (e)=>{
+  try{ ringStopKnob.setPointerCapture(e.pointerId); }catch(_){}
+  const track = ringStopKnob.parentElement;
+  ringStopDrag = { startX:e.clientX, max: track.clientWidth - ringStopKnob.clientWidth - 8 };
+});
+ringStopKnob.addEventListener('pointermove', (e)=>{
+  if(!ringStopDrag) return;
+  const x = Math.max(0, Math.min(ringStopDrag.max, e.clientX - ringStopDrag.startX));
+  ringStopKnob.style.transform = `translateX(${x}px)`;
+  if(x >= ringStopDrag.max - 2){ ringStopDrag = null; ringStop(); }
+});
+function endRingDrag(){ if(ringStopDrag){ ringStopDrag = null; ringStopKnob.style.transform = ''; } }
+ringStopKnob.addEventListener('pointerup', endRingDrag);
+ringStopKnob.addEventListener('pointercancel', endRingDrag);
 
 iconBtns.settings.addEventListener('click', ()=>openPanel('settings'));
 /* These three no longer open a sheet — they open the pill. */
@@ -3374,6 +3765,7 @@ overlay.addEventListener('click', closeEditPanel);
 /* Long-press the home to open the edit sheet. */
 let editPressTimer = null, editPressX = 0, editPressY = 0;
 clockLayerEl.addEventListener('pointerdown', (e)=>{
+  if(document.body.classList.contains('locked')) return;
   if(e.target.closest('.icon-btn, .island-wrap, .sheet, .weather-screen, #island-dot')) return;
   if(state.activePanel || islandPanel || sheetEdit.classList.contains('open')) return;
   editPressX = e.clientX; editPressY = e.clientY;
@@ -3779,10 +4171,12 @@ function readTags(file){
    Playlist
    --------------------------------------------------------------- */
 
-const AUDIO_RE = /\.(mp3|m4a|m4b|aac|mp4|flac|wav|wave|ogg|oga|opus|weba|webm)$/i;
+const AUDIO_RE = /\.(mp3|m4a|m4b|aac|mp4|m4v|mov|mkv|avi|flac|wav|wave|ogg|oga|opus|weba|webm)$/i;
 
+/* Video files are accepted too: loaded into the <audio> element they
+   play their audio track only (no picture), which is what was asked. */
 function isAudioFile(f){
-  return (f.type && f.type.indexOf('audio/') === 0) || AUDIO_RE.test(f.name || '');
+  return (f.type && (f.type.indexOf('audio/') === 0 || f.type.indexOf('video/') === 0)) || AUDIO_RE.test(f.name || '');
 }
 
 function baseName(name){
@@ -3918,6 +4312,12 @@ function nextTrack(auto){
     music.el.play().catch(()=>{});
     return;
   }
+  /* Anything queued with "다음 재생" jumps the line. */
+  while(music.queue.length){
+    const id = music.queue.shift();
+    const qi = music.tracks.findIndex(t=>t.id === id);
+    if(qi >= 0){ playTrack(qi); return; }
+  }
   let i;
   if(music.shuffle && n > 1){
     do { i = Math.floor(Math.random() * n); } while(i === music.index);
@@ -3956,12 +4356,198 @@ function closeMusic(){
   music.playing = false;
   islandExpanded = false;
   islandMode = null;
+  closeMusicFull();
   document.body.classList.remove('music-open');
   applyBgMode();
   updateMediaSession();
   renderIsland();
   renderTrackList();
 }
+
+/* ---- Fullscreen player (tap the cover to open) ---- */
+const musicFull = document.getElementById('music-full');
+const mfBg = document.getElementById('mf-bg');
+let musicFullOpen = false;
+let mfColorToken = 0;
+let mfBeat = 0;
+
+/* Pull a few representative colours out of the album art so the backdrop
+   is a moving blend of the cover rather than a hard-edged box. Falls back
+   to a blue/purple mix when there is no art (or it can't be read). Runs
+   on a 16px downscale -- plenty for averages. */
+function applyCoverBackdrop(url){
+  const token = ++mfColorToken;
+  const set = (c1, c2, c3, base)=>{
+    if(token !== mfColorToken) return;
+    mfBg.style.setProperty('--mf-c1', c1);
+    mfBg.style.setProperty('--mf-c2', c2);
+    mfBg.style.setProperty('--mf-c3', c3);
+    mfBg.style.setProperty('--mf-base', base);
+  };
+  const fallback = ()=>set('#3b4dd8', '#7a37d0', '#4a2a6a', '#14121f');
+  if(!url){ fallback(); return; }
+  const img = new Image();
+  img.onload = ()=>{
+    try{
+      const S = 16, cv = document.createElement('canvas');
+      cv.width = S; cv.height = S;
+      const cx = cv.getContext('2d');
+      cx.drawImage(img, 0, 0, S, S);
+      const d = cx.getImageData(0, 0, S, S).data;
+      const avg = (x0,y0,x1,y1)=>{
+        let r=0,g=0,b=0,n=0;
+        for(let y=y0;y<y1;y++) for(let x=x0;x<x1;x++){ const i=(y*S+x)*4; r+=d[i]; g+=d[i+1]; b+=d[i+2]; n++; }
+        return [r/n, g/n, b/n];
+      };
+      const mul = (c,f)=>`rgb(${Math.min(255,c[0]*f)|0},${Math.min(255,c[1]*f)|0},${Math.min(255,c[2]*f)|0})`;
+      const tl = avg(0,0,S/2,S/2), br = avg(S/2,S/2,S,S), whole = avg(0,0,S,S);
+      set(mul(tl,1.15), mul(br,1.15), mul(whole,1.0), mul(whole,0.32));
+    }catch(e){ fallback(); }
+  };
+  img.onerror = fallback;
+  img.src = url;
+}
+
+function openMusicFull(){
+  if(music.index < 0 || musicFullOpen) return;
+  const srcEl = document.getElementById('music-art');
+  const srcRect = srcEl ? srcEl.getBoundingClientRect() : null;
+
+  musicFullOpen = true;
+  islandExpanded = false;
+  document.body.classList.add('music-full-open');
+  musicFull.setAttribute('aria-hidden', 'false');
+  musicFull.querySelector('[data-mf="prev"]').innerHTML = PREV_SVG;
+  musicFull.querySelector('[data-mf="next"]').innerHTML = NEXT_SVG;
+
+  const t = music.tracks[music.index] || {};
+  applyCoverBackdrop(t.art || null);
+  updateMusicFull(true);
+  islandMode = null; renderIsland();   // island drops to a minimal pill
+
+  /* FLIP: grow the cover out of where the small one sat. */
+  const cover = document.getElementById('mf-cover');
+  cover.style.transition = 'none';
+  cover.style.transform = '';
+  requestAnimationFrame(()=>{
+    const dst = cover.getBoundingClientRect();
+    if(srcRect && dst.width){
+      const dx = srcRect.left - dst.left, dy = srcRect.top - dst.top;
+      const s = srcRect.width / dst.width;
+      cover.style.transformOrigin = 'top left';
+      cover.style.transform = `translate(${dx}px,${dy}px) scale(${s})`;
+      requestAnimationFrame(()=>{
+        cover.style.transition = 'transform .5s cubic-bezier(.2,.8,.2,1)';
+        cover.style.transform = 'translate(0,0) scale(1)';
+      });
+    }
+  });
+}
+
+function closeMusicFull(){
+  if(!musicFullOpen) return;
+  const cover = document.getElementById('mf-cover');
+  const r = cover.getBoundingClientRect();
+  /* Suck the cover up toward the island band while everything fades. */
+  const tx = window.innerWidth / 2 - (r.left + r.width / 2);
+  const ty = 48 - (r.top + r.height / 2);
+  cover.style.transformOrigin = 'center';
+  cover.style.transition = 'transform .45s cubic-bezier(.4,0,.7,1), opacity .45s ease';
+  cover.style.transform = `translate(${tx}px,${ty}px) scale(0.05)`;
+  cover.style.opacity = '0';
+  document.body.classList.add('music-full-closing');
+  setTimeout(()=>{
+    musicFullOpen = false;
+    document.body.classList.remove('music-full-open', 'music-full-closing');
+    musicFull.setAttribute('aria-hidden', 'true');
+    cover.style.transition = 'none';
+    cover.style.transform = '';
+    cover.style.opacity = '';
+    islandMode = null; renderIsland();
+  }, 450);
+}
+
+function updateMusicFull(force){
+  if(!musicFullOpen && !force) return;
+  const t = music.tracks[music.index] || {};
+  const wantArt = t.art || '';
+
+  const cover = document.getElementById('mf-cover');
+  if(cover.dataset.art !== wantArt){
+    cover.dataset.art = wantArt;
+    cover.style.backgroundImage = wantArt ? `url('${wantArt}')` : '';
+    cover.innerHTML = wantArt ? '' : NOTE_SVG;
+    applyCoverBackdrop(wantArt || null);
+  }
+
+  const titleEl = document.getElementById('mf-title');
+  const wT = t.title || '재생할 곡 없음';
+  if(titleEl.textContent !== wT) titleEl.textContent = wT;
+  const artistEl = document.getElementById('mf-artist');
+  const wA = (t.artist || '알 수 없는 아티스트') + (t.album ? ' · ' + t.album : '');
+  if(artistEl.textContent !== wA) artistEl.textContent = wA;
+
+  /* Beat-reactive backdrop: pulse the whole colour field with the bass.
+     Needs the analyser, which only runs over http (see ensureMusicGraph);
+     on file:// bass stays 0 and the field just drifts. */
+  let bass = 0;
+  if(music.analyser && music.freq && music.playing){
+    music.analyser.getByteFrequencyData(music.freq);
+    let s = 0; for(let i = 1; i <= 6; i++) s += music.freq[i];
+    bass = Math.min(1, (s / 6) / 210);
+  }
+  mfBeat += (bass - mfBeat) * 0.32;
+  mfBg.style.transform = `scale(${(1 + mfBeat * 0.28).toFixed(3)})`;
+  mfBg.style.filter = `brightness(${(1 + mfBeat * 0.6).toFixed(3)}) saturate(${(1 + mfBeat * 0.4).toFixed(3)})`;
+  mfBg.style.setProperty('--mf-beat', mfBeat.toFixed(3));
+
+  const el = music.el;
+  const dur = isFinite(el.duration) ? el.duration : 0;
+  const cur = el.currentTime || 0;
+  const frac = dur ? cur / dur : 0;
+  document.getElementById('mf-bar-fill').style.width = (frac * 100).toFixed(2) + '%';
+  document.getElementById('mf-cur').textContent = fmtMMSS(Math.floor(cur));
+  document.getElementById('mf-dur').textContent = fmtMMSS(Math.floor(dur));
+
+  const play = document.getElementById('mf-play');
+  const wantG = music.playing ? 'pause' : 'play';
+  if(play.dataset.glyph !== wantG){
+    play.dataset.glyph = wantG;
+    play.innerHTML = music.playing ? PAUSE_SVG : PLAY_SVG;
+  }
+  const sh = document.getElementById('mf-shuffle');
+  sh.classList.toggle('on', music.shuffle);
+  if(!sh.dataset.init){ sh.dataset.init = '1'; sh.innerHTML = SHUFFLE_SVG; }
+  const rp = document.getElementById('mf-repeat');
+  rp.classList.toggle('on', music.repeat !== 'off');
+  const wr = music.repeat === 'one' ? 'one' : 'rep';
+  if(rp.dataset.rep !== wr){ rp.dataset.rep = wr; rp.innerHTML = music.repeat === 'one' ? REPEAT1_SVG : REPEAT_SVG; }
+}
+
+musicFull.addEventListener('click', (e)=>{
+  const b = e.target.closest('[data-mf]');
+  if(!b){
+    /* Tapping the dim backdrop (not the artwork/controls) closes it. */
+    if(e.target === musicFull || e.target.id === 'mf-bg' || e.target.classList.contains('mf-blob')) closeMusicFull();
+    return;
+  }
+  const a = b.dataset.mf;
+  if(a === 'toggle') toggleMusic();
+  else if(a === 'next') nextTrack(false);
+  else if(a === 'prev') prevTrack();
+  else if(a === 'shuffle'){ music.shuffle = !music.shuffle; updateMusicFull(true); renderIsland(); scheduleSave(); }
+  else if(a === 'repeat'){
+    music.repeat = music.repeat === 'off' ? 'all' : (music.repeat === 'all' ? 'one' : 'off');
+    updateMusicFull(true); renderIsland(); scheduleSave();
+  }
+});
+document.getElementById('mf-close').addEventListener('click', closeMusicFull);
+document.getElementById('mf-bar').addEventListener('pointerdown', (e)=>{
+  const rect = e.currentTarget.getBoundingClientRect();
+  const f = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+  if(isFinite(music.el.duration)) music.el.currentTime = f * music.el.duration;
+  updateMusicFull(true);
+});
 
 music.el.addEventListener('play', ()=>{
   music.playing = true;
@@ -4167,16 +4753,64 @@ function renderTrackList(){
   }
   listEl.innerHTML = music.tracks.map((t, i)=>{
     const sub = [t.artist, t.album].filter(Boolean).join(' · ') || t.name;
-    return `<div class="track-row${i === music.index ? ' current' : ''}" data-action="play-track" data-index="${i}">
+    const queued = music.queue.indexOf(t.id) >= 0;
+    return `<div class="track-row${i === music.index ? ' current' : ''}" data-action="play-track" data-index="${i}" draggable="true">
+      <span class="track-drag" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h.01M8 12h.01M8 18h.01M16 6h.01M16 12h.01M16 18h.01"/></svg></span>
       <div class="track-cover" ${t.art ? `style="background-image:url('${t.art}')"` : ''}>${t.art ? '' : NOTE_SVG}</div>
       <div class="track-meta">
-        <div class="track-name">${esc(t.title)}</div>
+        <div class="track-name">${esc(t.title)}${queued ? '<span class="track-q-badge">대기</span>' : ''}</div>
         <div class="track-sub">${esc(sub)}</div>
       </div>
+      <button class="track-queue-btn${queued ? ' on' : ''}" data-action="queue-track" data-index="${i}" aria-label="다음에 재생"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11M3 12h11M3 18h7"/><path d="M18 9v9"/><path d="M15 15l3 3 3-3"/></svg></button>
       <button class="delete-btn" data-action="remove-track" data-index="${i}" aria-label="목록에서 제거"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>`;
   }).join('');
 }
+
+/* Native drag-and-drop reorder (Chrome/desktop). Delegated on islandEl
+   because the panel markup is rebuilt whenever the pill changes. */
+let trackDragFrom = -1;
+function moveTrack(from, to){
+  if(from === to || from < 0 || to < 0 || from >= music.tracks.length || to >= music.tracks.length) return;
+  const cur = music.index >= 0 ? music.tracks[music.index] : null;
+  const [t] = music.tracks.splice(from, 1);
+  music.tracks.splice(to, 0, t);
+  if(cur) music.index = music.tracks.indexOf(cur);
+  renderTrackList();
+  scheduleSave();
+}
+function queueNext(i){
+  const t = music.tracks[i];
+  if(!t) return;
+  const at = music.queue.indexOf(t.id);
+  if(at >= 0) music.queue.splice(at, 1);   // second tap un-queues
+  else music.queue.push(t.id);
+  renderTrackList();
+}
+islandEl.addEventListener('dragstart', (e)=>{
+  const row = e.target.closest('.track-row');
+  if(!row){ return; }
+  trackDragFrom = +row.dataset.index;
+  row.classList.add('dragging');
+  if(e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+});
+islandEl.addEventListener('dragover', (e)=>{
+  if(trackDragFrom < 0) return;
+  if(e.target.closest('.track-row')) e.preventDefault();
+});
+islandEl.addEventListener('drop', (e)=>{
+  if(trackDragFrom < 0) return;
+  e.preventDefault();
+  const row = e.target.closest('.track-row');
+  const to = row ? +row.dataset.index : music.tracks.length - 1;
+  moveTrack(trackDragFrom, to);
+  trackDragFrom = -1;
+});
+islandEl.addEventListener('dragend', ()=>{
+  trackDragFrom = -1;
+  const d = islandEl.querySelector('.track-row.dragging');
+  if(d) d.classList.remove('dragging');
+});
 
 function removeTrack(i){
   const t = music.tracks[i];
@@ -4285,6 +4919,7 @@ function islandAnimationFrame(){
   if(state.stopwatch.running || state.timer.running || ringingNow || ambient.on || musicLive){
     renderIsland();
   }
+  if(musicFullOpen) updateMusicFull();
   /* The stopwatch panel is inside the pill now, so renderIsland
      already refreshes it every frame. */
   requestAnimationFrame(islandAnimationFrame);
@@ -4537,6 +5172,7 @@ let pressStartY = null;
 let pressStartX = null;
 
 islandEl.addEventListener('pointerdown', (e)=>{
+  if(isLocked()) return;
   pressStartY = e.clientY;
   pressStartX = e.clientX;
   const base = resolveIsland();
@@ -4556,8 +5192,16 @@ islandEl.addEventListener('pointermove', (e)=>{
     }
   }
 });
-islandEl.addEventListener('pointerup', ()=>{
+islandEl.addEventListener('pointerup', (e)=>{
   clearTimeout(longPressTimer); longPressTimer = null;
+  /* Horizontal swipe on the wide music pill = previous / next track. */
+  if(pressStartX !== null && resolveIsland().mode === 'music'){
+    const dx = e.clientX - pressStartX, dy = e.clientY - pressStartY;
+    if(Math.abs(dx) > 45 && Math.abs(dy) < 40){
+      suppressNextClick = true;
+      if(dx < 0) nextTrack(false); else prevTrack();
+    }
+  }
   pressStartY = null; pressStartX = null;
 });
 islandEl.addEventListener('pointercancel', ()=>{
@@ -5461,6 +6105,17 @@ setInterval(()=>{
 document.addEventListener('pointerdown', ()=>{
   if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
 }, true);
+
+/* Bundled default track — always in the playlist on load. Shipped as a
+   sibling file (not an inline data URL: at ~8 MB it would bloat the
+   page). Not autoplayed; browsers block that without a gesture anyway. */
+(function seedDefaultTrack(){
+  music.tracks.push({
+    id: music.seq++, name:'Unavailable.mp3', url:'Unavailable.mp3',
+    title:'Unavailable', artist:'', album:'', art:null, duration:0, isDefault:true
+  });
+  renderTrackList();
+})();
 
 /* Cameras must not outlive the view that opened them. Closing the
    mirror panel already releases it, but switching tabs does not
