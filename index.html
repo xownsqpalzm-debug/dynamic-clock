@@ -2608,6 +2608,7 @@ body.widgets-editing .widget-card .wg-remove{ display:flex; }
     <div class="field-label">배경</div>
     <div class="chip-row" id="bg-mode-chips"></div>
     <button class="ghost-btn" id="bg-image-pick-btn" style="display:none;">이미지 선택</button>
+    <button class="ghost-btn" id="voice-help-btn">음성 명령 안내</button>
     <button class="ghost-btn" id="replay-intro">앱 안내 다시 보기</button>
 
     <div class="danger-zone">
@@ -7612,6 +7613,14 @@ if(restoredActive){
 
   function showHelp(){ helpEl.classList.add('show'); helpEl.setAttribute('aria-hidden','false'); }
   function hideHelp(){ helpEl.classList.remove('show'); helpEl.setAttribute('aria-hidden','true'); }
+  /* Tap the dimmed backdrop (outside the card) to close it. */
+  helpEl.addEventListener('click', (e)=>{ if(e.target === helpEl) hideHelp(); });
+  /* Re-open the guide any time from Settings. */
+  const helpBtn = document.getElementById('voice-help-btn');
+  if(helpBtn) helpBtn.addEventListener('click', ()=>{
+    try{ if(typeof closePanel === 'function') closePanel(); }catch(err){}
+    showHelp();
+  });
 
   /* First tap ever: explain, then start in full mode so they see the
      capsule once. After that: minimal (glow only). */
