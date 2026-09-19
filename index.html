@@ -280,6 +280,120 @@ body.island-panel-open .island-wrap{ z-index:700; }
    pill only has horizontal padding. */
 .island.ringing{ padding:12px 18px; }
 .island.expanded{ padding:10px 16px; }
+
+/* ---- Voice AI oval ----
+   A separate elliptical glass bubble that drops in just below the real
+   Dynamic Island (never covering it). Glossy black camera-glass look
+   with a top sheen, a rainbow lens-flare, and a live audio spectrum. */
+.voice-orb{
+  position:absolute;
+  top:calc(66px + env(safe-area-inset-top, 0px));
+  left:50%;
+  display:flex; align-items:center; justify-content:space-between; gap:14px;
+  width:min(360px, 92vw);
+  height:56px;
+  padding:0 20px;
+  /* Starts as the island's footprint up at the pill, then drops down and
+     stretches out — so it reads as emerging FROM the Dynamic Island. */
+  transform:translate(-50%, -48px) scaleX(0.35) scaleY(0.62);
+  transform-origin:center top;
+  border-radius:28px;                  /* wide stadium capsule */
+  background:
+    radial-gradient(120% 120% at 50% 0%, rgba(64,68,78,0.5), rgba(0,0,0,0) 62%),
+    linear-gradient(to bottom, #070708 0%, #000 60%, #000 100%);
+  box-shadow:0 14px 46px rgba(0,0,0,0.62), 0 0 30px rgba(143,216,255,0.18);
+  overflow:hidden;
+  opacity:0; pointer-events:none;
+  z-index:680;                          /* below the real island (700) */
+  transition:opacity .3s var(--soft-ease), transform .5s var(--pill-ease);
+}
+.voice-orb.show{ opacity:1; transform:translate(-50%, 0) scale(1); pointer-events:auto; }
+.voice-orb.err{ box-shadow:0 14px 46px rgba(0,0,0,0.62), 0 0 30px rgba(255,155,106,0.26); }
+/* Top glass sheen */
+.voice-orb::before{
+  content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  background:radial-gradient(140% 70% at 50% -20%, rgba(255,255,255,0.16), rgba(255,255,255,0) 60%);
+  z-index:1;
+}
+
+/* Rainbow glow that lives BEHIND the real Dynamic Island — a soft
+   iridescent halo that only spills around the pill's edges. */
+.island-glow{
+  position:absolute; top:19px; left:50%;
+  width:210px; height:66px;
+  transform:translate(-50%, -50%) scale(0.6);
+  border-radius:50%;
+  background:conic-gradient(from 0deg,
+    #ff5a5a, #ffd65c, #78ff96, #78c4ff, #ce78ff, #ff5a5a);
+  filter:blur(20px);
+  opacity:0; pointer-events:none;
+  transition:opacity .45s ease, transform .5s var(--pill-ease);
+}
+body.voice-active .island-glow{
+  opacity:0.5;
+  transform:translate(-50%, -50%) scale(1);
+  animation:islandGlowSpin 6s linear infinite;
+}
+@keyframes islandGlowSpin{
+  from{ filter:blur(20px) hue-rotate(0deg); }
+  to{ filter:blur(20px) hue-rotate(360deg); }
+}
+.vo-text{
+  position:relative; z-index:2; flex:1 1 auto; min-width:0;
+  text-align:left; color:#fff; font-size:15px; line-height:1.25;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  text-shadow:0 1px 5px rgba(0,0,0,0.7);
+}
+.vo-text .vo-act{ display:block; color:#8fd8ff; font-size:12px; overflow:hidden; text-overflow:ellipsis; }
+.voice-orb.err .vo-text .vo-act{ color:#ffb08a; }
+.vo-spectrum{
+  position:relative; z-index:2; flex:0 0 auto;
+  width:96px; height:28px; pointer-events:none;
+}
+
+/* First-run voice explanation modal */
+.voice-help{
+  position:absolute; inset:0; z-index:820;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(0,0,0,0.55);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  opacity:0; pointer-events:none;
+  transition:opacity .3s ease;
+}
+.voice-help.show{ opacity:1; pointer-events:auto; }
+.vh-card{
+  width:min(360px, 88vw);
+  padding:26px 24px 22px;
+  border-radius:28px;
+  background:linear-gradient(to bottom, #131315, #0a0a0b);
+  border:1px solid rgba(255,255,255,0.10);
+  box-shadow:0 30px 80px rgba(0,0,0,0.7);
+  transform:scale(0.9); transition:transform .34s var(--pill-ease);
+  font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+}
+.voice-help.show .vh-card{ transform:scale(1); }
+.vh-icon{
+  width:52px; height:52px; margin:0 auto 12px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  color:#8fd8ff; background:rgba(143,216,255,0.12); border:1px solid rgba(143,216,255,0.3);
+}
+.vh-icon svg{ width:24px; height:24px; }
+.vh-title{ text-align:center; color:#fff; font-size:20px; font-weight:600; }
+.vh-sub{ text-align:center; color:var(--text-dim); font-size:13px; margin-top:5px; margin-bottom:16px; }
+.vh-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; }
+.vh-list li{
+  color:rgba(235,238,244,0.82); font-size:13.5px; line-height:1.4;
+  background:rgba(255,255,255,0.05); border-radius:12px; padding:10px 13px;
+}
+.vh-list li b{ color:#8fd8ff; font-weight:600; margin-right:4px; }
+.vh-start{
+  margin-top:20px; width:100%; padding:13px;
+  border:none; border-radius:15px; cursor:pointer;
+  background:#8fd8ff; color:#062535; font-size:15px; font-weight:600;
+  font-family:inherit;
+}
+.vh-start:active{ transform:scale(0.97); }
 /* ---- Mirror + memo + weather panel ----
    Left column stacks the quick memo (top) and a compact weather
    readout (bottom); the right side is the circular front-camera
@@ -712,6 +826,18 @@ body.ring-open .ring-screen{ opacity:1; pointer-events:auto; }
 .icon-btn.on#btn-settings svg{ animation:gearSpin 3s linear infinite; }
 @keyframes gearSpin{ from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
 
+/* ---------- Voice command ---------- */
+#btn-voice.listening{
+  color:#8fd8ff;
+  border-color:#8fd8ff;
+  background:rgba(20,40,58,0.9);
+  animation:voicePulse 1.2s ease-in-out infinite;
+}
+@keyframes voicePulse{
+  0%,100%{ box-shadow:0 0 0 0 rgba(143,216,255,0.5); }
+  50%{ box-shadow:0 0 0 7px rgba(143,216,255,0); }
+}
+
 /* ---------- Clock ---------- */
 .clock-wrap{
   display:flex;
@@ -722,21 +848,24 @@ body.ring-open .ring-screen{ opacity:1; pointer-events:auto; }
 .clock{
   display:flex;
   align-items:baseline;
-  font-weight:var(--clock-weight, 200);
-  font-size:calc(clamp(56px, 13vw, 168px) * var(--clock-scale, 1));
-  letter-spacing:0.01em;
-  line-height:1;
+  font-weight:var(--clock-weight, 590);
+  font-size:calc(clamp(72px, 15vw, 240px) * var(--clock-scale, 1));
+  letter-spacing:-0.02em;
+  line-height:0.9;
   font-variant-numeric:tabular-nums;
-  color:var(--clock-color, var(--text));
-  font-family:var(--clock-font, inherit);
+  /* Frosted-glass numerals like the iOS lock screen: translucent white
+     that lets the wallpaper read through, with a soft bloom. */
+  color:var(--clock-color, rgba(238,241,246,0.88));
+  font-family:var(--clock-font, -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif);
   perspective:500px;
+  text-shadow:0 2px 44px rgba(255,255,255,0.10);
   transition:font-size .2s var(--soft-ease), color .3s ease;
 }
 .clock .sec{
-  font-size:0.38em;
-  font-weight:300;
-  color:var(--text-dim);
-  margin-left:0.25em;
+  font-size:0.34em;
+  font-weight:500;
+  color:rgba(238,241,246,0.5);
+  margin-left:0.22em;
   align-self:center;
 }
 .char{
@@ -744,8 +873,8 @@ body.ring-open .ring-screen{ opacity:1; pointer-events:auto; }
   position:relative;
 }
 .char.colon{
-  color:var(--text-faint);
-  animation:colonBreathe 2.4s ease-in-out infinite;
+  color:var(--clock-color, rgba(238,241,246,0.88));
+  animation:none;
 }
 @keyframes colonBreathe{
   0%,100%{ opacity:1; } 50%{ opacity:0.45; }
@@ -756,10 +885,12 @@ body.ring-open .ring-screen{ opacity:1; pointer-events:auto; }
   perspective:200px;
 }
 .date-label{
-  position:absolute; bottom:26px; left:0; right:0;
+  position:static;
+  margin-bottom:10px;
   text-align:center;
-  font-size:12px; font-weight:300; letter-spacing:0.15em;
-  color:var(--text-faint);
+  font-size:17px; font-weight:500; letter-spacing:0.01em;
+  color:rgba(235,238,244,0.72);
+  font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
   perspective:200px;
 }
 
@@ -820,6 +951,24 @@ body[data-anim-style="none"] .digit-change{ animation:none; }
   overflow-y:auto;
 }
 .sheet.open{ transform:translateX(0); }
+
+/* Settings no longer slides in from the side — it grows out of the
+   Dynamic Island as a big centered glass panel. */
+#sheet-settings{
+  right:auto; left:50%; top:calc(62px + env(safe-area-inset-top, 0px)); bottom:auto;
+  width:min(400px, 92vw);
+  max-height:min(74vh, 700px);
+  border:1px solid rgba(255,255,255,0.10);
+  border-left:1px solid rgba(255,255,255,0.10);
+  border-radius:34px;
+  background:linear-gradient(to bottom, #0c0c0d 0%, #050506 100%);
+  box-shadow:0 30px 90px rgba(0,0,0,0.72), 0 0 40px rgba(143,216,255,0.10);
+  transform:translate(-50%, -46px) scaleX(0.34) scaleY(0.46);
+  transform-origin:top center;
+  opacity:0;
+  transition:transform .52s var(--pill-ease), opacity .32s ease;
+}
+#sheet-settings.open{ transform:translate(-50%, 0) scale(1); opacity:1; }
 
 .sheet-title{
   font-size:12px; font-weight:500; letter-spacing:0.15em;
@@ -1907,7 +2056,7 @@ body.island-panel-open .icons-row{ opacity:0; pointer-events:none; }
    lost to the later base rule and the whole block was dead code.
    Same specificity means source order decides. */
 @media (orientation:portrait){
-  .clock{ font-size:calc(clamp(38px, 15vw, 110px) * var(--clock-scale, 1)); }
+  .clock{ font-size:calc(clamp(64px, 30vw, 150px) * var(--clock-scale, 1)); }
   .island-wrap{ top:calc(20px + env(safe-area-inset-top, 0px)); }
   /* Below the island band, not beside it: at this width the pill
      and the four buttons share one strip, and since the island now
@@ -1916,7 +2065,7 @@ body.island-panel-open .icons-row{ opacity:0; pointer-events:none; }
   .icons-row{ top:calc(72px + env(safe-area-inset-top, 0px)); right:calc(16px + env(safe-area-inset-right, 0px)); gap:8px; }
   .icon-btn{ width:30px; height:30px; }
   .icon-btn svg{ width:13px; height:13px; }
-  .date-label{ bottom:18px; font-size:11px; }
+  .date-label{ font-size:15px; }
   .meridiem{ font-size:11px; }
 }
 
@@ -2320,6 +2469,11 @@ body.widgets-editing .widget-card .wg-remove{ display:flex; }
         <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
       </svg>
     </button>
+    <button class="icon-btn fn" id="btn-voice" title="음성 명령">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v4"/>
+      </svg>
+    </button>
     <button class="icon-btn fn" id="btn-ambient" title="앰비언트">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
         <path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 11v2M21 12h1"/>
@@ -2337,20 +2491,49 @@ body.widgets-editing .widget-card .wg-remove{ display:flex; }
   </div>
 
   <div class="clock-stack">
+    <div class="date-label" id="date-label"></div>
     <div class="clock-wrap">
       <div class="clock" id="clock"></div>
       <div class="meridiem" id="meridiem"></div>
     </div>
   </div>
-  <div class="date-label" id="date-label"></div>
   </div><!-- /.clock-layer -->
 
   <!-- Outside .clock-layer on purpose: the island is meant to read
        as part of the hardware, so it stays put and stays sharp when
        the clock recedes and the weather screen comes up. -->
   <div class="island-wrap">
+    <div class="island-glow" id="island-glow"></div>
     <div class="island idle" id="island"></div>
     <div id="island-dot" role="button" tabindex="0" aria-label="다른 활동으로 전환"></div>
+  </div>
+
+  <!-- Voice AI oval — sits just below the real Dynamic Island without
+       covering it, glassy black with a rainbow lens-flare and a live
+       audio spectrum. -->
+  <div class="voice-orb" id="voice-orb" aria-hidden="true">
+    <div class="vo-text" id="vo-text"></div>
+    <canvas class="vo-spectrum" id="vo-spectrum"></canvas>
+  </div>
+
+  <!-- First-run voice explanation -->
+  <div class="voice-help" id="voice-help" aria-hidden="true">
+    <div class="vh-card">
+      <div class="vh-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v4"/>
+        </svg>
+      </div>
+      <div class="vh-title">음성 명령</div>
+      <div class="vh-sub">마이크 버튼을 누르고 이렇게 말해보세요</div>
+      <ul class="vh-list">
+        <li><b>타이머</b> — "5분 타이머" · "10분 20초 타이머" · "타이머 취소"</li>
+        <li><b>알람</b> — "오전 7시 30분 알람" · "알람 다 지워"</li>
+        <li><b>스톱워치</b> — "스톱워치 시작" · "정지" · "리셋"</li>
+        <li><b>음악</b> — "음악 틀어줘" · "다음곡" · "멈춰"</li>
+      </ul>
+      <button class="vh-start" id="vh-start">시작하기</button>
+    </div>
   </div>
 
   <!-- Fullscreen ring alert (timer / alarm) with slide-to-stop -->
@@ -2382,7 +2565,7 @@ body.widgets-editing .widget-card .wg-remove{ display:flex; }
   </div>
 
   <div class="sheet-overlay" id="overlay"></div>
-  <div class="drop-hint" id="drop-hint">음악 파일을 놓으세요</div>
+  <div class="drop-hint" id="drop-hint">음악 · 이미지를 놓으세요</div>
 
   <!-- Walkthrough -->
   <div class="onboard" id="onboard" role="dialog" aria-label="앱 안내">
@@ -2618,8 +2801,8 @@ body.widgets-editing .widget-card .wg-remove{ display:flex; }
 /* ================= State ================= */
 const state = {
   use24h: true,
-  showSeconds: true,
-  showDate: false,
+  showSeconds: false,
+  showDate: true,
   flipped: false,
   animStyle: 'pop',
   lastRendered: { h:'', m:'', s:'', ampm:'', dateStr:'' },
@@ -2735,6 +2918,15 @@ if(persisted){
   }
 }
 
+/* One-time migration to the iOS lock-screen redesign: turn the date on,
+   seconds off, and drop any old solid clock color so the frosted default
+   reads, for anyone who saved state before this build. */
+if(persisted && !persisted.designV2){
+  state.showDate = true;
+  state.showSeconds = false;
+  state.clockColor = null;
+}
+
 /* Set once the person erases everything. Saving is driven by a
    capture-phase listener on every click plus a pagehide handler, so
    without this the very next tap -- or simply closing the tab --
@@ -2746,6 +2938,7 @@ function saveState(){
   if(savingDisabled) return;
   try{
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      designV2: true,
       use24h: state.use24h,
       showSeconds: state.showSeconds,
       showDate: state.showDate,
@@ -2905,8 +3098,9 @@ function renderClock(){
   meridiemEl.style.display = ampm ? 'block' : 'none';
 
   if(state.showDate){
-    const days = ['일','월','화','수','목','금','토'];
-    const dateStr = `${now.getMonth()+1}월 ${now.getDate()}일 ${days[now.getDay()]}요일`;
+    const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const dateStr = `${days[now.getDay()]} ${months[now.getMonth()]} ${now.getDate()}`;
     if(dateStr !== prev.dateStr){
       dateLabelEl.textContent = dateStr;
       retriggerAnim(dateLabelEl);
@@ -3961,9 +4155,10 @@ function renderBgModeChips(){
   });
 }
 bgImagePickBtn.addEventListener('click', ()=>bgImageInput.click());
-bgImageInput.addEventListener('change', ()=>{
-  const file = bgImageInput.files && bgImageInput.files[0];
-  if(!file) return;
+/* Turn an image File into the wallpaper. Shared by the picker button and
+   by drag-and-drop onto the screen. */
+function applyBgFile(file){
+  if(!file || !/^image\//.test(file.type)) return;
   const reader = new FileReader();
   reader.onload = ()=>{
     customBgDataUrl = reader.result;
@@ -3977,6 +4172,9 @@ bgImageInput.addEventListener('change', ()=>{
     }
   };
   reader.readAsDataURL(file);
+}
+bgImageInput.addEventListener('change', ()=>{
+  applyBgFile(bgImageInput.files && bgImageInput.files[0]);
 });
 renderBgModeChips();
 applyBgMode();
@@ -5774,7 +5972,13 @@ window.addEventListener('drop', (e)=>{
   e.preventDefault();
   dragDepth = 0;
   document.body.classList.remove('dropping');
-  if(e.dataTransfer && e.dataTransfer.files) addFiles(e.dataTransfer.files);
+  if(!e.dataTransfer || !e.dataTransfer.files) return;
+  const files = Array.from(e.dataTransfer.files);
+  /* An image sets the wallpaper; everything else feeds the music list. */
+  const img = files.find(f => /^image\//.test(f.type));
+  if(img) applyBgFile(img);
+  const rest = files.filter(f => !/^image\//.test(f.type));
+  if(rest.length) addFiles(rest);
 });
 
 /* Nothing to draw until the panel exists — these are called from
@@ -7068,6 +7272,352 @@ if(restoredActive){
 } else {
   runIntroStage(0);
 }
+
+/* ======================================================================
+   Voice commands — free, no API key. Uses the browser's built-in
+   Web Speech API (SpeechRecognition). Understands simple Korean
+   requests for timer / alarm / stopwatch / music and drives the same
+   functions the on-screen controls do. Secure context only (https or
+   localhost); GitHub Pages qualifies.
+   ====================================================================== */
+(function voiceCommands(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const btn = document.getElementById('btn-voice');
+  if(!btn) return;
+
+  /* ---- The AI oval below the Dynamic Island is the UI ---- */
+  const orb  = document.getElementById('voice-orb');
+  const orbTx = document.getElementById('vo-text');
+  const canvas = document.getElementById('vo-spectrum');
+  const helpEl = document.getElementById('voice-help');
+  const helpStart = document.getElementById('vh-start');
+  const INTRO_KEY = 'dynamicClock.voiceIntroSeen';
+  let voiceHideT = null;
+  /* After the first run the capsule is dropped: listening shows only the
+     rainbow glow behind the island. */
+  let voiceMinimal = false;
+  function introSeen(){ try{ return localStorage.getItem(INTRO_KEY) === '1'; }catch(e){ return false; } }
+
+  function orbText(heard, act, err){
+    orbTx.innerHTML = (heard ? `<span class="vo-heard">${esc(heard)}</span>` : '') +
+                      (act ? `<span class="vo-act">${esc(act)}</span>` : '');
+    orb.classList.toggle('err', !!err);
+  }
+  function voiceShowListening(text){
+    clearTimeout(voiceHideT);
+    document.body.classList.add('voice-active');   // rainbow glow behind island
+    if(voiceMinimal){ orb.classList.remove('show'); return; }  // no capsule after first run
+    orb.classList.remove('err');
+    orbText(text || '말해보세요', '', false);
+    orb.classList.add('show');
+  }
+  function voiceShowResult(heard, act, err){
+    clearTimeout(voiceHideT);
+    orbText(heard ? '“'+heard+'”' : '', act || '', !!err);
+    orb.classList.add('show');
+    stopSpectrum();
+    voiceHideT = setTimeout(voiceHide, err ? 3400 : 2800);
+  }
+  function voiceHide(){
+    clearTimeout(voiceHideT);
+    orb.classList.remove('show');
+    document.body.classList.remove('voice-active');
+    stopSpectrum();
+  }
+
+  /* ---------- Live audio spectrum (real mic) ----------
+     A second, short-lived getUserMedia stream feeds an AnalyserNode.
+     If the mic can't be opened alongside recognition, an animated
+     placeholder keeps the oval alive so it never looks frozen. */
+  let audioCtx = null, analyser = null, micStream = null, rafId = 0, freqData = null;
+  const cctx = canvas.getContext('2d');
+
+  function sizeCanvas(){
+    const r = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.max(1, Math.round(r.width * dpr));
+    canvas.height = Math.max(1, Math.round(r.height * dpr));
+  }
+  function drawBars(vals){
+    const w = canvas.width, h = canvas.height;
+    cctx.clearRect(0,0,w,h);
+    const n = vals.length, gap = Math.max(1, w*0.012);
+    const bw = (w - gap*(n-1)) / n;
+    const grad = cctx.createLinearGradient(0,0,w,0);
+    grad.addColorStop(0,'#7ad0ff'); grad.addColorStop(.5,'#8fd8ff'); grad.addColorStop(1,'#b98cff');
+    cctx.fillStyle = grad;
+    for(let i=0;i<n;i++){
+      const bh = Math.max(h*0.08, vals[i]*h);
+      const x = i*(bw+gap), y = (h-bh)/2;
+      const rr = bw/2;
+      cctx.beginPath();
+      if(cctx.roundRect) cctx.roundRect(x, y, bw, bh, rr);
+      else cctx.rect(x, y, bw, bh);
+      cctx.fill();
+    }
+  }
+  let fakePhase = 0;
+  function tickSpectrum(){
+    rafId = requestAnimationFrame(tickSpectrum);
+    const N = 20;
+    let vals = new Array(N);
+    if(analyser){
+      analyser.getByteFrequencyData(freqData);
+      const step = Math.floor(freqData.length / N) || 1;
+      for(let i=0;i<N;i++) vals[i] = Math.min(1, (freqData[i*step]/255) * 1.4);
+    } else {
+      fakePhase += 0.14;
+      for(let i=0;i<N;i++) vals[i] = 0.18 + 0.32*Math.abs(Math.sin(fakePhase + i*0.5));
+    }
+    drawBars(vals);
+  }
+  async function startSpectrum(){
+    sizeCanvas();
+    try{
+      micStream = await navigator.mediaDevices.getUserMedia({ audio:true });
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const src = audioCtx.createMediaStreamSource(micStream);
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 128; analyser.smoothingTimeConstant = 0.75;
+      src.connect(analyser);
+      freqData = new Uint8Array(analyser.frequencyBinCount);
+    }catch(e){ analyser = null; /* fall back to animated bars */ }
+    cancelAnimationFrame(rafId);
+    tickSpectrum();
+  }
+  function stopSpectrum(){
+    cancelAnimationFrame(rafId); rafId = 0;
+    if(micStream){ micStream.getTracks().forEach(t=>t.stop()); micStream = null; }
+    if(audioCtx){ audioCtx.close().catch(()=>{}); audioCtx = null; }
+    analyser = null; freqData = null;
+  }
+
+  if(!SR){
+    btn.addEventListener('click', ()=>voiceShowResult('', '이 브라우저는 음성 인식을 지원하지 않습니다', true));
+    return;
+  }
+
+  /* ---------- Korean numeral parsing ---------- */
+  const SINO   = {'영':0,'공':0,'일':1,'이':2,'삼':3,'사':4,'오':5,'육':6,'륙':6,'칠':7,'팔':8,'구':9};
+  const NATIVE = {'한':1,'하나':1,'두':2,'둘':2,'세':3,'셋':3,'네':4,'넷':4,'다섯':5,'여섯':6,
+                  '일곱':7,'여덟':8,'아홉':9,'열':10,'열한':11,'열두':12,'열둘':12,
+                  '스물':20,'서른':30,'마흔':40,'쉰':50};
+  const NUM_RE = '(\\d+|[영공일이삼사오육륙칠팔구십한하나두둘세넷셋네다섯여섯일곱여덟아홉열스물서른마흔쉰반]+)';
+
+  function sino2(tok){                 /* korean sino numeral 0..99 -> number */
+    if(tok==='십') return 10;
+    const i = tok.indexOf('십');
+    if(i>=0){
+      const t = tok.slice(0,i), o = tok.slice(i+1);
+      const tens = t==='' ? 1 : SINO[t];
+      const ones = o==='' ? 0 : SINO[o];
+      if(tens==null || ones==null) return null;
+      return tens*10 + ones;
+    }
+    if(tok.length===1 && SINO[tok]!=null) return SINO[tok];
+    return null;
+  }
+  function readValue(raw){
+    if(raw==null) return null;
+    raw = raw.trim();
+    if(raw==='반') return 30;           /* "일곱시 반" */
+    if(/^\d+$/.test(raw)) return parseInt(raw,10);
+    if(NATIVE[raw]!=null) return NATIVE[raw];
+    const s = sino2(raw);
+    return s!=null ? s : null;
+  }
+  /* value that appears right before a unit ("5분", "삼십 분", "일곱시") */
+  function valueBefore(text, unit){
+    const re = new RegExp(NUM_RE + '\\s*' + unit);
+    const m = text.match(re);
+    return m ? readValue(m[1]) : null;
+  }
+
+  const has    = w => t.includes(w);
+  const hasAny = arr => arr.some(w => t.includes(w));
+  let t = '';
+
+  /* ---------- Command router. Returns a Korean confirmation, or null. ---------- */
+  function execute(raw){
+    t = raw.replace(/\s+/g,' ').trim();
+    if(!t) return null;
+
+    const STOP  = ['정지','중지','멈춰','멈춤','꺼','끄','스톱','스탑','그만','취소'];
+    const PAUSE = ['일시정지','잠깐','잠시','일시 정지'];
+    const RESUME= ['다시','계속','재개','이어'];
+
+    /* ---- Timer ---- */
+    if(has('타이머') || ((has('분') || has('초')) && hasAny(['맞춰','설정','시작','걸어','재줘','해줘','시켜']))){
+      if(has('타이머') && hasAny(PAUSE)){ pauseTimer(); return '타이머를 일시정지했어요'; }
+      if(has('타이머') && hasAny(RESUME)){ resumeTimer(); return '타이머를 다시 시작했어요'; }
+      if(has('타이머') && hasAny(STOP)){
+        if(state.timer.running||state.timer.paused||state.timer.ringing){ stopTimer(); return '타이머를 껐어요'; }
+        return '실행 중인 타이머가 없어요';
+      }
+      const mn = valueBefore(t,'분');
+      const sc = valueBefore(t,'초');
+      const hr = valueBefore(t,'시간');
+      if(mn!=null || sc!=null || hr!=null){
+        if(state.timer.running||state.timer.paused||state.timer.ringing) stopTimer();
+        let totMin = (hr!=null?hr*60:0) + (mn!=null?mn:0);
+        state.timerMin = Math.min(99, totMin);
+        state.timerSec = sc!=null ? Math.min(59, sc) : 0;
+        startTimerFromPanel();
+        const parts = [];
+        if(state.timerMin) parts.push(state.timerMin+'분');
+        if(state.timerSec) parts.push(state.timerSec+'초');
+        return (parts.join(' ')||'0초') + ' 타이머 시작';
+      }
+      return '몇 분 타이머인지 말해 주세요 (예: 5분 타이머)';
+    }
+
+    /* ---- Alarm ---- */
+    if(has('알람')){
+      if(hasAny(['다','전부','모두','싹']) && hasAny(['지워','삭제','취소','꺼','끄'])){
+        const n = state.alarms.length;
+        state.alarms = []; renderAlarmList();
+        return n ? `알람 ${n}개를 모두 지웠어요` : '등록된 알람이 없어요';
+      }
+      let hr = valueBefore(t,'시');
+      let mn = valueBefore(t,'분');
+      if(has('반') && mn==null) mn = 30;
+      if(hr!=null){
+        if(hasAny(['오후','저녁','밤']) && hr < 12) hr += 12;
+        if(hasAny(['오전','아침','새벽']) && hr === 12) hr = 0;
+        state.alarmHour = ((hr%24)+24)%24;
+        state.alarmMin  = mn!=null ? Math.min(59,mn) : 0;
+        addAlarmFromPanel();
+        const ap = state.alarmHour < 12 ? '오전' : '오후';
+        const h12 = state.alarmHour % 12 || 12;
+        return `${ap} ${h12}시 ${pad(state.alarmMin)}분 알람을 맞췄어요`;
+      }
+      return '몇 시 알람인지 말해 주세요 (예: 오전 7시 알람)';
+    }
+
+    /* ---- Stopwatch ---- */
+    if(hasAny(['스톱워치','스탑워치','스톱 워치','초시계'])){
+      if(hasAny(['리셋','초기화','지워','재설정'])){ resetStopwatch(); return '스톱워치를 초기화했어요'; }
+      if(hasAny(STOP) && state.stopwatch.running){ toggleStopwatchRun(); return '스톱워치를 멈췄어요'; }
+      if(hasAny(['시작','스타트','켜'].concat(RESUME)) && !state.stopwatch.running){ toggleStopwatchRun(); return '스톱워치를 시작했어요'; }
+      toggleStopwatchRun();
+      return state.stopwatch.running ? '스톱워치를 시작했어요' : '스톱워치를 멈췄어요';
+    }
+
+    /* ---- Music ---- */
+    if(hasAny(['음악','노래','뮤직','플레이','재생','틀어','곡'])){
+      if(hasAny(['다음','넘겨','다음곡','넘어'])){ nextTrack(false); return '다음 곡으로 넘겼어요'; }
+      if(hasAny(['이전','전곡','뒤로','이전곡','앞으로'])){ prevTrack(); return '이전 곡으로 이동했어요'; }
+      if(hasAny(STOP.concat(PAUSE))){
+        if(music.index>=0 && !music.el.paused){ toggleMusic(); return '음악을 멈췄어요'; }
+        return '재생 중인 음악이 없어요';
+      }
+      if(hasAny(['틀어','재생','들려','켜','시작','플레이'].concat(RESUME))){
+        if(!music.tracks.length) return '재생할 음악이 없어요';
+        if(music.index<0){ playTrack(0); }
+        else if(music.el.paused){ toggleMusic(); }
+        const tr = (typeof currentTrack==='function' && currentTrack()) ? currentTrack() : null;
+        return tr && tr.title ? `${tr.title} 재생` : '음악을 재생해요';
+      }
+      toggleMusic();
+      return '음악을 전환했어요';
+    }
+
+    return null;
+  }
+
+  /* ---------- Recognition lifecycle ---------- */
+  const rec = new SR();
+  rec.lang = 'ko-KR';
+  rec.interimResults = true;
+  rec.continuous = false;
+  rec.maxAlternatives = 1;
+
+  let listening = false, gotFinal = false, lastHeard = '';
+
+  /* Run a command safely and surface the outcome (or any thrown error) in
+     the pill, so a bad match never fails silently. */
+  function runCommand(text){
+    let act, err = false;
+    try{ act = execute(text); }
+    catch(e){ act = '실행 중 오류: ' + (e && e.message ? e.message : e); err = true; }
+    if(!act){ act = '무슨 뜻인지 못 알아들었어요'; err = true; }
+    voiceShowResult(text.trim(), act, err);
+  }
+
+  function start(minimal){
+    if(listening) return;
+    voiceMinimal = !!minimal;
+    gotFinal = false; lastHeard = '';
+    try{ rec.start(); }
+    catch(e){ /* start() throws if called too soon after stop() */ }
+  }
+  function stop(){ try{ rec.stop(); }catch(e){} }
+
+  rec.onstart = ()=>{
+    listening = true;
+    btn.classList.add('listening');
+    voiceShowListening('');
+    if(!voiceMinimal) startSpectrum();   // capsule (with spectrum) only in full mode
+  };
+  rec.onend = ()=>{
+    listening = false;
+    btn.classList.remove('listening');
+    /* Chrome often ends on silence without promoting the last phrase to a
+       final result. If we heard something but never got a final, run it. */
+    if(!gotFinal){
+      if(lastHeard) runCommand(lastHeard);
+      else voiceHide();
+    }
+  };
+  rec.onerror = (e)=>{
+    listening = false;
+    btn.classList.remove('listening');
+    const map = {
+      'not-allowed':'마이크 권한을 허용해 주세요',
+      'service-not-allowed':'마이크 권한을 허용해 주세요',
+      'no-speech':'소리를 못 들었어요. 다시 눌러 말해 주세요',
+      'audio-capture':'마이크를 찾을 수 없어요',
+      'network':'네트워크 오류로 인식하지 못했어요',
+    };
+    voiceShowResult('', map[e.error] || '음성 인식에 실패했어요', true);
+  };
+  rec.onresult = (ev)=>{
+    let interim = '', final = '';
+    for(let i=ev.resultIndex; i<ev.results.length; i++){
+      const r = ev.results[i];
+      if(r.isFinal) final += r[0].transcript;
+      else interim += r[0].transcript;
+    }
+    if(final){
+      gotFinal = true;
+      lastHeard = final;
+      runCommand(final);
+    } else if(interim){
+      lastHeard = interim;
+      voiceShowListening(interim.trim());
+    }
+  };
+
+  function showHelp(){ helpEl.classList.add('show'); helpEl.setAttribute('aria-hidden','false'); }
+  function hideHelp(){ helpEl.classList.remove('show'); helpEl.setAttribute('aria-hidden','true'); }
+
+  /* First tap ever: explain, then start in full mode so they see the
+     capsule once. After that: minimal (glow only). */
+  if(helpStart) helpStart.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    try{ localStorage.setItem(INTRO_KEY, '1'); }catch(err){}
+    hideHelp();
+    start(false);
+  });
+
+  btn.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    if(isLocked && isLocked()) return;
+    if(listening){ stop(); return; }
+    if(!introSeen()){ showHelp(); return; }
+    start(true);
+  });
+})();
 
 })();
 </script>
