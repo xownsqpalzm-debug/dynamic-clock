@@ -351,6 +351,11 @@ body.voice-active .island-glow{
   position:relative; z-index:2; flex:0 0 auto;
   width:96px; height:28px; pointer-events:none;
 }
+/* On the result screen the spectrum folds away so the text gets the full
+   width (and can wrap to two lines). */
+.voice-orb.result{ height:auto; min-height:56px; padding-top:10px; padding-bottom:10px; }
+.voice-orb.result .vo-spectrum{ display:none; }
+.voice-orb.result .vo-text{ white-space:normal; text-align:center; }
 
 /* First-run voice explanation modal */
 .voice-help{
@@ -7306,17 +7311,24 @@ if(restoredActive){
   function voiceShowListening(text){
     clearTimeout(voiceHideT);
     document.body.classList.add('voice-active');   // rainbow glow behind island
-    if(voiceMinimal){ orb.classList.remove('show'); return; }  // no capsule after first run
+    /* After the first run the idle prompt is dropped — but once the user
+       actually starts speaking, show the capsule so they can see what was
+       heard. Before any speech in minimal mode it's just the glow. */
+    if(voiceMinimal && !text){ orb.classList.remove('show'); return; }
     orb.classList.remove('err');
+    orb.classList.remove('result');
     orbText(text || '말해보세요', '', false);
     orb.classList.add('show');
   }
   function voiceShowResult(heard, act, err){
     clearTimeout(voiceHideT);
-    orbText(heard ? '“'+heard+'”' : '', act || '', !!err);
+    /* Show what was heard, and whether the command ran (✓) or not (✗). */
+    const mark = act ? (err ? '✗ ' : '✓ ') : '';
+    orbText(heard ? '“'+heard+'”' : '', act ? mark+act : '', !!err);
     orb.classList.add('show');
+    orb.classList.add('result');
     stopSpectrum();
-    voiceHideT = setTimeout(voiceHide, err ? 3400 : 2800);
+    voiceHideT = setTimeout(voiceHide, err ? 3400 : 3000);
   }
   function voiceHide(){
     clearTimeout(voiceHideT);
@@ -7557,7 +7569,7 @@ if(restoredActive){
     listening = true;
     btn.classList.add('listening');
     voiceShowListening('');
-    if(!voiceMinimal) startSpectrum();   // capsule (with spectrum) only in full mode
+    startSpectrum();   // live spectrum for whenever the capsule appears
   };
   rec.onend = ()=>{
     listening = false;
