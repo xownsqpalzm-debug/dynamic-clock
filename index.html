@@ -316,31 +316,6 @@ body.island-panel-open .island-wrap{ z-index:700; }
   z-index:1;
 }
 
-/* A large, heavily-blurred rainbow disc parked mostly above the screen.
-   Only its lower arc shows, so an iridescent curve seems to spill down
-   from the Dynamic Island while the assistant is listening. */
-.voice-topglow{
-  position:absolute; top:-330px; left:50%;
-  width:112vw; height:470px;
-  transform:translateX(-50%) scale(0.92);
-  border-radius:50%;
-  background:conic-gradient(from 120deg at 50% 100%,
-    #ff5a5a, #ffb04a, #ffd65c, #78ff96, #78c4ff, #6a9bff, #ce78ff, #ff5a5a);
-  filter:blur(50px);
-  opacity:0; pointer-events:none;
-  z-index:6;                          /* above wallpaper, below the clock/chrome */
-  transition:opacity .55s ease, transform .6s var(--pill-ease);
-}
-body.voice-active .voice-topglow{
-  opacity:0.4;
-  transform:translateX(-50%) scale(1);
-  animation:topGlowHue 8s linear infinite;
-}
-@keyframes topGlowHue{
-  from{ filter:blur(50px) hue-rotate(0deg); }
-  to{ filter:blur(50px) hue-rotate(360deg); }
-}
-
 /* Rainbow glow that lives BEHIND the real Dynamic Island — a soft
    iridescent halo that only spills around the pill's edges. */
 .island-glow{
@@ -2532,9 +2507,6 @@ body.widgets-editing .widget-card .wg-remove{ display:flex; }
   <!-- Outside .clock-layer on purpose: the island is meant to read
        as part of the hardware, so it stays put and stays sharp when
        the clock recedes and the weather screen comes up. -->
-  <!-- Rainbow that arcs down from the top / Dynamic Island while AI runs -->
-  <div class="voice-topglow" id="voice-topglow" aria-hidden="true"></div>
-
   <div class="island-wrap">
     <div class="island-glow" id="island-glow"></div>
     <div class="island idle" id="island"></div>
@@ -7483,12 +7455,14 @@ if(restoredActive){
     t = raw.replace(/\s+/g,' ').trim();
     if(!t) return null;
 
-    const STOP  = ['정지','중지','멈춰','멈춤','꺼','끄','스톱','스탑','그만','취소'];
-    const PAUSE = ['일시정지','잠깐','잠시','일시 정지'];
-    const RESUME= ['다시','계속','재개','이어'];
+    const STOP  = ['정지','중지','중단','멈춰','멈춤','멈춰줘','꺼','끄','꺼줘','스톱','스탑','스토프','그만','그만해','취소','종료','없애'];
+    const PAUSE = ['일시정지','일시 정지','잠깐','잠시','일단 멈'];
+    const RESUME= ['다시','계속','재개','이어','이어서'];
 
     /* ---- Timer ---- */
-    if(has('타이머') || ((has('분') || has('초')) && hasAny(['맞춰','설정','시작','걸어','재줘','해줘','시켜']))){
+    if(has('타이머') || hasAny(['알람 말고','카운트다운'])
+       || ((has('분') || has('초') || has('시간')) &&
+           hasAny(['맞춰','설정','세팅','시작','걸어','걸어줘','재줘','재 줘','해줘','시켜','알려','울려','뒤에','후에','있다가','이따','재','카운트']))){
       if(has('타이머') && hasAny(PAUSE)){ pauseTimer(); return '타이머를 일시정지했어요'; }
       if(has('타이머') && hasAny(RESUME)){ resumeTimer(); return '타이머를 다시 시작했어요'; }
       if(has('타이머') && hasAny(STOP)){
@@ -7513,8 +7487,8 @@ if(restoredActive){
     }
 
     /* ---- Alarm ---- */
-    if(has('알람')){
-      if(hasAny(['다','전부','모두','싹']) && hasAny(['지워','삭제','취소','꺼','끄'])){
+    if(has('알람') || (has('시') && hasAny(['깨워','기상','일어나','알람'])) ){
+      if(hasAny(['다','전부','모두','싹','전체']) && hasAny(['지워','삭제','취소','꺼','끄','없애'])){
         const n = state.alarms.length;
         state.alarms = []; renderAlarmList();
         return n ? `알람 ${n}개를 모두 지웠어요` : '등록된 알람이 없어요';
@@ -7536,31 +7510,32 @@ if(restoredActive){
     }
 
     /* ---- Stopwatch ---- */
-    if(hasAny(['스톱워치','스탑워치','스톱 워치','초시계'])){
-      if(hasAny(['리셋','초기화','지워','재설정'])){ resetStopwatch(); return '스톱워치를 초기화했어요'; }
+    if(hasAny(['스톱워치','스탑워치','스톱 워치','스탑 워치','스톱와치','초시계','타임 재','시간 재','시간재'])){
+      if(hasAny(['리셋','초기화','지워','재설정','리셋해'])){ resetStopwatch(); return '스톱워치를 초기화했어요'; }
       if(hasAny(STOP) && state.stopwatch.running){ toggleStopwatchRun(); return '스톱워치를 멈췄어요'; }
-      if(hasAny(['시작','스타트','켜'].concat(RESUME)) && !state.stopwatch.running){ toggleStopwatchRun(); return '스톱워치를 시작했어요'; }
+      if(hasAny(['시작','스타트','켜','고','재','출발'].concat(RESUME)) && !state.stopwatch.running){ toggleStopwatchRun(); return '스톱워치를 시작했어요'; }
       toggleStopwatchRun();
       return state.stopwatch.running ? '스톱워치를 시작했어요' : '스톱워치를 멈췄어요';
     }
 
     /* ---- Music ---- */
-    if(hasAny(['음악','노래','뮤직','플레이','재생','틀어','곡'])){
-      if(hasAny(['다음','넘겨','다음곡','넘어'])){ nextTrack(false); return '다음 곡으로 넘겼어요'; }
-      if(hasAny(['이전','전곡','뒤로','이전곡','앞으로'])){ prevTrack(); return '이전 곡으로 이동했어요'; }
+    const PLAYWORDS = ['틀어','틀어줘','재생','들려','들을래','듣고 싶','듣자','켜','켜줘','시작','플레이','play','노래해'];
+    if(hasAny(['음악','노래','뮤직','음원','곡'].concat(PLAYWORDS))){
+      if(hasAny(['다음','다음곡','다음 곡','다음 노래','넘겨','넘어','스킵','skip'])){ nextTrack(false); return '다음 곡으로 넘겼어요'; }
+      if(hasAny(['이전','이전곡','이전 곡','이전 노래','전곡','뒤로','앞으로','되돌'])){ prevTrack(); return '이전 곡으로 이동했어요'; }
       if(hasAny(STOP.concat(PAUSE))){
         if(music.index>=0 && !music.el.paused){ toggleMusic(); return '음악을 멈췄어요'; }
         return '재생 중인 음악이 없어요';
       }
       /* "이어서/계속" resumes where it left off; plain "틀어/재생" always
          starts from the first track. */
-      if(hasAny(RESUME) && !hasAny(['틀어','재생','들려','켜','시작','플레이'])){
+      if(hasAny(RESUME) && !hasAny(PLAYWORDS)){
         if(!music.tracks.length) return '재생할 음악이 없어요';
         if(music.index<0) playTrack(0);
         else if(music.el.paused) toggleMusic();
         return '음악을 이어서 재생해요';
       }
-      if(hasAny(['틀어','재생','들려','켜','시작','플레이'])){
+      if(hasAny(PLAYWORDS)){
         if(!music.tracks.length) return '재생할 음악이 없어요';
         playTrack(0);                       // always from the first song
         const tr = (typeof currentTrack==='function' && currentTrack()) ? currentTrack() : null;
