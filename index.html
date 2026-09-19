@@ -7524,12 +7524,19 @@ if(restoredActive){
         if(music.index>=0 && !music.el.paused){ toggleMusic(); return '음악을 멈췄어요'; }
         return '재생 중인 음악이 없어요';
       }
-      if(hasAny(['틀어','재생','들려','켜','시작','플레이'].concat(RESUME))){
+      /* "이어서/계속" resumes where it left off; plain "틀어/재생" always
+         starts from the first track. */
+      if(hasAny(RESUME) && !hasAny(['틀어','재생','들려','켜','시작','플레이'])){
         if(!music.tracks.length) return '재생할 음악이 없어요';
-        if(music.index<0){ playTrack(0); }
-        else if(music.el.paused){ toggleMusic(); }
+        if(music.index<0) playTrack(0);
+        else if(music.el.paused) toggleMusic();
+        return '음악을 이어서 재생해요';
+      }
+      if(hasAny(['틀어','재생','들려','켜','시작','플레이'])){
+        if(!music.tracks.length) return '재생할 음악이 없어요';
+        playTrack(0);                       // always from the first song
         const tr = (typeof currentTrack==='function' && currentTrack()) ? currentTrack() : null;
-        return tr && tr.title ? `${tr.title} 재생` : '음악을 재생해요';
+        return tr && tr.title ? `${tr.title} 재생 (처음부터)` : '음악을 처음부터 재생해요';
       }
       toggleMusic();
       return '음악을 전환했어요';
@@ -7566,9 +7573,10 @@ if(restoredActive){
   }
   function stop(){ try{ rec.stop(); }catch(e){} }
 
-  /* Turn AI mode off after 5s of silence. The timer starts when the mic
-     opens and resets whenever speech comes in, so pauses mid-phrase are
-     fine; only true silence closes it. */
+  /* Hard 5s cap from the moment the mic opens: if no command is spoken
+     it closes on its own. A fixed window (not reset by ambient-noise
+     interim results) guarantees it actually turns off. Cleared as soon
+     as a final phrase is being processed. */
   let silenceT = null;
   function armSilence(){ clearTimeout(silenceT); silenceT = setTimeout(()=>{ stop(); }, 5000); }
   function clearSilence(){ clearTimeout(silenceT); silenceT = null; }
@@ -7620,7 +7628,6 @@ if(restoredActive){
       runCommand(final);
     } else if(interim){
       lastHeard = interim;
-      armSilence();                 // heard speech → restart the 5s window
       voiceShowListening(interim.trim());
     }
   };
