@@ -316,6 +316,31 @@ body.island-panel-open .island-wrap{ z-index:700; }
   z-index:1;
 }
 
+/* A large, heavily-blurred rainbow disc parked mostly above the screen.
+   Only its lower arc shows, so an iridescent curve seems to spill down
+   from the Dynamic Island while the assistant is listening. */
+.voice-topglow{
+  position:absolute; top:-330px; left:50%;
+  width:112vw; height:470px;
+  transform:translateX(-50%) scale(0.92);
+  border-radius:50%;
+  background:conic-gradient(from 120deg at 50% 100%,
+    #ff5a5a, #ffb04a, #ffd65c, #78ff96, #78c4ff, #6a9bff, #ce78ff, #ff5a5a);
+  filter:blur(50px);
+  opacity:0; pointer-events:none;
+  z-index:6;                          /* above wallpaper, below the clock/chrome */
+  transition:opacity .55s ease, transform .6s var(--pill-ease);
+}
+body.voice-active .voice-topglow{
+  opacity:0.4;
+  transform:translateX(-50%) scale(1);
+  animation:topGlowHue 8s linear infinite;
+}
+@keyframes topGlowHue{
+  from{ filter:blur(50px) hue-rotate(0deg); }
+  to{ filter:blur(50px) hue-rotate(360deg); }
+}
+
 /* Rainbow glow that lives BEHIND the real Dynamic Island — a soft
    iridescent halo that only spills around the pill's edges. */
 .island-glow{
@@ -2507,6 +2532,9 @@ body.widgets-editing .widget-card .wg-remove{ display:flex; }
   <!-- Outside .clock-layer on purpose: the island is meant to read
        as part of the hardware, so it stays put and stays sharp when
        the clock recedes and the weather screen comes up. -->
+  <!-- Rainbow that arcs down from the top / Dynamic Island while AI runs -->
+  <div class="voice-topglow" id="voice-topglow" aria-hidden="true"></div>
+
   <div class="island-wrap">
     <div class="island-glow" id="island-glow"></div>
     <div class="island idle" id="island"></div>
