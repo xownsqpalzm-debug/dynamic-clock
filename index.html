@@ -7566,17 +7566,27 @@ if(restoredActive){
   }
   function stop(){ try{ rec.stop(); }catch(e){} }
 
+  /* Turn AI mode off after 5s of silence. The timer starts when the mic
+     opens and resets whenever speech comes in, so pauses mid-phrase are
+     fine; only true silence closes it. */
+  let silenceT = null;
+  function armSilence(){ clearTimeout(silenceT); silenceT = setTimeout(()=>{ stop(); }, 5000); }
+  function clearSilence(){ clearTimeout(silenceT); silenceT = null; }
+
   rec.onstart = ()=>{
     listening = true;
     btn.classList.add('listening');
     voiceShowListening('');
     startSpectrum();   // live spectrum for whenever the capsule appears
+    armSilence();
   };
   rec.onend = ()=>{
     listening = false;
     btn.classList.remove('listening');
+    clearSilence();
     /* Chrome often ends on silence without promoting the last phrase to a
-       final result. If we heard something but never got a final, run it. */
+       final result. If we heard something but never got a final, run it;
+       if nothing was said, just close quietly. */
     if(!gotFinal){
       if(lastHeard) runCommand(lastHeard);
       else voiceHide();
@@ -7585,10 +7595,12 @@ if(restoredActive){
   rec.onerror = (e)=>{
     listening = false;
     btn.classList.remove('listening');
+    clearSilence();
+    /* Said nothing → close quietly (no error card). */
+    if(e.error === 'no-speech' || e.error === 'aborted'){ voiceHide(); return; }
     const map = {
       'not-allowed':'마이크 권한을 허용해 주세요',
       'service-not-allowed':'마이크 권한을 허용해 주세요',
-      'no-speech':'소리를 못 들었어요. 다시 눌러 말해 주세요',
       'audio-capture':'마이크를 찾을 수 없어요',
       'network':'네트워크 오류로 인식하지 못했어요',
     };
@@ -7604,9 +7616,11 @@ if(restoredActive){
     if(final){
       gotFinal = true;
       lastHeard = final;
+      clearSilence();
       runCommand(final);
     } else if(interim){
       lastHeard = interim;
+      armSilence();                 // heard speech → restart the 5s window
       voiceShowListening(interim.trim());
     }
   };
