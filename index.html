@@ -466,6 +466,120 @@ body.aod .clock-stack{ transition:transform 2s ease-in-out; }
 .aod-music .aod-mus-artist{ display:none; }
 .aod-music .aod-mus-ctrl{ display:none; }
 .aod-music{ height:60px; }
+
+/* ================= Home screen ================= */
+/* The lock-screen dock is gone; everything lives on the home screen now. */
+.icons-row{ display:none !important; }
+
+.home-screen{
+  position:absolute; inset:0; z-index:120;
+  transform:translateY(100%);
+  transition:transform .5s var(--pill-ease);
+  background:rgba(8,8,10,0.55);
+  backdrop-filter:blur(34px) saturate(150%); -webkit-backdrop-filter:blur(34px) saturate(150%);
+  display:flex; flex-direction:column;
+  padding:calc(64px + env(safe-area-inset-top,0px)) 22px calc(30px + env(safe-area-inset-bottom,0px));
+  overflow-y:auto; pointer-events:none;
+}
+body.home-open .home-screen{ transform:translateY(0); pointer-events:auto; }
+.home-spot{
+  display:flex; align-items:center; gap:9px;
+  background:rgba(255,255,255,0.12); border-radius:14px; padding:9px 14px; margin-bottom:26px;
+}
+.home-spot-ico{ width:17px; height:17px; color:rgba(255,255,255,0.6); flex:0 0 auto; }
+#home-search{
+  flex:1 1 auto; background:none; border:none; outline:none;
+  color:#fff; font-size:16px; font-family:-apple-system,sans-serif;
+}
+#home-search::placeholder{ color:rgba(255,255,255,0.5); }
+.home-grid{
+  display:grid; grid-template-columns:repeat(4, 1fr); gap:22px 8px; align-content:start;
+}
+.app-tile{
+  display:flex; flex-direction:column; align-items:center; gap:7px;
+  cursor:pointer; user-select:none; -webkit-user-select:none;
+}
+.app-tile:active{ transform:scale(0.92); }
+.app-ico{
+  width:60px; height:60px; border-radius:16px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:30px; color:#fff; overflow:hidden;
+  background:linear-gradient(160deg,#3a3a3d,#1d1d1f);
+  box-shadow:0 6px 16px rgba(0,0,0,0.4);
+}
+.app-ico svg{ width:30px; height:30px; }
+.app-ico img{ width:100%; height:100%; object-fit:cover; }
+.app-ico.grad-set{ background:linear-gradient(160deg,#8e8e93,#48484a); }
+.app-ico.grad-timer{ background:linear-gradient(160deg,#ff9f0a,#c76b00); }
+.app-ico.grad-alarm{ background:linear-gradient(160deg,#ff453a,#b3271f); }
+.app-ico.grad-sw{ background:linear-gradient(160deg,#30d158,#1a7a34); }
+.app-ico.grad-music{ background:linear-gradient(160deg,#ff2d55,#ff375f); }
+.app-ico.grad-voice{ background:linear-gradient(160deg,#0a84ff,#0060df); }
+.app-ico.grad-weather{ background:linear-gradient(160deg,#64b5f6,#1976d2); }
+.app-ico.grad-add{ background:rgba(255,255,255,0.10); border:1px dashed rgba(255,255,255,0.4); color:rgba(255,255,255,0.7); }
+.app-label{
+  font-size:12px; color:#fff; text-align:center; max-width:72px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  text-shadow:0 1px 3px rgba(0,0,0,0.6); font-family:-apple-system,sans-serif;
+}
+.app-tile.hide{ display:none; }
+.home-hint{ margin-top:auto; padding-top:24px; text-align:center; color:rgba(255,255,255,0.4); font-size:12px; }
+
+/* Add-app modal */
+.app-add{
+  position:absolute; inset:0; z-index:830;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(0,0,0,0.6); backdrop-filter:blur(6px);
+  opacity:0; pointer-events:none; transition:opacity .28s ease;
+}
+.app-add.show{ opacity:1; pointer-events:auto; }
+.aa-card{
+  width:min(340px,88vw); padding:22px; border-radius:24px;
+  background:linear-gradient(to bottom,#141416,#0b0b0c);
+  border:1px solid rgba(255,255,255,0.1); box-shadow:0 30px 80px rgba(0,0,0,0.7);
+  font-family:-apple-system,sans-serif;
+}
+.aa-title{ color:#fff; font-size:18px; font-weight:600; text-align:center; margin-bottom:16px; }
+.aa-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
+.aa-row span{ color:var(--text-dim); font-size:13px; flex:0 0 auto; }
+.aa-row input[type=text]{
+  flex:1 1 auto; min-width:0; text-align:right;
+  background:rgba(255,255,255,0.06); border:1px solid var(--border); color:#fff;
+  border-radius:10px; padding:8px 10px; font-size:15px; outline:none;
+}
+.aa-mini{
+  background:rgba(255,255,255,0.1); border:none; color:#fff;
+  border-radius:9px; padding:7px 14px; font-size:13px; cursor:pointer;
+}
+.aa-preview{
+  width:64px; height:64px; margin:6px auto 14px; border-radius:16px;
+  display:flex; align-items:center; justify-content:center; font-size:32px; color:#fff; overflow:hidden;
+  background:linear-gradient(160deg,#3a3a3d,#1d1d1f);
+}
+.aa-preview img{ width:100%; height:100%; object-fit:cover; }
+.aa-btns{ display:flex; gap:10px; }
+.aa-btns button{ flex:1; padding:12px; border:none; border-radius:13px; font-size:15px; font-weight:600; cursor:pointer; font-family:inherit; }
+.aa-cancel{ background:rgba(255,255,255,0.1); color:#fff; }
+.aa-save{ background:#0a84ff; color:#fff; }
+
+/* Custom app runner */
+.app-runner{
+  position:absolute; inset:0; z-index:840;
+  background:#000; display:flex; flex-direction:column;
+  transform:translateY(100%); transition:transform .4s var(--pill-ease);
+  pointer-events:none;
+}
+.app-runner.show{ transform:translateY(0); pointer-events:auto; }
+.ar-bar{
+  display:flex; align-items:center; gap:10px;
+  padding:calc(10px + env(safe-area-inset-top,0px)) 14px 10px;
+  background:#0a0a0b; border-bottom:1px solid rgba(255,255,255,0.08); flex:0 0 auto;
+}
+.ar-bar button{ width:34px; height:34px; border-radius:50%; border:none; background:rgba(255,255,255,0.1); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.ar-bar button svg{ width:18px; height:18px; }
+.ar-title{ flex:1 1 auto; color:#fff; font-size:15px; font-weight:600; text-align:center; font-family:-apple-system,sans-serif; }
+.ar-del{ background:rgba(255,69,58,0.16) !important; color:#ff453a !important; }
+.ar-frame{ flex:1 1 auto; width:100%; border:none; background:#fff; }
 /* ---- Mirror + memo + weather panel ----
    Left column stacks the quick memo (top) and a compact weather
    readout (bottom); the right side is the circular front-camera
@@ -2661,6 +2775,43 @@ body.widgets-editing .widget-card .wg-remove{ display:flex; }
 
   <div class="sheet-overlay" id="overlay"></div>
   <div class="drop-hint" id="drop-hint">음악 · 이미지를 놓으세요</div>
+
+  <!-- ===== Home screen (slides up from the lock screen) ===== -->
+  <div class="home-screen" id="home-screen" aria-hidden="true">
+    <div class="home-spot">
+      <svg class="home-spot-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input type="text" id="home-search" placeholder="검색" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="home-grid" id="home-grid"></div>
+    <div class="home-hint">아래로 쓸어내려 잠금화면으로</div>
+    <input type="file" id="app-file-input" accept=".html,.htm,text/html" style="display:none;">
+  </div>
+
+  <!-- ===== Add-app modal ===== -->
+  <div class="app-add" id="app-add" aria-hidden="true">
+    <div class="aa-card">
+      <div class="aa-title">앱 추가</div>
+      <div class="aa-row"><span>이름</span><input type="text" id="aa-name" placeholder="내 앱" maxlength="24"></div>
+      <div class="aa-row"><span>아이콘(이모지)</span><input type="text" id="aa-emoji" placeholder="🚀" maxlength="4"></div>
+      <div class="aa-row"><span>아이콘 이미지</span><button class="aa-mini" id="aa-pick-img">선택</button></div>
+      <div class="aa-preview" id="aa-preview"></div>
+      <div class="aa-btns">
+        <button class="aa-cancel" id="aa-cancel">취소</button>
+        <button class="aa-save" id="aa-save">추가</button>
+      </div>
+      <input type="file" id="aa-img-input" accept="image/*" style="display:none;">
+    </div>
+  </div>
+
+  <!-- ===== Custom app runner ===== -->
+  <div class="app-runner" id="app-runner" aria-hidden="true">
+    <div class="ar-bar">
+      <button class="ar-back" id="ar-back" aria-label="홈으로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <span class="ar-title" id="ar-title">앱</span>
+      <button class="ar-del" id="ar-del" aria-label="앱 삭제"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
+    </div>
+    <iframe class="ar-frame" id="ar-frame" sandbox="allow-scripts allow-forms allow-pointer-lock allow-modals" referrerpolicy="no-referrer"></iframe>
+  </div>
 
   <!-- Walkthrough -->
   <div class="onboard" id="onboard" role="dialog" aria-label="앱 안내">
@@ -7968,6 +8119,198 @@ if(restoredActive){
     document.addEventListener(ev, resetIdle, {passive:true}));
 
   resetIdle();
+})();
+
+/* ======================================================================
+   Home screen — swipe up from the lock screen to reveal an app grid.
+   Built-in apps reuse the existing features; custom apps are HTML files
+   the user imports, named + iconed, and run in a sandboxed iframe.
+   ====================================================================== */
+(function homeScreen(){
+  const home   = document.getElementById('home-screen');
+  const grid   = document.getElementById('home-grid');
+  const search = document.getElementById('home-search');
+  const fileIn = document.getElementById('app-file-input');
+  const addEl  = document.getElementById('app-add');
+  const aaName = document.getElementById('aa-name');
+  const aaEmoji= document.getElementById('aa-emoji');
+  const aaImg  = document.getElementById('aa-img-input');
+  const aaPickImg = document.getElementById('aa-pick-img');
+  const aaPrev = document.getElementById('aa-preview');
+  const aaSave = document.getElementById('aa-save');
+  const aaCancel = document.getElementById('aa-cancel');
+  const runner = document.getElementById('app-runner');
+  const frame  = document.getElementById('ar-frame');
+  const arTitle= document.getElementById('ar-title');
+  const arBack = document.getElementById('ar-back');
+  const arDel  = document.getElementById('ar-del');
+  if(!home || !grid) return;
+
+  const APPS_KEY = 'dynamicClock.apps';
+  const svg = s => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+s+'</svg>';
+  const BUILTIN = [
+    { key:'timer', name:'타이머', grad:'grad-timer', icon:svg('<path d="M10 2h4"/><path d="M12 14v-4"/><circle cx="12" cy="14" r="8"/>'), open:()=>openIslandPanel('timer') },
+    { key:'alarm', name:'알람', grad:'grad-alarm', icon:svg('<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>'), open:()=>openIslandPanel('alarm') },
+    { key:'stopwatch', name:'스톱워치', grad:'grad-sw', icon:svg('<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2"/><path d="M9 2h6"/><path d="M18 4l1.5 1.5"/>'), open:()=>openIslandPanel('stopwatch') },
+    { key:'music', name:'음악', grad:'grad-music', icon:svg('<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>'), open:()=>openIslandPanel('music') },
+    { key:'voice', name:'음성', grad:'grad-voice', icon:svg('<rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v4"/>'), open:()=>{ const b=document.getElementById('btn-voice'); if(b) b.click(); } },
+    { key:'weather', name:'날씨', grad:'grad-weather', icon:svg('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/>'), open:()=>{ closeHome(); openWeatherScreen(); } },
+    { key:'settings', name:'설정', grad:'grad-set', icon:svg('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'), open:()=>openPanel('settings') },
+  ];
+  const ADD_SVG = svg('<path d="M12 5v14M5 12h14"/>');
+
+  function loadApps(){ try{ return JSON.parse(localStorage.getItem(APPS_KEY) || '[]'); }catch(e){ return []; } }
+  function saveApps(a){
+    try{ localStorage.setItem(APPS_KEY, JSON.stringify(a)); return true; }
+    catch(e){ alert('저장 공간이 부족합니다. HTML 파일이 너무 큽니다.'); return false; }
+  }
+  let apps = loadApps();
+
+  function iconHTML(app){
+    if(app.icon && app.icon.t === 'i') return `<img src="${app.icon.v}" alt="">`;
+    if(app.icon && app.icon.t === 'e') return esc(app.icon.v);
+    return esc((app.name||'앱').slice(0,1));
+  }
+
+  function renderGrid(){
+    let html = '';
+    BUILTIN.forEach(a=>{
+      html += `<div class="app-tile" data-builtin="${a.key}"><div class="app-ico ${a.grad}">${a.icon}</div><div class="app-label">${esc(a.name)}</div></div>`;
+    });
+    apps.forEach(a=>{
+      html += `<div class="app-tile" data-custom="${a.id}"><div class="app-ico">${iconHTML(a)}</div><div class="app-label">${esc(a.name)}</div></div>`;
+    });
+    html += `<div class="app-tile" data-add="1"><div class="app-ico grad-add">${ADD_SVG}</div><div class="app-label">앱 추가</div></div>`;
+    grid.innerHTML = html;
+    applyFilter();
+  }
+
+  function applyFilter(){
+    const q = (search.value || '').trim().toLowerCase();
+    grid.querySelectorAll('.app-tile').forEach(t=>{
+      if(t.dataset.add){ t.classList.toggle('hide', !!q); return; }
+      const label = t.querySelector('.app-label').textContent.toLowerCase();
+      t.classList.toggle('hide', q && label.indexOf(q) < 0);
+    });
+  }
+  search.addEventListener('input', applyFilter);
+
+  function openHome(){ if(aodActiveGuard()) return; document.body.classList.add('home-open'); home.setAttribute('aria-hidden','false'); }
+  function closeHome(){ document.body.classList.remove('home-open'); home.setAttribute('aria-hidden','true'); search.value=''; applyFilter(); }
+  function aodActiveGuard(){ return document.body.classList.contains('aod'); }
+
+  /* ---- grid taps ---- */
+  grid.addEventListener('click', (e)=>{
+    const tile = e.target.closest('.app-tile');
+    if(!tile) return;
+    if(tile.dataset.add){ fileIn.click(); return; }
+    if(tile.dataset.builtin){
+      const a = BUILTIN.find(x=>x.key===tile.dataset.builtin);
+      if(a) a.open();
+      return;
+    }
+    if(tile.dataset.custom){
+      const a = apps.find(x=>x.id===tile.dataset.custom);
+      if(a) runApp(a);
+    }
+  });
+
+  /* ---- import an HTML file as an app ---- */
+  let pending = null;   // { html, iconData }
+  fileIn.addEventListener('change', ()=>{
+    const f = fileIn.files && fileIn.files[0];
+    fileIn.value = '';
+    if(!f) return;
+    const r = new FileReader();
+    r.onload = ()=>{
+      pending = { html: String(r.result || ''), iconData: null };
+      aaName.value = (f.name || '앱').replace(/\.html?$/i,'').slice(0,24);
+      aaEmoji.value = '';
+      updatePreview();
+      addEl.classList.add('show'); addEl.setAttribute('aria-hidden','false');
+    };
+    r.readAsText(f);
+  });
+  function updatePreview(){
+    if(pending && pending.iconData){ aaPrev.innerHTML = `<img src="${pending.iconData}" alt="">`; return; }
+    const em = (aaEmoji.value || '').trim();
+    aaPrev.innerHTML = em ? esc(em) : esc((aaName.value || '앱').slice(0,1));
+  }
+  aaName.addEventListener('input', updatePreview);
+  aaEmoji.addEventListener('input', updatePreview);
+  aaPickImg.addEventListener('click', ()=> aaImg.click());
+  aaImg.addEventListener('change', ()=>{
+    const f = aaImg.files && aaImg.files[0]; aaImg.value='';
+    if(!f) return;
+    const r = new FileReader();
+    r.onload = ()=>{ pending.iconData = String(r.result||''); updatePreview(); };
+    r.readAsDataURL(f);
+  });
+  aaCancel.addEventListener('click', ()=>{ pending=null; addEl.classList.remove('show'); addEl.setAttribute('aria-hidden','true'); });
+  aaSave.addEventListener('click', ()=>{
+    if(!pending) return;
+    const name = (aaName.value || '앱').trim().slice(0,24) || '앱';
+    let icon = null;
+    if(pending.iconData) icon = { t:'i', v:pending.iconData };
+    else if((aaEmoji.value||'').trim()) icon = { t:'e', v:(aaEmoji.value).trim().slice(0,4) };
+    const app = { id:'a'+Date.now().toString(36)+Math.floor(performance.now()).toString(36), name, icon, html: pending.html };
+    const next = apps.concat([app]);
+    if(!saveApps(next)) return;
+    apps = next;
+    pending = null;
+    addEl.classList.remove('show'); addEl.setAttribute('aria-hidden','true');
+    renderGrid();
+  });
+
+  /* ---- run / delete a custom app ---- */
+  let currentApp = null;
+  function runApp(a){
+    currentApp = a;
+    arTitle.textContent = a.name;
+    frame.srcdoc = a.html;
+    runner.classList.add('show'); runner.setAttribute('aria-hidden','false');
+  }
+  arBack.addEventListener('click', ()=>{
+    runner.classList.remove('show'); runner.setAttribute('aria-hidden','true');
+    frame.srcdoc = ''; currentApp = null;
+  });
+  arDel.addEventListener('click', ()=>{
+    if(!currentApp) return;
+    if(!confirm(`"${currentApp.name}" 앱을 삭제할까요?`)) return;
+    apps = apps.filter(x=>x.id !== currentApp.id);
+    saveApps(apps);
+    runner.classList.remove('show'); runner.setAttribute('aria-hidden','true');
+    frame.srcdoc=''; currentApp=null;
+    renderGrid();
+  });
+
+  /* ---- swipe: up on lock -> home, down on home -> lock ---- */
+  let sx=0, sy=0, tracking=false;
+  document.addEventListener('pointerdown', (e)=>{
+    if(document.body.classList.contains('aod')) return;
+    if(addEl.classList.contains('show') || runner.classList.contains('show')) return;
+    if(state.activePanel || islandPanel) return;
+    if(e.target.closest('.island, .sheet, .voice-orb, #home-search, .app-runner, .app-add')) return;
+    sx=e.clientX; sy=e.clientY; tracking=true;
+  });
+  document.addEventListener('pointerup', (e)=>{
+    if(!tracking) return; tracking=false;
+    const dy = e.clientY - sy, dx = e.clientX - sx;
+    if(Math.abs(dx) > Math.abs(dy)) return;
+    const homeOpen = document.body.classList.contains('home-open');
+    if(!homeOpen && dy < -55){ openHome(); }
+    else if(homeOpen && dy > 55 && home.scrollTop <= 2){ closeHome(); }
+  });
+
+  document.addEventListener('keydown', (e)=>{
+    if(e.key === 'Escape'){
+      if(runner.classList.contains('show')){ arBack.click(); }
+      else if(addEl.classList.contains('show')){ aaCancel.click(); }
+      else if(document.body.classList.contains('home-open')){ closeHome(); }
+    }
+  });
+
+  renderGrid();
 })();
 
 })();
