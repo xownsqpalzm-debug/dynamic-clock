@@ -4962,8 +4962,14 @@ function renderTimerStepper(){
 function adjustTimer(a){
   if(a==='min+') state.timerMin = Math.min(99, state.timerMin+1);
   if(a==='min-') state.timerMin = Math.max(0, state.timerMin-1);
-  if(a==='sec+') state.timerSec = state.timerSec+5>=60 ? 0 : state.timerSec+5;
-  if(a==='sec-') state.timerSec = state.timerSec-5<0 ? 55 : state.timerSec-5;
+  if(a==='sec+'){
+    if(state.timerSec+5>=60){ state.timerSec=0; state.timerMin=Math.min(99, state.timerMin+1); }
+    else state.timerSec+=5;
+  }
+  if(a==='sec-'){
+    if(state.timerSec-5<0){ if(state.timerMin>0){ state.timerMin--; state.timerSec=55; } else state.timerSec=0; }
+    else state.timerSec-=5;
+  }
   renderTimerStepper();
 }
 
