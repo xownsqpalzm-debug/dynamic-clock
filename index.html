@@ -475,8 +475,7 @@ body.aod .clock-stack{ transition:transform 2s ease-in-out; }
   position:absolute; inset:0; z-index:120;
   transform:translateY(100%);
   transition:transform .5s var(--pill-ease);
-  background:rgba(8,8,10,0.55);
-  backdrop-filter:blur(34px) saturate(150%); -webkit-backdrop-filter:blur(34px) saturate(150%);
+  background:linear-gradient(180deg,#14161c 0%,#0a0b0e 55%,#050507 100%);
   display:flex; flex-direction:column;
   padding:calc(64px + env(safe-area-inset-top,0px)) 22px calc(30px + env(safe-area-inset-bottom,0px));
   overflow-y:auto; pointer-events:none;
@@ -580,6 +579,25 @@ body.home-open .home-screen{ transform:translateY(0); pointer-events:auto; }
 .ar-title{ flex:1 1 auto; color:#fff; font-size:15px; font-weight:600; text-align:center; font-family:-apple-system,sans-serif; }
 .ar-del{ background:rgba(255,69,58,0.16) !important; color:#ff453a !important; }
 .ar-frame{ flex:1 1 auto; width:100%; border:none; background:#fff; }
+
+/* ===== Built-in apps open full-screen (not in the pill) ===== */
+body.app-fs .island.ultra,
+body.app-fs .island.full{
+  position:fixed; inset:0; width:100vw; height:100vh; max-width:none;
+  border-radius:0; padding:calc(72px + env(safe-area-inset-top,0px)) 22px calc(28px + env(safe-area-inset-bottom,0px));
+  background:linear-gradient(180deg,#14161c 0%,#0a0b0e 60%,#050507 100%);
+  align-items:stretch; justify-content:flex-start; overflow-y:auto;
+  box-shadow:none;
+}
+body.app-fs .island.ultra .island-content,
+body.app-fs .island.full .island-content{ width:100%; max-width:520px; margin:0 auto; }
+body.app-fs #sheet-settings{
+  top:0; left:0; right:auto; transform:none; width:100vw; height:100vh; max-height:100vh;
+  border-radius:0; padding-top:calc(72px + env(safe-area-inset-top,0px));
+}
+body.app-fs #sheet-settings.open{ transform:none; }
+/* while a full-screen app is up, dim scrim isn't needed */
+body.app-fs #overlay{ opacity:0 !important; }
 /* ---- Mirror + memo + weather panel ----
    Left column stacks the quick memo (top) and a compact weather
    readout (bottom); the right side is the circular front-camera
@@ -6548,20 +6566,18 @@ function collapseIntro(){
   islandEl.className = 'island idle';
   islandEl.innerHTML = '';
 }
-function runIntroStage(i){
-  if(i >= INTRO_STAGES.length){
-    islandMode = null;
-    renderIsland();
-    return;
-  }
-  const stage = INTRO_STAGES[i];
-  showIntroStage(stage.text);
-  if(stage.onStart) stage.onStart();
+/* Intro is now just a quick welcome, no staged boot sequence. */
+function runIntroStage(){
+  document.body.classList.add('clock-ready');
+  document.body.classList.add('timer-ready');
+  try{ prefetchWeather(); }catch(e){}
+  try{ localStorage.setItem(INTRO_SEEN_KEY, '1'); }catch(e){}
+  showIntroStage('환영합니다');
   setTimeout(()=>{
     collapseIntro();
-    if(stage.onDone) stage.onDone();
-    setTimeout(()=>{ runIntroStage(i+1); }, INTRO_GAP);
-  }, stage.duration);
+    islandMode = null;
+    renderIsland();
+  }, 1600);
 }
 /* 시작은 스크립트 맨 끝에서 (복원 상태에 따라 인트로 생략) */
 
@@ -7552,12 +7568,8 @@ if(restoredActive){
   if(state.timer.ringing) playSound(state.timer.sound);
   islandMode = null;
   renderIsland();
-} else if(!introAlreadySeen()){
-  /* First run: explain the app, then play the loading sequence. Doing
-     both at once would hide the pill animation behind the overlay. */
-  openOnboard(()=>runIntroStage(0));
 } else {
-  runIntroStage(0);
+  runIntroStage();   // quick "환영합니다" welcome, then straight to the clock
 }
 
 /* ======================================================================
@@ -7980,7 +7992,9 @@ if(restoredActive){
     return !!(state.activePanel || islandPanel
       || document.querySelector('.sheet.open, .music-full[aria-hidden="false"], .ring-screen:not([aria-hidden="true"])')
       || document.body.classList.contains('weather-open')
-      || document.body.classList.contains('ambient-open'));
+      || document.body.classList.contains('ambient-open')
+      || document.body.classList.contains('home-open')     // no AOD once unlocked to home
+      || document.body.classList.contains('app-fs'));
   }
 
   /* ---- bottom music bar ---- */
@@ -8149,13 +8163,12 @@ if(restoredActive){
   const APPS_KEY = 'dynamicClock.apps';
   const svg = s => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+s+'</svg>';
   const BUILTIN = [
-    { key:'timer', name:'타이머', grad:'grad-timer', icon:svg('<path d="M10 2h4"/><path d="M12 14v-4"/><circle cx="12" cy="14" r="8"/>'), open:()=>openIslandPanel('timer') },
-    { key:'alarm', name:'알람', grad:'grad-alarm', icon:svg('<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>'), open:()=>openIslandPanel('alarm') },
-    { key:'stopwatch', name:'스톱워치', grad:'grad-sw', icon:svg('<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2"/><path d="M9 2h6"/><path d="M18 4l1.5 1.5"/>'), open:()=>openIslandPanel('stopwatch') },
-    { key:'music', name:'음악', grad:'grad-music', icon:svg('<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>'), open:()=>openIslandPanel('music') },
-    { key:'voice', name:'음성', grad:'grad-voice', icon:svg('<rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v4"/>'), open:()=>{ const b=document.getElementById('btn-voice'); if(b) b.click(); } },
-    { key:'weather', name:'날씨', grad:'grad-weather', icon:svg('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/>'), open:()=>{ closeHome(); openWeatherScreen(); } },
-    { key:'settings', name:'설정', grad:'grad-set', icon:svg('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'), open:()=>openPanel('settings') },
+    { key:'timer', name:'타이머', grad:'grad-timer', fs:true, icon:svg('<path d="M10 2h4"/><path d="M12 14v-4"/><circle cx="12" cy="14" r="8"/>'), open:()=>openIslandPanel('timer') },
+    { key:'alarm', name:'알람', grad:'grad-alarm', fs:true, icon:svg('<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>'), open:()=>openIslandPanel('alarm') },
+    { key:'stopwatch', name:'스톱워치', grad:'grad-sw', fs:true, icon:svg('<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2"/><path d="M9 2h6"/><path d="M18 4l1.5 1.5"/>'), open:()=>openIslandPanel('stopwatch') },
+    { key:'music', name:'음악', grad:'grad-music', fs:true, icon:svg('<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>'), open:()=>openIslandPanel('music') },
+    { key:'weather', name:'날씨', grad:'grad-weather', fs:false, icon:svg('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/>'), open:()=>{ closeHome(); openWeatherScreen(); } },
+    { key:'settings', name:'설정', grad:'grad-set', fs:true, icon:svg('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'), open:()=>openPanel('settings') },
   ];
   const ADD_SVG = svg('<path d="M12 5v14M5 12h14"/>');
 
@@ -8206,7 +8219,9 @@ if(restoredActive){
     if(tile.dataset.add){ fileIn.click(); return; }
     if(tile.dataset.builtin){
       const a = BUILTIN.find(x=>x.key===tile.dataset.builtin);
-      if(a) a.open();
+      /* app-fs is added AFTER open(): openIslandPanel/openPanel call the
+         (wrapped) close fns internally, which would otherwise clear it. */
+      if(a){ a.open(); if(a.fs) document.body.classList.add('app-fs'); }
       return;
     }
     if(tile.dataset.custom){
@@ -8217,10 +8232,9 @@ if(restoredActive){
 
   /* ---- import an HTML file as an app ---- */
   let pending = null;   // { html, iconData }
-  fileIn.addEventListener('change', ()=>{
-    const f = fileIn.files && fileIn.files[0];
-    fileIn.value = '';
+  function beginAddFromFile(f){
     if(!f) return;
+    if(!/\.html?$/i.test(f.name) && f.type !== 'text/html'){ alert('HTML 파일을 넣어 주세요.'); return; }
     const r = new FileReader();
     r.onload = ()=>{
       pending = { html: String(r.result || ''), iconData: null };
@@ -8230,6 +8244,11 @@ if(restoredActive){
       addEl.classList.add('show'); addEl.setAttribute('aria-hidden','false');
     };
     r.readAsText(f);
+  }
+  fileIn.addEventListener('change', ()=>{
+    const f = fileIn.files && fileIn.files[0];
+    fileIn.value = '';
+    beginAddFromFile(f);
   });
   function updatePreview(){
     if(pending && pending.iconData){ aaPrev.innerHTML = `<img src="${pending.iconData}" alt="">`; return; }
@@ -8309,6 +8328,43 @@ if(restoredActive){
       else if(document.body.classList.contains('home-open')){ closeHome(); }
     }
   });
+
+  /* Leaving a full-screen built-in app clears app-fs. Wrap the existing
+     close functions so every close path (button, overlay, esc) works. */
+  const _closeIsland = closeIslandPanel;
+  closeIslandPanel = function(){ _closeIsland(); document.body.classList.remove('app-fs'); };
+  const _closePanel = closePanel;
+  closePanel = function(){ _closePanel(); document.body.classList.remove('app-fs'); };
+
+  /* ---- drag & drop onto specific home tiles ---- */
+  grid.addEventListener('dragover', (e)=>{ if(e.target.closest('.app-tile')) e.preventDefault(); });
+  grid.addEventListener('drop', (e)=>{
+    const tile = e.target.closest('.app-tile');
+    if(!tile || !e.dataTransfer) return;
+    e.preventDefault(); e.stopPropagation();       // don't let the global handler also fire
+    const files = Array.from(e.dataTransfer.files || []);
+    if(!files.length) return;
+    if(tile.dataset.add){
+      const html = files.find(f=>/\.html?$/i.test(f.name) || f.type==='text/html');
+      if(html) beginAddFromFile(html); else alert('HTML 파일을 넣어 주세요.');
+    } else if(tile.dataset.builtin === 'music'){
+      const media = files.filter(f=>/^audio\/|^video\//.test(f.type) || /\.(mp3|m4a|aac|flac|wav|ogg|opus|mp4|m4v|mov|webm|mkv)$/i.test(f.name));
+      if(media.length) addFiles(media);
+    } else if(tile.dataset.builtin === 'settings'){
+      const img = files.find(f=>/^image\//.test(f.type));
+      if(img) applyBgFile(img);
+    }
+  });
+
+  /* ---- swipe DOWN on the Dynamic Island (anywhere) opens voice ---- */
+  let iy=0, itrack=false;
+  islandEl.addEventListener('pointerdown', (e)=>{ iy=e.clientY; itrack=true; }, true);
+  islandEl.addEventListener('pointerup', (e)=>{
+    if(!itrack) return; itrack=false;
+    if(e.clientY - iy > 34){
+      const b=document.getElementById('btn-voice'); if(b) b.click();
+    }
+  }, true);
 
   renderGrid();
 })();
