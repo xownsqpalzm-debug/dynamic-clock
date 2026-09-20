@@ -403,10 +403,8 @@ body.voice-active .island-glow{
 /* ================= AOD (Always-On Display) ================= */
 @property --aodR{ syntax:'<length>'; inherits:false; initial-value:0px; }
 .aod-veil{
-  position:absolute; inset:0; z-index:650;
-  background:rgba(0,0,0,0.82);              /* dims to ~15-20%, not pure black */
-  backdrop-filter:blur(3px) saturate(80%);
-  -webkit-backdrop-filter:blur(3px) saturate(80%);
+  position:absolute; inset:0;
+  background:rgba(0,0,0,0.86);              /* dims the wallpaper; clock stays on top */
   opacity:0; pointer-events:none;
   --aodR:0px; --aodX:50%; --aodY:0%;
   -webkit-mask:radial-gradient(circle var(--aodR) at var(--aodX) var(--aodY), transparent 98%, #000 100%);
@@ -415,19 +413,6 @@ body.voice-active .island-glow{
 }
 body.aod .aod-veil{ opacity:1; pointer-events:auto; }
 body.aod.aod-waking .aod-veil{ --aodR:160vmax; }   /* reveal grows from touch point */
-/* Pretty curved sheet that drops from the top on the way in */
-.aod-veil::before{
-  content:""; position:absolute; left:-12%; right:-12%; top:0; height:135%;
-  background:linear-gradient(to bottom, rgba(0,0,0,0.95), rgba(0,0,0,0.45) 68%, rgba(0,0,0,0));
-  border-bottom-left-radius:58% 80px; border-bottom-right-radius:58% 80px;
-  transform:translateY(-100%); opacity:0;
-}
-body.aod:not(.aod-waking) .aod-veil::before{ animation:aodDrop 1s cubic-bezier(.4,0,.2,1) forwards; }
-@keyframes aodDrop{
-  0%{ transform:translateY(-100%); opacity:.95; }
-  70%{ opacity:.9; }
-  100%{ transform:translateY(0); opacity:0; }
-}
 body.aod .icons-row{ opacity:0 !important; pointer-events:none; }
 /* Burn-in pixel shift glides slowly so it's imperceptible */
 body.aod .clock-stack{ transition:transform 2s ease-in-out; }
@@ -441,7 +426,7 @@ body.aod .clock-stack{ transition:transform 2s ease-in-out; }
 .island.aod-msg .aod-i-text{ color:#fff; font-size:14px; font-family:-apple-system,sans-serif; white-space:nowrap; }
 .island.aod-lock{
   width:132px; height:38px; border-radius:20px;
-  background:#000; display:flex; align-items:center; justify-content:flex-start; padding:0 15px; gap:7px;
+  background:#000; display:flex; align-items:center; justify-content:flex-end; padding:0 18px; gap:7px;
 }
 .island.aod-lock .aod-i-lock{ display:flex; color:rgba(255,255,255,0.82); }
 .island.aod-lock .aod-i-lock svg{ width:15px; height:15px; }
@@ -477,6 +462,10 @@ body.aod .clock-stack{ transition:transform 2s ease-in-out; }
 }
 .aod-mus-ctrl button svg{ width:16px; height:16px; }
 .aod-mus-ctrl #aod-mus-play{ background:#fff; color:#111; }
+/* In AOD the bar is minimal: cover + title only */
+.aod-music .aod-mus-artist{ display:none; }
+.aod-music .aod-mus-ctrl{ display:none; }
+.aod-music{ height:60px; }
 /* ---- Mirror + memo + weather panel ----
    Left column stacks the quick memo (top) and a compact weather
    readout (bottom); the right side is the circular front-camera
@@ -2528,8 +2517,6 @@ body.widgets-editing .widget-card .wg-remove{ display:flex; }
 </svg>
 
 <div class="app">
-  <!-- AOD dim veil (curved drop-in on enter, radial reveal from touch on wake) -->
-  <div class="aod-veil" id="aod-veil" aria-hidden="true"></div>
   <!-- AOD bottom music bar (shown when music plays during AOD) -->
   <div class="aod-music" id="aod-music" aria-hidden="true">
     <div class="aod-mus-art" id="aod-mus-art"></div>
@@ -2545,6 +2532,9 @@ body.widgets-editing .widget-card .wg-remove{ display:flex; }
   </div>
   <div class="clock-layer" id="clock-layer">
   <div class="bg-image-layer" id="bg-image-layer"></div>
+  <!-- AOD dim veil — sits over the wallpaper but UNDER the clock, so the
+       clock stays visible. Radial reveal from the touch point on wake. -->
+  <div class="aod-veil" id="aod-veil" aria-hidden="true"></div>
 
   <div class="icons-row">
     <button class="icon-btn fn" id="btn-settings" title="설정">
@@ -2706,6 +2696,10 @@ body.widgets-editing .widget-card .wg-remove{ display:flex; }
     <div class="settings-row">
       <span class="field-label">AOD 자동 진입 (초)</span>
       <input type="number" id="aod-idle-input" class="num-input" min="5" step="5" value="120" inputmode="numeric">
+    </div>
+    <div class="settings-row">
+      <span class="field-label">마우스 움직임으로 깨우기</span>
+      <div class="switch" id="toggle-aod-mousewake"><div class="switch-knob"></div></div>
     </div>
     <div class="field-label">숫자 전환 애니메이션</div>
     <div class="chip-row" id="anim-style-chips"></div>
@@ -4174,6 +4168,16 @@ if(aodIdleInput){
   };
   aodIdleInput.addEventListener('change', commit);
   aodIdleInput.addEventListener('blur', commit);
+}
+
+/* Wake-on-mouse-move toggle (default on). Stored in localStorage so the
+   AOD module reads the live value. */
+const AOD_MOUSEWAKE_KEY = 'dynamicClock.aodMouseWake';
+const aodMouseWakeEl = document.getElementById('toggle-aod-mousewake');
+if(aodMouseWakeEl){
+  makeToggle(aodMouseWakeEl,
+    ()=> localStorage.getItem(AOD_MOUSEWAKE_KEY) !== '0',
+    v=>{ try{ localStorage.setItem(AOD_MOUSEWAKE_KEY, v ? '1' : '0'); }catch(e){} });
 }
 
 const animStyleChips = document.getElementById('anim-style-chips');
@@ -7897,11 +7901,11 @@ if(restoredActive){
     document.body.classList.remove('aod-waking');
     document.body.classList.add('aod');
     veil.style.setProperty('--aodR','0px');
-    /* island: banner (1s) -> brief shrink -> lock badge */
+    /* island: "AOD 시작됨" banner (1.2s) -> smoothly shrinks to the lock
+       badge. No empty in-between frame (that read as a flicker). */
     lastPhase = ''; islandPhase = 'banner';
     aodIsland = renderAodIsland; renderIsland();
-    phaseTimers.push(setTimeout(()=>{ islandPhase = 'shrink'; renderIsland(); }, 1000));
-    phaseTimers.push(setTimeout(()=>{ islandPhase = 'lock';   renderIsland(); }, 1500));
+    phaseTimers.push(setTimeout(()=>{ islandPhase = 'lock'; renderIsland(); }, 1200));
     updateBar();
     scheduleShift();
   }
@@ -7951,8 +7955,13 @@ if(restoredActive){
   });
   ['pointerup','pointermove','pointercancel'].forEach(ev=>
     document.addEventListener(ev, ()=>{ clearTimeout(pressT); }));
-  // Mouse move / touch drag also wakes (from the pointer position)
-  document.addEventListener('pointermove', (e)=>{ if(active) wake(e.clientX, e.clientY); });
+  // Mouse move / touch drag also wakes (from the pointer position) —
+  // unless the user turned that off in Settings.
+  document.addEventListener('pointermove', (e)=>{
+    if(!active) return;
+    if(e.pointerType === 'mouse' && localStorage.getItem('dynamicClock.aodMouseWake') === '0') return;
+    wake(e.clientX, e.clientY);
+  });
 
   // Any activity resets the idle countdown (and wakes if sleeping handled above)
   ['pointermove','pointerdown','keydown','wheel','touchstart'].forEach(ev=>
