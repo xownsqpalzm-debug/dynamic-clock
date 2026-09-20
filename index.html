@@ -697,16 +697,49 @@ body.app-open .app-view{ transform:translateY(0); pointer-events:auto; }
 .ph-vbar button{ background:rgba(0,0,0,0.5); border:none; color:#fff; border-radius:50%; width:38px; height:38px; cursor:pointer; font-size:16px; }
 .ph-vbar .ph-del2{ color:#ff453a; }
 
-/* Long-press delete (jiggle) */
-@keyframes jiggle{ 0%,100%{ transform:rotate(-2deg); } 50%{ transform:rotate(2deg); } }
-.home-grid.editing .app-tile[data-custom]{ animation:jiggle .28s ease-in-out infinite; }
-.home-grid.editing .app-tile[data-custom] .app-ico{ position:relative; }
-.tile-x{
-  position:absolute; top:-6px; left:-6px; width:22px; height:22px; border-radius:50%;
-  background:#e5e5e7; color:#000; border:none; font-size:15px; font-weight:700; line-height:20px;
-  display:none; align-items:center; justify-content:center; cursor:pointer; z-index:2;
+.tile-x{ display:none; }
+
+/* iOS-style delete action sheet */
+.act-sheet{
+  position:absolute; inset:0; z-index:850;
+  display:flex; flex-direction:column; justify-content:flex-end;
+  padding:0 10px calc(12px + env(safe-area-inset-bottom,0px));
+  background:rgba(0,0,0,0.4);
+  opacity:0; pointer-events:none; transition:opacity .25s ease;
 }
-.home-grid.editing .app-tile[data-custom] .tile-x{ display:flex; }
+.act-sheet.show{ opacity:1; pointer-events:auto; }
+.act-sheet .as-card, .act-sheet .as-cancel{
+  transform:translateY(18px); transition:transform .3s var(--pill-ease);
+}
+.act-sheet.show .as-card, .act-sheet.show .as-cancel{ transform:translateY(0); }
+.as-card{
+  background:rgba(40,40,44,0.72); backdrop-filter:blur(26px) saturate(160%); -webkit-backdrop-filter:blur(26px) saturate(160%);
+  border-radius:16px; overflow:hidden; margin-bottom:8px; text-align:center;
+  font-family:-apple-system,sans-serif;
+}
+.as-name{ color:rgba(255,255,255,0.55); font-size:13px; padding:14px; border-bottom:1px solid rgba(255,255,255,0.12); }
+.as-del{ display:block; width:100%; background:none; border:none; color:#ff453a; font-size:19px; font-weight:600; padding:16px; cursor:pointer; }
+.as-cancel{
+  width:100%; background:rgba(50,50,54,0.85); backdrop-filter:blur(26px); border:none;
+  color:#0a84ff; font-size:19px; font-weight:700; padding:16px; border-radius:16px; cursor:pointer;
+  font-family:-apple-system,sans-serif;
+}
+
+/* Liquid-glass treatment for the full-screen music player */
+body.music-full-open .mf-controls{
+  background:rgba(255,255,255,0.08);
+  backdrop-filter:blur(26px) saturate(170%); -webkit-backdrop-filter:blur(26px) saturate(170%);
+  border:1px solid rgba(255,255,255,0.16);
+  border-radius:26px; padding:10px 6px;
+  box-shadow:0 12px 36px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+body.music-full-open .mf-scrub{
+  background:rgba(255,255,255,0.06);
+  backdrop-filter:blur(18px) saturate(150%); -webkit-backdrop-filter:blur(18px) saturate(150%);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:16px; padding:8px 14px;
+}
+body.music-full-open .mf-cover{ box-shadow:0 24px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.15); }
 /* ---- Mirror + memo + weather panel ----
    Left column stacks the quick memo (top) and a compact weather
    readout (bottom); the right side is the circular front-camera
@@ -2940,6 +2973,15 @@ body.widgets-editing .widget-card .wg-remove{ display:flex; }
     </div>
   </div>
 
+  <!-- ===== App delete action sheet (long-press) ===== -->
+  <div class="act-sheet" id="act-sheet" aria-hidden="true">
+    <div class="as-card">
+      <div class="as-name" id="as-name">앱</div>
+      <button class="as-del" id="as-del">앱 삭제</button>
+    </div>
+    <button class="as-cancel" id="as-cancel">취소</button>
+  </div>
+
   <!-- ===== Custom app runner ===== -->
   <div class="app-runner" id="app-runner" aria-hidden="true">
     <div class="ar-bar">
@@ -2988,6 +3030,15 @@ body.widgets-editing .widget-card .wg-remove{ display:flex; }
     <div class="settings-row">
       <span class="field-label">마우스 움직임으로 깨우기</span>
       <div class="switch" id="toggle-aod-mousewake"><div class="switch-knob"></div></div>
+    </div>
+    <div class="settings-row">
+      <span class="field-label">화면 자동 꺼짐 (분)</span>
+      <select id="auto-off-select" class="num-input">
+        <option value="0">끔</option>
+        <option value="1">1</option><option value="3">3</option><option value="4">4</option>
+        <option value="5">5</option><option value="6">6</option><option value="7">7</option>
+        <option value="8">8</option><option value="9">9</option><option value="10">10</option>
+      </select>
     </div>
     <div class="field-label">숫자 전환 애니메이션</div>
     <div class="chip-row" id="anim-style-chips"></div>
@@ -4466,6 +4517,15 @@ if(aodMouseWakeEl){
   makeToggle(aodMouseWakeEl,
     ()=> localStorage.getItem(AOD_MOUSEWAKE_KEY) !== '0',
     v=>{ try{ localStorage.setItem(AOD_MOUSEWAKE_KEY, v ? '1' : '0'); }catch(e){} });
+}
+
+/* Auto screen-off: minutes of inactivity on home/app before returning to
+   the clock + AOD. Stored in localStorage so the home module reads it. */
+const AUTO_OFF_KEY = 'dynamicClock.autoOffMin';
+const autoOffSel = document.getElementById('auto-off-select');
+if(autoOffSel){
+  autoOffSel.value = localStorage.getItem(AUTO_OFF_KEY) || '3';
+  autoOffSel.addEventListener('change', ()=>{ try{ localStorage.setItem(AUTO_OFF_KEY, autoOffSel.value); }catch(e){} });
 }
 
 const animStyleChips = document.getElementById('anim-style-chips');
@@ -8178,6 +8238,7 @@ if(restoredActive){
 
   function clearPhaseTimers(){ phaseTimers.forEach(clearTimeout); phaseTimers.length = 0; }
 
+  window.__aodEnter = enter;   // let the auto-off watcher trigger AOD
   function enter(){
     if(active || anyModalOpen()) return;
     active = true; enteredAt = Date.now();
@@ -8285,11 +8346,15 @@ if(restoredActive){
     { key:'timer', name:'타이머', grad:'grad-timer', icon:svg('<path d="M10 2h4"/><path d="M12 14v-4"/><circle cx="12" cy="14" r="8"/>'), open:()=>openApp('timer') },
     { key:'alarm', name:'알람', grad:'grad-alarm', icon:svg('<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>'), open:()=>openApp('alarm') },
     { key:'stopwatch', name:'스톱워치', grad:'grad-sw', icon:svg('<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2"/><path d="M9 2h6"/><path d="M18 4l1.5 1.5"/>'), open:()=>openApp('stopwatch') },
-    { key:'music', name:'음악', grad:'grad-music', icon:svg('<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>'), open:()=>openApp('music') },
+    { key:'music', name:'음악', grad:'grad-music', icon:svg('<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>'), open:()=>{
+        closeHome();
+        if(music.index < 0 && music.tracks.length) playTrack(0);
+        if(music.index >= 0) openMusicFull(); else openIslandPanel('music');
+      } },
     { key:'weather', name:'날씨', grad:'grad-weather', icon:svg('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/>'), open:()=>{ closeHome(); openWeatherScreen(); } },
     { key:'camera', name:'카메라', grad:'grad-cam', icon:svg('<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>'), open:()=>openApp('camera') },
     { key:'photos', name:'사진', grad:'grad-photo', icon:svg('<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="M21 15l-5-5L5 21"/>'), open:()=>openApp('photos') },
-    { key:'settings', name:'설정', grad:'grad-set', icon:svg('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'), open:()=>openApp('settings') },
+    { key:'settings', name:'설정', grad:'grad-set', icon:svg('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'), open:()=>openPanel('settings') },
   ];
   const ADD_SVG = svg('<path d="M12 5v14M5 12h14"/>');
 
@@ -8329,21 +8394,25 @@ if(restoredActive){
   }
   search.addEventListener('input', applyFilter);
 
-  function openHome(){ if(aodActiveGuard()) return; document.body.classList.add('home-open'); home.setAttribute('aria-hidden','false'); }
+  function openHome(){ if(aodActiveGuard()) return; document.body.classList.add('home-open'); home.setAttribute('aria-hidden','false'); resetAutoOff(); }
   function closeHome(){ document.body.classList.remove('home-open'); home.setAttribute('aria-hidden','true'); search.value=''; applyFilter(); grid.classList.remove('editing'); }
   function aodActiveGuard(){ return document.body.classList.contains('aod'); }
 
   /* ---- grid taps ---- */
-  function exitEditing(){ grid.classList.remove('editing'); }
+  /* delete action sheet */
+  const actSheet = document.getElementById('act-sheet');
+  const asName = document.getElementById('as-name');
+  const asDel = document.getElementById('as-del');
+  const asCancel = document.getElementById('as-cancel');
+  let delTarget = null, lpFired = false;
+  function showDeleteSheet(app){ delTarget=app; asName.textContent=app.name; actSheet.classList.add('show'); actSheet.setAttribute('aria-hidden','false'); }
+  function hideDeleteSheet(){ actSheet.classList.remove('show'); actSheet.setAttribute('aria-hidden','true'); delTarget=null; }
+  asDel.addEventListener('click', ()=>{ if(delTarget){ apps=apps.filter(t=>t.id!==delTarget.id); saveApps(apps); renderGrid(); } hideDeleteSheet(); });
+  asCancel.addEventListener('click', hideDeleteSheet);
+  actSheet.addEventListener('click', (e)=>{ if(e.target===actSheet) hideDeleteSheet(); });
+
   grid.addEventListener('click', (e)=>{
-    // delete badge
-    const x = e.target.closest('.tile-x');
-    if(x){
-      const a = apps.find(t=>t.id===x.dataset.x);
-      if(a && confirm(`"${a.name}" 앱을 삭제할까요?`)){ apps = apps.filter(t=>t.id!==a.id); saveApps(apps); renderGrid(); }
-      return;
-    }
-    if(grid.classList.contains('editing')){ exitEditing(); return; }  // tap outside badge exits edit
+    if(lpFired){ lpFired=false; return; }   // the long-press already handled it
     const tile = e.target.closest('.app-tile');
     if(!tile) return;
     if(tile.dataset.add){ fileIn.click(); return; }
@@ -8357,13 +8426,16 @@ if(restoredActive){
       if(a) runApp(a);
     }
   });
-  /* long-press a custom app to enter delete (jiggle) mode */
+  /* long-press a custom app -> delete sheet pops up immediately */
   let lpT=null;
   grid.addEventListener('pointerdown', (e)=>{
     const tile = e.target.closest('.app-tile[data-custom]');
     if(!tile) return;
     clearTimeout(lpT);
-    lpT = setTimeout(()=>{ grid.classList.add('editing'); }, 550);
+    lpT = setTimeout(()=>{
+      const a = apps.find(x=>x.id===tile.dataset.custom);
+      if(a){ lpFired=true; showDeleteSheet(a); }
+    }, 500);
   });
   ['pointerup','pointermove','pointercancel','scroll'].forEach(ev=>
     grid.addEventListener(ev, ()=>{ clearTimeout(lpT); }, {passive:true}));
@@ -8500,6 +8572,7 @@ if(restoredActive){
     appView.setAttribute('aria-hidden','false');
     document.body.classList.add('app-open');
     if(key==='camera') startCamera();
+    resetAutoOff();
   }
   function closeApp(){
     stopCamera();
@@ -8754,6 +8827,21 @@ if(restoredActive){
       const b=document.getElementById('btn-voice'); if(b) b.click();
     }
   }, true);
+
+  /* ---- auto screen-off: idle on home/app -> clock + AOD ---- */
+  let autoOffT = null;
+  function autoOffMs(){ const v = parseInt(localStorage.getItem('dynamicClock.autoOffMin') || '3', 10); return (v >= 1) ? v*60000 : 0; }
+  function resetAutoOff(){
+    clearTimeout(autoOffT);
+    if(!(document.body.classList.contains('home-open') || document.body.classList.contains('app-open'))) return;
+    const ms = autoOffMs(); if(!ms) return;
+    autoOffT = setTimeout(()=>{
+      closeApp(); closeHome();
+      if(window.__aodEnter) window.__aodEnter();
+    }, ms);
+  }
+  ['pointerdown','pointermove','keydown','wheel','touchstart'].forEach(ev=>
+    document.addEventListener(ev, resetAutoOff, {passive:true}));
 
   renderGrid();
 })();
