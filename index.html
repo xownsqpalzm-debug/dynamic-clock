@@ -475,15 +475,25 @@ body.aod .clock-stack{ transition:transform 2s ease-in-out; }
   position:absolute; inset:0; z-index:120;
   transform:translateY(100%);
   transition:transform .5s var(--pill-ease);
-  background:linear-gradient(180deg,#14161c 0%,#0a0b0e 55%,#050507 100%);
+  background:
+    radial-gradient(120% 80% at 18% 10%, #5b7cff 0%, rgba(91,124,255,0) 45%),
+    radial-gradient(120% 90% at 90% 20%, #ff6fae 0%, rgba(255,111,174,0) 42%),
+    radial-gradient(140% 100% at 50% 100%, #7b5bff 0%, rgba(123,91,255,0) 55%),
+    linear-gradient(180deg,#1a1030 0%,#0d0a1c 100%);
   display:flex; flex-direction:column;
-  padding:calc(64px + env(safe-area-inset-top,0px)) 22px calc(30px + env(safe-area-inset-bottom,0px));
+  padding:calc(70px + env(safe-area-inset-top,0px)) 26px calc(40px + env(safe-area-inset-bottom,0px));
   overflow-y:auto; pointer-events:none;
 }
 body.home-open .home-screen{ transform:translateY(0); pointer-events:auto; }
+/* iOS-style home indicator bar */
+.home-screen::after{
+  content:""; position:absolute; left:50%; bottom:9px; transform:translateX(-50%);
+  width:135px; height:5px; border-radius:3px; background:rgba(255,255,255,0.5);
+}
 .home-spot{
   display:flex; align-items:center; gap:9px;
-  background:rgba(255,255,255,0.12); border-radius:14px; padding:9px 14px; margin-bottom:26px;
+  background:rgba(255,255,255,0.16); border-radius:16px; padding:10px 15px; margin-bottom:30px;
+  backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
 }
 .home-spot-ico{ width:17px; height:17px; color:rgba(255,255,255,0.6); flex:0 0 auto; }
 #home-search{
@@ -492,7 +502,7 @@ body.home-open .home-screen{ transform:translateY(0); pointer-events:auto; }
 }
 #home-search::placeholder{ color:rgba(255,255,255,0.5); }
 .home-grid{
-  display:grid; grid-template-columns:repeat(4, 1fr); gap:22px 8px; align-content:start;
+  display:grid; grid-template-columns:repeat(4, 1fr); gap:26px 10px; align-content:start;
 }
 .app-tile{
   display:flex; flex-direction:column; align-items:center; gap:7px;
@@ -500,11 +510,11 @@ body.home-open .home-screen{ transform:translateY(0); pointer-events:auto; }
 }
 .app-tile:active{ transform:scale(0.92); }
 .app-ico{
-  width:60px; height:60px; border-radius:16px;
+  width:62px; height:62px; border-radius:15px;
   display:flex; align-items:center; justify-content:center;
   font-size:30px; color:#fff; overflow:hidden;
   background:linear-gradient(160deg,#3a3a3d,#1d1d1f);
-  box-shadow:0 6px 16px rgba(0,0,0,0.4);
+  box-shadow:0 8px 18px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15);
 }
 .app-ico svg{ width:30px; height:30px; }
 .app-ico img{ width:100%; height:100%; object-fit:cover; }
@@ -580,24 +590,123 @@ body.home-open .home-screen{ transform:translateY(0); pointer-events:auto; }
 .ar-del{ background:rgba(255,69,58,0.16) !important; color:#ff453a !important; }
 .ar-frame{ flex:1 1 auto; width:100%; border:none; background:#fff; }
 
-/* ===== Built-in apps open full-screen (not in the pill) ===== */
-body.app-fs .island.ultra,
-body.app-fs .island.full{
-  position:fixed; inset:0; width:100vw; height:100vh; max-width:none;
-  border-radius:0; padding:calc(72px + env(safe-area-inset-top,0px)) 22px calc(28px + env(safe-area-inset-bottom,0px));
-  background:linear-gradient(180deg,#14161c 0%,#0a0b0e 60%,#050507 100%);
-  align-items:stretch; justify-content:flex-start; overflow-y:auto;
-  box-shadow:none;
+/* ===== Full-screen app views (their own surface; island stays on top) ===== */
+.app-view{
+  position:absolute; inset:0; z-index:150;
+  background:linear-gradient(180deg,#14161c 0%,#0a0b0e 58%,#050507 100%);
+  display:flex; flex-direction:column;
+  transform:translateY(100%); transition:transform .42s var(--pill-ease);
+  pointer-events:none;
 }
-body.app-fs .island.ultra .island-content,
-body.app-fs .island.full .island-content{ width:100%; max-width:520px; margin:0 auto; }
-body.app-fs #sheet-settings{
-  top:0; left:0; right:auto; transform:none; width:100vw; height:100vh; max-height:100vh;
-  border-radius:0; padding-top:calc(72px + env(safe-area-inset-top,0px));
+body.app-open .app-view{ transform:translateY(0); pointer-events:auto; }
+.av-head{
+  display:flex; align-items:center; gap:10px; flex:0 0 auto;
+  padding:calc(58px + env(safe-area-inset-top,0px)) 18px 12px;
 }
-body.app-fs #sheet-settings.open{ transform:none; }
-/* while a full-screen app is up, dim scrim isn't needed */
-body.app-fs #overlay{ opacity:0 !important; }
+.av-back{
+  display:flex; align-items:center; gap:3px; background:none; border:none; cursor:pointer;
+  color:#0a84ff; font-size:17px; font-family:-apple-system,sans-serif; padding:0;
+}
+.av-back svg{ width:22px; height:22px; }
+.av-title{ font-size:17px; font-weight:600; color:#fff; font-family:-apple-system,sans-serif; }
+.av-body{ flex:1 1 auto; overflow-y:auto; padding:0 20px calc(28px + env(safe-area-inset-bottom,0px)); }
+.av-h1{ font-size:34px; font-weight:800; color:#fff; margin:2px 0 18px; font-family:-apple-system,sans-serif; letter-spacing:-0.02em; }
+
+/* shared bits */
+.big-time{ font-size:74px; font-weight:200; color:#fff; text-align:center; font-variant-numeric:tabular-nums; letter-spacing:-0.01em; margin:8px 0 22px; font-family:-apple-system,sans-serif; }
+.round-btns{ display:flex; justify-content:center; gap:44px; margin-bottom:26px; }
+.round-btn{ width:84px; height:84px; border-radius:50%; border:2px solid; background:none; cursor:pointer; font-size:16px; font-family:-apple-system,sans-serif; display:flex; align-items:center; justify-content:center; }
+.round-btn.go{ color:#30d158; border-color:#0e3b1c; background:#0e2a17; }
+.round-btn.stop{ color:#ff453a; border-color:#3b1512; background:#2a0f0d; }
+.round-btn.neutral{ color:#fff; border-color:#3a3a3d; background:#1c1c1f; }
+
+/* stepper (timer/alarm) */
+.picker{ display:flex; justify-content:center; align-items:center; gap:10px; margin:16px 0 26px; }
+.pk-col{ display:flex; flex-direction:column; align-items:center; gap:6px; }
+.pk-col button{ width:56px; height:40px; border-radius:12px; border:none; background:#1c1c1f; color:#fff; font-size:22px; cursor:pointer; }
+.pk-val{ font-size:52px; font-weight:300; color:#fff; font-variant-numeric:tabular-nums; min-width:78px; text-align:center; font-family:-apple-system,sans-serif; }
+.pk-sep{ font-size:44px; color:#666; }
+.pk-unit{ font-size:12px; color:var(--text-dim); }
+
+.pill-btn{ display:block; width:100%; padding:15px; border:none; border-radius:15px; font-size:17px; font-weight:600; cursor:pointer; font-family:-apple-system,sans-serif; }
+.pill-btn.primary{ background:#0a84ff; color:#fff; }
+.pill-btn.green{ background:#30d158; color:#062; }
+.pill-btn.red{ background:#ff453a; color:#fff; }
+.pill-btn.ghost{ background:#1c1c1f; color:#fff; }
+
+/* list rows */
+.av-list{ display:flex; flex-direction:column; gap:1px; background:rgba(255,255,255,0.06); border-radius:16px; overflow:hidden; }
+.av-row2{ display:flex; align-items:center; justify-content:space-between; padding:15px 16px; background:#141416; }
+.av-row2 .r-main{ color:#fff; font-size:30px; font-weight:300; font-family:-apple-system,sans-serif; font-variant-numeric:tabular-nums; }
+.av-row2 .r-sub{ color:var(--text-dim); font-size:13px; }
+.av-row2 .r-del{ background:none; border:none; color:#ff453a; font-size:14px; cursor:pointer; }
+
+/* Alarm add form */
+.av-note{ color:var(--text-dim); font-size:14px; text-align:center; padding:26px 0; }
+
+/* ===== Apple Music-style player ===== */
+.app-view.music-app{ background:#0a0a0c; }
+.am-bg{ position:absolute; inset:0; z-index:0; background-size:cover; background-position:center; filter:blur(60px) saturate(180%) brightness(0.6); transform:scale(1.3); opacity:0.9; transition:background-image .4s ease; }
+.am-bg::after{ content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(10,10,12,0.2), rgba(10,10,12,0.85)); }
+.app-view.music-app .av-head, .app-view.music-app .av-body{ position:relative; z-index:1; }
+.am-wrap{ display:flex; flex-direction:column; align-items:center; height:100%; }
+.am-art{ width:min(74vw,300px); aspect-ratio:1; border-radius:14px; background:#222 center/cover no-repeat; box-shadow:0 20px 50px rgba(0,0,0,0.6); margin:6px 0 26px; display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,0.3); font-size:60px; overflow:hidden; }
+.am-art video{ width:100%; height:100%; object-fit:cover; }
+.am-title{ font-size:22px; font-weight:700; color:#fff; text-align:center; width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-family:-apple-system,sans-serif; }
+.am-artist{ font-size:17px; color:#ff5a6a; text-align:center; margin-top:3px; margin-bottom:20px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.am-bar{ width:100%; height:6px; border-radius:3px; background:rgba(255,255,255,0.18); cursor:pointer; overflow:hidden; }
+.am-bar-fill{ height:100%; width:0%; background:rgba(255,255,255,0.85); border-radius:3px; }
+.am-times{ display:flex; justify-content:space-between; font-size:11px; color:rgba(255,255,255,0.55); margin-top:6px; font-variant-numeric:tabular-nums; }
+.am-ctrl{ display:flex; align-items:center; justify-content:center; gap:30px; margin:22px 0; }
+.am-ctrl button{ background:none; border:none; color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.am-ctrl svg{ width:32px; height:32px; }
+.am-ctrl .am-play svg{ width:56px; height:56px; }
+.am-ctrl .am-small svg{ width:22px; height:22px; color:rgba(255,255,255,0.7); }
+.am-ctrl .am-small.on svg{ color:#ff5a6a; }
+.am-up{ width:100%; margin-top:10px; }
+.am-up-h{ display:flex; align-items:center; justify-content:space-between; color:#fff; font-size:15px; font-weight:600; margin-bottom:8px; }
+.am-up-h button{ background:none; border:none; color:#0a84ff; font-size:14px; cursor:pointer; }
+.am-track{ display:flex; align-items:center; gap:12px; padding:10px 4px; border-bottom:1px solid rgba(255,255,255,0.07); cursor:pointer; }
+.am-track .t-art{ width:42px; height:42px; border-radius:7px; background:#333 center/cover no-repeat; flex:0 0 auto; }
+.am-track .t-meta{ flex:1 1 auto; min-width:0; }
+.am-track .t-title{ color:#fff; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.am-track.playing .t-title{ color:#ff5a6a; }
+.am-empty{ color:rgba(255,255,255,0.5); text-align:center; padding:30px 0; }
+
+/* full-bleed app body (camera/photos) */
+.av-body.bleed{ padding:0; }
+.app-ico.grad-cam{ background:linear-gradient(160deg,#3a3a3d,#111); }
+.app-ico.grad-photo{ background:linear-gradient(160deg,#ff2d55,#ffcc00 60%,#34c759); }
+
+/* Camera */
+.cam-view{ position:relative; width:100%; height:100%; background:#000; }
+.cam-video{ width:100%; height:100%; object-fit:cover; }
+.cam-shutter{ position:absolute; bottom:38px; left:50%; transform:translateX(-50%); width:72px; height:72px; border-radius:50%; background:#fff; border:4px solid rgba(255,255,255,0.45); cursor:pointer; }
+.cam-shutter:active{ transform:translateX(-50%) scale(0.92); }
+.cam-thumb{ position:absolute; bottom:48px; left:24px; width:52px; height:52px; border-radius:10px; background:#222 center/cover no-repeat; border:2px solid #fff; cursor:pointer; }
+.cam-err{ color:#fff; text-align:center; padding:60px 24px; font-size:15px; line-height:1.5; }
+
+/* Photos */
+.ph-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:3px; }
+.ph-cell{ aspect-ratio:1; background:#222 center/cover no-repeat; cursor:pointer; }
+.ph-empty{ color:rgba(255,255,255,0.5); text-align:center; padding:60px 20px; }
+.ph-viewer{ position:absolute; inset:0; z-index:6; background:#000; display:none; align-items:center; justify-content:center; }
+.ph-viewer.show{ display:flex; }
+.ph-viewer img{ max-width:100%; max-height:100%; object-fit:contain; }
+.ph-vbar{ position:absolute; top:0; left:0; right:0; display:flex; justify-content:space-between; padding:calc(16px + env(safe-area-inset-top,0px)) 18px 12px; }
+.ph-vbar button{ background:rgba(0,0,0,0.5); border:none; color:#fff; border-radius:50%; width:38px; height:38px; cursor:pointer; font-size:16px; }
+.ph-vbar .ph-del2{ color:#ff453a; }
+
+/* Long-press delete (jiggle) */
+@keyframes jiggle{ 0%,100%{ transform:rotate(-2deg); } 50%{ transform:rotate(2deg); } }
+.home-grid.editing .app-tile[data-custom]{ animation:jiggle .28s ease-in-out infinite; }
+.home-grid.editing .app-tile[data-custom] .app-ico{ position:relative; }
+.tile-x{
+  position:absolute; top:-6px; left:-6px; width:22px; height:22px; border-radius:50%;
+  background:#e5e5e7; color:#000; border:none; font-size:15px; font-weight:700; line-height:20px;
+  display:none; align-items:center; justify-content:center; cursor:pointer; z-index:2;
+}
+.home-grid.editing .app-tile[data-custom] .tile-x{ display:flex; }
 /* ---- Mirror + memo + weather panel ----
    Left column stacks the quick memo (top) and a compact weather
    readout (bottom); the right side is the circular front-camera
@@ -2803,6 +2912,16 @@ body.widgets-editing .widget-card .wg-remove{ display:flex; }
     <div class="home-grid" id="home-grid"></div>
     <div class="home-hint">아래로 쓸어내려 잠금화면으로</div>
     <input type="file" id="app-file-input" accept=".html,.htm,text/html" style="display:none;">
+  </div>
+
+  <!-- ===== Full-screen app view (bespoke UI per app) ===== -->
+  <div class="app-view" id="app-view" aria-hidden="true">
+    <div class="av-head">
+      <button class="av-back" id="av-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg><span>홈</span></button>
+      <span class="av-title" id="av-title"></span>
+    </div>
+    <div class="av-body" id="av-body"></div>
+    <input type="file" id="av-music-input" accept="audio/*,video/*,.mp3,.m4a,.aac,.flac,.wav,.ogg,.opus,.mp4,.m4v,.mov,.webm,.mkv" multiple style="display:none;">
   </div>
 
   <!-- ===== Add-app modal ===== -->
@@ -7994,7 +8113,7 @@ if(restoredActive){
       || document.body.classList.contains('weather-open')
       || document.body.classList.contains('ambient-open')
       || document.body.classList.contains('home-open')     // no AOD once unlocked to home
-      || document.body.classList.contains('app-fs'));
+      || document.body.classList.contains('app-open'));
   }
 
   /* ---- bottom music bar ---- */
@@ -8163,12 +8282,14 @@ if(restoredActive){
   const APPS_KEY = 'dynamicClock.apps';
   const svg = s => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+s+'</svg>';
   const BUILTIN = [
-    { key:'timer', name:'타이머', grad:'grad-timer', fs:true, icon:svg('<path d="M10 2h4"/><path d="M12 14v-4"/><circle cx="12" cy="14" r="8"/>'), open:()=>openIslandPanel('timer') },
-    { key:'alarm', name:'알람', grad:'grad-alarm', fs:true, icon:svg('<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>'), open:()=>openIslandPanel('alarm') },
-    { key:'stopwatch', name:'스톱워치', grad:'grad-sw', fs:true, icon:svg('<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2"/><path d="M9 2h6"/><path d="M18 4l1.5 1.5"/>'), open:()=>openIslandPanel('stopwatch') },
-    { key:'music', name:'음악', grad:'grad-music', fs:true, icon:svg('<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>'), open:()=>openIslandPanel('music') },
-    { key:'weather', name:'날씨', grad:'grad-weather', fs:false, icon:svg('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/>'), open:()=>{ closeHome(); openWeatherScreen(); } },
-    { key:'settings', name:'설정', grad:'grad-set', fs:true, icon:svg('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'), open:()=>openPanel('settings') },
+    { key:'timer', name:'타이머', grad:'grad-timer', icon:svg('<path d="M10 2h4"/><path d="M12 14v-4"/><circle cx="12" cy="14" r="8"/>'), open:()=>openApp('timer') },
+    { key:'alarm', name:'알람', grad:'grad-alarm', icon:svg('<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>'), open:()=>openApp('alarm') },
+    { key:'stopwatch', name:'스톱워치', grad:'grad-sw', icon:svg('<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2"/><path d="M9 2h6"/><path d="M18 4l1.5 1.5"/>'), open:()=>openApp('stopwatch') },
+    { key:'music', name:'음악', grad:'grad-music', icon:svg('<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>'), open:()=>openApp('music') },
+    { key:'weather', name:'날씨', grad:'grad-weather', icon:svg('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/>'), open:()=>{ closeHome(); openWeatherScreen(); } },
+    { key:'camera', name:'카메라', grad:'grad-cam', icon:svg('<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>'), open:()=>openApp('camera') },
+    { key:'photos', name:'사진', grad:'grad-photo', icon:svg('<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="M21 15l-5-5L5 21"/>'), open:()=>openApp('photos') },
+    { key:'settings', name:'설정', grad:'grad-set', icon:svg('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'), open:()=>openApp('settings') },
   ];
   const ADD_SVG = svg('<path d="M12 5v14M5 12h14"/>');
 
@@ -8191,7 +8312,7 @@ if(restoredActive){
       html += `<div class="app-tile" data-builtin="${a.key}"><div class="app-ico ${a.grad}">${a.icon}</div><div class="app-label">${esc(a.name)}</div></div>`;
     });
     apps.forEach(a=>{
-      html += `<div class="app-tile" data-custom="${a.id}"><div class="app-ico">${iconHTML(a)}</div><div class="app-label">${esc(a.name)}</div></div>`;
+      html += `<div class="app-tile" data-custom="${a.id}"><button class="tile-x" data-x="${a.id}" aria-label="삭제">×</button><div class="app-ico">${iconHTML(a)}</div><div class="app-label">${esc(a.name)}</div></div>`;
     });
     html += `<div class="app-tile" data-add="1"><div class="app-ico grad-add">${ADD_SVG}</div><div class="app-label">앱 추가</div></div>`;
     grid.innerHTML = html;
@@ -8209,19 +8330,26 @@ if(restoredActive){
   search.addEventListener('input', applyFilter);
 
   function openHome(){ if(aodActiveGuard()) return; document.body.classList.add('home-open'); home.setAttribute('aria-hidden','false'); }
-  function closeHome(){ document.body.classList.remove('home-open'); home.setAttribute('aria-hidden','true'); search.value=''; applyFilter(); }
+  function closeHome(){ document.body.classList.remove('home-open'); home.setAttribute('aria-hidden','true'); search.value=''; applyFilter(); grid.classList.remove('editing'); }
   function aodActiveGuard(){ return document.body.classList.contains('aod'); }
 
   /* ---- grid taps ---- */
+  function exitEditing(){ grid.classList.remove('editing'); }
   grid.addEventListener('click', (e)=>{
+    // delete badge
+    const x = e.target.closest('.tile-x');
+    if(x){
+      const a = apps.find(t=>t.id===x.dataset.x);
+      if(a && confirm(`"${a.name}" 앱을 삭제할까요?`)){ apps = apps.filter(t=>t.id!==a.id); saveApps(apps); renderGrid(); }
+      return;
+    }
+    if(grid.classList.contains('editing')){ exitEditing(); return; }  // tap outside badge exits edit
     const tile = e.target.closest('.app-tile');
     if(!tile) return;
     if(tile.dataset.add){ fileIn.click(); return; }
     if(tile.dataset.builtin){
       const a = BUILTIN.find(x=>x.key===tile.dataset.builtin);
-      /* app-fs is added AFTER open(): openIslandPanel/openPanel call the
-         (wrapped) close fns internally, which would otherwise clear it. */
-      if(a){ a.open(); if(a.fs) document.body.classList.add('app-fs'); }
+      if(a) a.open();
       return;
     }
     if(tile.dataset.custom){
@@ -8229,6 +8357,16 @@ if(restoredActive){
       if(a) runApp(a);
     }
   });
+  /* long-press a custom app to enter delete (jiggle) mode */
+  let lpT=null;
+  grid.addEventListener('pointerdown', (e)=>{
+    const tile = e.target.closest('.app-tile[data-custom]');
+    if(!tile) return;
+    clearTimeout(lpT);
+    lpT = setTimeout(()=>{ grid.classList.add('editing'); }, 550);
+  });
+  ['pointerup','pointermove','pointercancel','scroll'].forEach(ev=>
+    grid.addEventListener(ev, ()=>{ clearTimeout(lpT); }, {passive:true}));
 
   /* ---- import an HTML file as an app ---- */
   let pending = null;   // { html, iconData }
@@ -8307,9 +8445,10 @@ if(restoredActive){
   let sx=0, sy=0, tracking=false;
   document.addEventListener('pointerdown', (e)=>{
     if(document.body.classList.contains('aod')) return;
+    if(document.body.classList.contains('app-open')) return;
     if(addEl.classList.contains('show') || runner.classList.contains('show')) return;
     if(state.activePanel || islandPanel) return;
-    if(e.target.closest('.island, .sheet, .voice-orb, #home-search, .app-runner, .app-add')) return;
+    if(e.target.closest('.island, .sheet, .voice-orb, #home-search, .app-runner, .app-add, .app-view')) return;
     sx=e.clientX; sy=e.clientY; tracking=true;
   });
   document.addEventListener('pointerup', (e)=>{
@@ -8325,16 +8464,266 @@ if(restoredActive){
     if(e.key === 'Escape'){
       if(runner.classList.contains('show')){ arBack.click(); }
       else if(addEl.classList.contains('show')){ aaCancel.click(); }
+      else if(document.body.classList.contains('app-open')){ closeApp(); }
       else if(document.body.classList.contains('home-open')){ closeHome(); }
     }
   });
 
-  /* Leaving a full-screen built-in app clears app-fs. Wrap the existing
-     close functions so every close path (button, overlay, esc) works. */
-  const _closeIsland = closeIslandPanel;
-  closeIslandPanel = function(){ _closeIsland(); document.body.classList.remove('app-fs'); };
-  const _closePanel = closePanel;
-  closePanel = function(){ _closePanel(); document.body.classList.remove('app-fs'); };
+  /* ================= Full-screen app views ================= */
+  const appView = document.getElementById('app-view');
+  const avBody  = document.getElementById('av-body');
+  const avTitle = document.getElementById('av-title');
+  const avBack  = document.getElementById('av-back');
+  const avMusIn = document.getElementById('av-music-input');
+  let currentAppKey = null;
+
+  const APP_NAMES = { timer:'타이머', alarm:'알람', stopwatch:'스톱워치', music:'음악', settings:'설정', camera:'카메라', photos:'사진' };
+  const PHOTOS_KEY = 'dynamicClock.photos';
+  const loadPhotos = ()=>{ try{ return JSON.parse(localStorage.getItem(PHOTOS_KEY)||'[]'); }catch(e){ return []; } };
+  const savePhotos = a=>{ try{ localStorage.setItem(PHOTOS_KEY, JSON.stringify(a)); return true; }catch(e){ alert('사진 저장 공간이 부족합니다.'); return false; } };
+  let camStream = null;
+  const PAUSE_SVG='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
+  const PLAY_SVG ='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+  const PREV_SVG ='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2.4v14H6z"/><path d="M20 5.6v12.8a1 1 0 0 1-1.55.83l-9.6-6.4a1 1 0 0 1 0-1.66l9.6-6.4A1 1 0 0 1 20 5.6z"/></svg>';
+  const NEXT_SVG ='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.6 5H18v14h-2.4z"/><path d="M4 5.6v12.8a1 1 0 0 0 1.55.83l9.6-6.4a1 1 0 0 0 0-1.66l-9.6-6.4A1 1 0 0 0 4 5.6z"/></svg>';
+  const SHUF_SVG ='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg>';
+  const REP_SVG  ='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>';
+  const fmt = s => { s=Math.max(0,Math.floor(s)); const m=Math.floor(s/60), ss=s%60; return pad2(m)+':'+pad2(ss); };
+
+  window.openApp = openApp;
+  function openApp(key){
+    currentAppKey = key;
+    avTitle.textContent = APP_NAMES[key] || '';
+    appView.classList.toggle('music-app', key==='music');
+    avBody.classList.toggle('bleed', key==='camera' || key==='photos');
+    renderApp();
+    appView.setAttribute('aria-hidden','false');
+    document.body.classList.add('app-open');
+    if(key==='camera') startCamera();
+  }
+  function closeApp(){
+    stopCamera();
+    document.body.classList.remove('app-open');
+    appView.setAttribute('aria-hidden','true');
+    currentAppKey = null;
+    avBody.innerHTML = '';
+  }
+  avBack.addEventListener('click', closeApp);
+
+  function renderApp(){
+    if(currentAppKey==='timer') renderTimerApp();
+    else if(currentAppKey==='stopwatch') renderStopwatchApp();
+    else if(currentAppKey==='alarm') renderAlarmApp();
+    else if(currentAppKey==='music') renderMusicApp();
+    else if(currentAppKey==='settings') renderSettingsApp();
+    else if(currentAppKey==='camera') renderCameraApp();
+    else if(currentAppKey==='photos') renderPhotosApp();
+  }
+
+  /* ---- Camera ---- */
+  function renderCameraApp(){
+    const ph = loadPhotos();
+    const last = ph[ph.length-1];
+    avBody.innerHTML = `<div class="cam-view">
+      <video class="cam-video" id="cam-video" autoplay playsinline muted></video>
+      <div class="cam-thumb" id="cam-thumb" ${last?`style="background-image:url('${last}')"`:''} data-act="cam-tophotos"></div>
+      <button class="cam-shutter" id="cam-shutter" data-act="cam-shot"></button>
+    </div>`;
+  }
+  async function startCamera(){
+    try{
+      camStream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' }, audio:false });
+      const v = document.getElementById('cam-video');
+      if(v){ v.srcObject = camStream; }
+    }catch(e){
+      const cv = avBody.querySelector('.cam-view');
+      if(cv) cv.innerHTML = '<div class="cam-err">카메라를 열 수 없습니다.<br>브라우저 권한을 허용해 주세요.<br>(https 또는 localhost 필요)</div>';
+    }
+  }
+  function stopCamera(){ if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; } }
+  function takePhoto(){
+    const v = document.getElementById('cam-video');
+    if(!v || !v.videoWidth) return;
+    const c = document.createElement('canvas');
+    const maxW = 1280, scale = Math.min(1, maxW / v.videoWidth);
+    c.width = Math.round(v.videoWidth*scale); c.height = Math.round(v.videoHeight*scale);
+    c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+    const data = c.toDataURL('image/jpeg', 0.72);
+    const ph = loadPhotos(); ph.push(data);
+    if(savePhotos(ph)){
+      const th = document.getElementById('cam-thumb');
+      if(th) th.style.backgroundImage = `url('${data}')`;
+    }
+  }
+
+  /* ---- Photos ---- */
+  function renderPhotosApp(){
+    const ph = loadPhotos();
+    const cells = ph.map((p,i)=>`<div class="ph-cell" style="background-image:url('${p}')" data-act="ph-open" data-i="${i}"></div>`).join('');
+    avBody.innerHTML = ph.length
+      ? `<div class="ph-grid">${cells}</div>
+         <div class="ph-viewer" id="ph-viewer"><div class="ph-vbar"><button data-act="ph-vclose">✕</button><button class="ph-del2" data-act="ph-vdel">🗑</button></div><img id="ph-vimg" alt=""></div>`
+      : `<div class="ph-empty">저장된 사진이 없어요.<br>카메라로 찍으면 여기에 담겨요.</div>`;
+  }
+  let viewIdx = -1;
+
+  /* ---- Timer ---- */
+  function renderTimerApp(){
+    const t = state.timer;
+    if(t.running || t.paused || t.ringing){
+      avBody.innerHTML = `<div class="av-h1">타이머</div>
+        <div class="big-time" id="t-remain">${fmt(getTimerRemaining())}</div>
+        <div class="round-btns">
+          <button class="round-btn neutral" data-act="t-cancel">취소</button>
+          <button class="round-btn ${t.paused?'go':'neutral'}" data-act="${t.paused?'t-resume':'t-pause'}">${t.paused?'재개':'일시정지'}</button>
+        </div>`;
+    } else {
+      avBody.innerHTML = `<div class="av-h1">타이머</div>
+        <div class="picker">
+          <div class="pk-col"><button data-act="t-min-up">+</button><div class="pk-val" id="t-min">${pad2(state.timerMin)}</div><button data-act="t-min-dn">−</button><div class="pk-unit">분</div></div>
+          <div class="pk-sep">:</div>
+          <div class="pk-col"><button data-act="t-sec-up">+</button><div class="pk-val" id="t-sec">${pad2(state.timerSec)}</div><button data-act="t-sec-dn">−</button><div class="pk-unit">초</div></div>
+        </div>
+        <button class="pill-btn green" data-act="t-start">시작</button>`;
+    }
+  }
+
+  /* ---- Stopwatch ---- */
+  function renderStopwatchApp(){
+    const sw = state.stopwatch;
+    const laps = (sw.laps||[]).slice().reverse().map((l,i)=>`<div class="av-row2"><span class="r-sub">랩 ${sw.laps.length-i}</span><span class="r-main" style="font-size:20px">${fmtStopwatch(l)}</span></div>`).join('');
+    avBody.innerHTML = `<div class="av-h1">스톱워치</div>
+      <div class="big-time" id="sw-disp">${fmtStopwatch(getStopwatchElapsed())}</div>
+      <div class="round-btns">
+        <button class="round-btn neutral" data-act="sw-lap">${sw.running?'랩':'리셋'}</button>
+        <button class="round-btn ${sw.running?'stop':'go'}" data-act="sw-toggle">${sw.running?'정지':'시작'}</button>
+      </div>
+      <div class="av-list">${laps}</div>`;
+  }
+
+  /* ---- Alarm ---- */
+  function renderAlarmApp(){
+    const list = state.alarms.slice().sort((a,b)=>a.hour*60+a.min-(b.hour*60+b.min)).map(a=>{
+      const ap=a.hour<12?'오전':'오후', h=a.hour%12||12;
+      return `<div class="av-row2"><span class="r-main">${ap} ${h}:${pad2(a.min)}</span><button class="r-del" data-act="al-del" data-id="${a.id}">삭제</button></div>`;
+    }).join('');
+    avBody.innerHTML = `<div class="av-h1">알람</div>
+      <div class="picker">
+        <div class="pk-col"><button data-act="al-h-up">+</button><div class="pk-val" id="al-h">${pad2(state.alarmHour)}</div><button data-act="al-h-dn">−</button><div class="pk-unit">시</div></div>
+        <div class="pk-sep">:</div>
+        <div class="pk-col"><button data-act="al-m-up">+</button><div class="pk-val" id="al-m">${pad2(state.alarmMin)}</div><button data-act="al-m-dn">−</button><div class="pk-unit">분</div></div>
+      </div>
+      <button class="pill-btn primary" data-act="al-add" style="margin-bottom:22px">알람 추가</button>
+      ${list ? `<div class="av-list">${list}</div>` : '<div class="av-note">등록된 알람이 없어요</div>'}`;
+  }
+
+  /* ---- Music (Apple Music style) ---- */
+  function musTrack(){ return (music.index>=0) ? (music.tracks[music.index]||null) : null; }
+  function renderMusicApp(){
+    const t = musTrack();
+    const dur = (music.el && music.el.duration) ? music.el.duration : 0;
+    const cur = (music.el && music.el.currentTime) ? music.el.currentTime : 0;
+    const up = music.tracks.map((tr,i)=>`<div class="am-track ${i===music.index?'playing':''}" data-act="am-play" data-i="${i}">
+        <div class="t-art" ${tr.art?`style="background-image:url('${tr.art}')"`:''}></div>
+        <div class="t-meta"><div class="t-title">${esc(tr.title||tr.name||'트랙')}</div></div>
+      </div>`).join('');
+    avBody.innerHTML = `
+      <div class="am-bg" id="am-bg" ${t&&t.art?`style="background-image:url('${t.art}')"`:''}></div>
+      <div class="am-wrap">
+        <div class="am-art" id="am-art" ${t&&t.art?`style="background-image:url('${t.art}')"`:''}>${t&&t.art?'':'♪'}</div>
+        <div class="am-title">${t?esc(t.title||t.name||'재생할 곡 없음'):'재생할 곡 없음'}</div>
+        <div class="am-artist">${t?esc(t.artist||'알 수 없는 아티스트'):'음악을 추가하세요'}</div>
+        <div class="am-bar" data-act="am-seek"><div class="am-bar-fill" id="am-fill" style="width:${dur?(cur/dur*100):0}%"></div></div>
+        <div class="am-times"><span id="am-cur">${fmt(cur)}</span><span id="am-dur">${dur?fmt(dur):'--:--'}</span></div>
+        <div class="am-ctrl">
+          <button class="am-small ${music.shuffle?'on':''}" data-act="am-shuffle">${SHUF_SVG}</button>
+          <button data-act="am-prev">${PREV_SVG}</button>
+          <button class="am-play" data-act="am-play-toggle">${(music.el&&!music.el.paused)?PAUSE_SVG:PLAY_SVG}</button>
+          <button data-act="am-next">${NEXT_SVG}</button>
+          <button class="am-small ${music.repeat!=='off'?'on':''}" data-act="am-repeat">${REP_SVG}</button>
+        </div>
+        <div class="am-up">
+          <div class="am-up-h"><span>보관함</span><button data-act="am-add">+ 추가</button></div>
+          ${up || '<div class="am-empty">음악을 추가하거나<br>음악 앱 아이콘에 파일을 끌어다 놓으세요</div>'}
+        </div>
+      </div>`;
+  }
+
+  /* ---- Settings ---- */
+  function renderSettingsApp(){
+    const sw=(id,label,on)=>`<div class="av-row2"><span class="r-sub" style="font-size:15px;color:#fff">${label}</span><div class="switch ${on?'on':''}" data-act="${id}"><div class="switch-knob"></div></div></div>`;
+    avBody.innerHTML = `<div class="av-h1">설정</div>
+      <div class="av-list" style="margin-bottom:18px">
+        ${sw('s-24h','24시간 표시',state.use24h)}
+        ${sw('s-sec','초 표시',state.showSeconds)}
+        ${sw('s-date','날짜 표시',state.showDate)}
+      </div>
+      <button class="pill-btn ghost" data-act="s-bg" style="margin-bottom:10px">배경 이미지 선택</button>
+      <button class="pill-btn ghost" data-act="s-voice" style="margin-bottom:10px">음성 명령 안내</button>
+      <div class="av-note">설정 앱 아이콘에 이미지를 끌어다 놓아도 배경이 바뀝니다.</div>`;
+  }
+
+  /* ---- app action delegation ---- */
+  avBody.addEventListener('click', (e)=>{
+    const el = e.target.closest('[data-act]'); if(!el) return;
+    const a = el.dataset.act;
+    // timer
+    if(a==='t-min-up') adjustTimer('min+'); else if(a==='t-min-dn') adjustTimer('min-');
+    else if(a==='t-sec-up') adjustTimer('sec+'); else if(a==='t-sec-dn') adjustTimer('sec-');
+    else if(a==='t-start'){ startTimerFromPanel(); }
+    else if(a==='t-pause'){ pauseTimer(); } else if(a==='t-resume'){ resumeTimer(); }
+    else if(a==='t-cancel'){ cancelTimer(); }
+    // stopwatch
+    else if(a==='sw-toggle'){ toggleStopwatchRun(); }
+    else if(a==='sw-lap'){ if(state.stopwatch.running){ state.stopwatch.laps.push(getStopwatchElapsed()); } else { resetStopwatch(); } }
+    // alarm
+    else if(a==='al-h-up') adjustAlarm('hour+'); else if(a==='al-h-dn') adjustAlarm('hour-');
+    else if(a==='al-m-up') adjustAlarm('min+'); else if(a==='al-m-dn') adjustAlarm('min-');
+    else if(a==='al-add'){ addAlarmFromPanel(); }
+    else if(a==='al-del'){ deleteAlarm(el.dataset.id); }
+    // music
+    else if(a==='am-play'){ playTrack(+el.dataset.i); }
+    else if(a==='am-play-toggle'){ toggleMusic(); }
+    else if(a==='am-next'){ nextTrack(false); }
+    else if(a==='am-prev'){ prevTrack(); }
+    else if(a==='am-shuffle'){ music.shuffle=!music.shuffle; }
+    else if(a==='am-repeat'){ music.repeat = music.repeat==='off'?'all':(music.repeat==='all'?'one':'off'); }
+    else if(a==='am-add'){ avMusIn.click(); }
+    // settings
+    else if(a==='s-24h'){ state.use24h=!state.use24h; }
+    else if(a==='s-sec'){ state.showSeconds=!state.showSeconds; }
+    else if(a==='s-date'){ state.showDate=!state.showDate; }
+    else if(a==='s-bg'){ document.getElementById('bg-image-input').click(); }
+    else if(a==='s-voice'){ const b=document.getElementById('voice-help-btn'); if(b) b.click(); }
+    // camera
+    else if(a==='cam-shot'){ takePhoto(); return; }
+    else if(a==='cam-tophotos'){ openApp('photos'); return; }
+    // photos
+    else if(a==='ph-open'){ viewIdx=+el.dataset.i; const ph=loadPhotos(); const vw=document.getElementById('ph-viewer'), im=document.getElementById('ph-vimg'); if(vw&&im){ im.src=ph[viewIdx]||''; vw.classList.add('show'); } return; }
+    else if(a==='ph-vclose'){ const vw=document.getElementById('ph-viewer'); if(vw) vw.classList.remove('show'); return; }
+    else if(a==='ph-vdel'){ const ph=loadPhotos(); if(viewIdx>=0){ ph.splice(viewIdx,1); savePhotos(ph); } const vw=document.getElementById('ph-viewer'); if(vw) vw.classList.remove('show'); renderApp(); return; }
+    const noRender = { 'am-seek':1 };
+    if(currentAppKey && !noRender[a]) renderApp();   // reflect state changes
+  });
+  // music progress seek
+  avBody.addEventListener('click', (e)=>{
+    const bar = e.target.closest('[data-act="am-seek"]'); if(!bar) return;
+    if(music.el && music.el.duration){ const r=bar.getBoundingClientRect(); music.el.currentTime=((e.clientX-r.left)/r.width)*music.el.duration; }
+  });
+  avMusIn.addEventListener('change', ()=>{ if(avMusIn.files&&avMusIn.files.length){ addFiles(Array.from(avMusIn.files)); avMusIn.value=''; setTimeout(renderApp,60); } });
+
+  /* live refresh for time-based app views */
+  function tickApp(){
+    if(currentAppKey==='timer'){ const el=document.getElementById('t-remain'); if(el && (state.timer.running)) el.textContent=fmt(getTimerRemaining()); }
+    else if(currentAppKey==='stopwatch'){ const el=document.getElementById('sw-disp'); if(el && state.stopwatch.running) el.textContent=fmtStopwatch(getStopwatchElapsed()); }
+    else if(currentAppKey==='music'){
+      const f=document.getElementById('am-fill'), c=document.getElementById('am-cur');
+      if(f && music.el && music.el.duration){ f.style.width=(music.el.currentTime/music.el.duration*100)+'%'; if(c) c.textContent=fmt(music.el.currentTime); }
+    }
+    requestAnimationFrame(tickApp);
+  }
+  requestAnimationFrame(tickApp);
+  if(music.el){ ['play','pause','loadedmetadata','ended'].forEach(ev=>music.el.addEventListener(ev, ()=>{ if(currentAppKey==='music') renderApp(); })); }
 
   /* ---- drag & drop onto specific home tiles ---- */
   grid.addEventListener('dragover', (e)=>{ if(e.target.closest('.app-tile')) e.preventDefault(); });
