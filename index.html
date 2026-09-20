@@ -685,6 +685,9 @@ body.app-open .app-view{ transform:translateY(0); pointer-events:auto; }
 .cam-shutter:active{ transform:translateX(-50%) scale(0.92); }
 .cam-thumb{ position:absolute; bottom:48px; left:24px; width:52px; height:52px; border-radius:10px; background:#222 center/cover no-repeat; border:2px solid #fff; cursor:pointer; }
 .cam-err{ color:#fff; text-align:center; padding:60px 24px; font-size:15px; line-height:1.5; }
+/* In flip mode the whole app is rotated 180°; counter-rotate the camera
+   preview so it stays upright. */
+.app.flipped .cam-video{ transform:rotate(180deg); }
 
 /* Photos */
 .ph-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:3px; }
@@ -2493,18 +2496,22 @@ body.music-full-open.music-full-closing .music-full{ opacity:0; }
 .mf-set-row{ display:flex; flex-direction:column; gap:8px; }
 .mf-set-label{ display:flex; justify-content:space-between; align-items:baseline; font-size:12px; color:var(--text-dim); }
 .mf-set-label span:last-child{ color:var(--text); font-variant-numeric:tabular-nums; }
-.mf-settings-panel input[type=range]{
+.mf-settings-panel input[type=range],
+#music-motion-host input[type=range]{
   -webkit-appearance:none; appearance:none; width:100%; height:4px; border-radius:4px;
   background:rgba(255,255,255,0.22); outline:none; cursor:pointer;
 }
-.mf-settings-panel input[type=range]::-webkit-slider-thumb{
+.mf-settings-panel input[type=range]::-webkit-slider-thumb,
+#music-motion-host input[type=range]::-webkit-slider-thumb{
   -webkit-appearance:none; appearance:none; width:14px; height:14px; border-radius:50%;
   background:var(--text); box-shadow:0 0 0 4px rgba(255,255,255,0.15); cursor:pointer;
 }
-.mf-settings-panel input[type=range]::-moz-range-thumb{
+.mf-settings-panel input[type=range]::-moz-range-thumb,
+#music-motion-host input[type=range]::-moz-range-thumb{
   width:14px; height:14px; border-radius:50%; border:none;
   background:var(--text); box-shadow:0 0 0 4px rgba(255,255,255,0.15); cursor:pointer;
 }
+#music-motion-host{ display:flex; flex-direction:column; gap:14px; margin-top:6px; }
 
 .mf-inner{
   position:relative; z-index:2;
@@ -3040,6 +3047,8 @@ body.widgets-editing .widget-card .wg-remove{ display:flex; }
         <option value="8">8</option><option value="9">9</option><option value="10">10</option>
       </select>
     </div>
+    <div class="field-label">음악 스펙트럼 움직임</div>
+    <div id="music-motion-host"></div>
     <div class="field-label">숫자 전환 애니메이션</div>
     <div class="chip-row" id="anim-style-chips"></div>
     <div class="field-label">배경</div>
@@ -6037,6 +6046,19 @@ document.querySelector('#music-full .mf-right').addEventListener('pointerdown', 
   input.addEventListener('change', ()=> setSpeed(parseFloat(input.value)));
   refreshSpeedUI();
 })();
+/* Relocate the spectrum-movement sliders into the Settings app (listeners
+   ride along with the moved nodes). The player keeps playback speed. */
+(function(){
+  const host = document.getElementById('music-motion-host');
+  const iEl = document.getElementById('mf-intensity');
+  const kEl = document.getElementById('mf-kick');
+  const r1 = iEl && iEl.closest('.mf-set-row');
+  const r2 = kEl && kEl.closest('.mf-set-row');
+  if(host && r1) host.appendChild(r1);
+  if(host && r2) host.appendChild(r2);
+  const panel = document.getElementById('mf-settings-panel');
+  if(panel){ const t=panel.querySelector('.mf-set-title'); if(t) t.style.display='none'; const d=panel.querySelector('.mf-set-divider'); if(d) d.style.display='none'; }
+})();
 document.getElementById('mf-bar').addEventListener('pointerdown', (e)=>{
   const rect = e.currentTarget.getBoundingClientRect();
   const f = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
@@ -8564,6 +8586,7 @@ if(restoredActive){
 
   window.openApp = openApp;
   function openApp(key){
+    stopCamera();                       // never leave a previous camera stream running
     currentAppKey = key;
     avTitle.textContent = APP_NAMES[key] || '';
     appView.classList.toggle('music-app', key==='music');
@@ -8644,15 +8667,15 @@ if(restoredActive){
   function renderTimerApp(){
     const t = state.timer;
     if(t.running || t.paused || t.ringing){
-      avBody.innerHTML = `<div class="av-h1">타이머</div>
+      avBody.innerHTML = `
         <div class="big-time" id="t-remain">${fmt(getTimerRemaining())}</div>
         <div class="round-btns">
           <button class="round-btn neutral" data-act="t-cancel">취소</button>
           <button class="round-btn ${t.paused?'go':'neutral'}" data-act="${t.paused?'t-resume':'t-pause'}">${t.paused?'재개':'일시정지'}</button>
         </div>`;
     } else {
-      avBody.innerHTML = `<div class="av-h1">타이머</div>
-        <div class="picker">
+      avBody.innerHTML = `
+        <div class="picker" style="margin-top:22px">
           <div class="pk-col"><button data-act="t-min-up">+</button><div class="pk-val" id="t-min">${pad2(state.timerMin)}</div><button data-act="t-min-dn">−</button><div class="pk-unit">분</div></div>
           <div class="pk-sep">:</div>
           <div class="pk-col"><button data-act="t-sec-up">+</button><div class="pk-val" id="t-sec">${pad2(state.timerSec)}</div><button data-act="t-sec-dn">−</button><div class="pk-unit">초</div></div>
@@ -8665,8 +8688,8 @@ if(restoredActive){
   function renderStopwatchApp(){
     const sw = state.stopwatch;
     const laps = (sw.laps||[]).slice().reverse().map((l,i)=>`<div class="av-row2"><span class="r-sub">랩 ${sw.laps.length-i}</span><span class="r-main" style="font-size:20px">${fmtStopwatch(l)}</span></div>`).join('');
-    avBody.innerHTML = `<div class="av-h1">스톱워치</div>
-      <div class="big-time" id="sw-disp">${fmtStopwatch(getStopwatchElapsed())}</div>
+    avBody.innerHTML = `
+      <div class="big-time" id="sw-disp" style="margin-top:20px">${fmtStopwatch(getStopwatchElapsed())}</div>
       <div class="round-btns">
         <button class="round-btn neutral" data-act="sw-lap">${sw.running?'랩':'리셋'}</button>
         <button class="round-btn ${sw.running?'stop':'go'}" data-act="sw-toggle">${sw.running?'정지':'시작'}</button>
@@ -8680,8 +8703,8 @@ if(restoredActive){
       const ap=a.hour<12?'오전':'오후', h=a.hour%12||12;
       return `<div class="av-row2"><span class="r-main">${ap} ${h}:${pad2(a.min)}</span><button class="r-del" data-act="al-del" data-id="${a.id}">삭제</button></div>`;
     }).join('');
-    avBody.innerHTML = `<div class="av-h1">알람</div>
-      <div class="picker">
+    avBody.innerHTML = `
+      <div class="picker" style="margin-top:22px">
         <div class="pk-col"><button data-act="al-h-up">+</button><div class="pk-val" id="al-h">${pad2(state.alarmHour)}</div><button data-act="al-h-dn">−</button><div class="pk-unit">시</div></div>
         <div class="pk-sep">:</div>
         <div class="pk-col"><button data-act="al-m-up">+</button><div class="pk-val" id="al-m">${pad2(state.alarmMin)}</div><button data-act="al-m-dn">−</button><div class="pk-unit">분</div></div>
@@ -8818,15 +8841,15 @@ if(restoredActive){
     }
   });
 
-  /* ---- swipe DOWN on the Dynamic Island (anywhere) opens voice ---- */
-  let iy=0, itrack=false;
-  islandEl.addEventListener('pointerdown', (e)=>{ iy=e.clientY; itrack=true; }, true);
-  islandEl.addEventListener('pointerup', (e)=>{
-    if(!itrack) return; itrack=false;
-    if(e.clientY - iy > 34){
-      const b=document.getElementById('btn-voice'); if(b) b.click();
-    }
+  /* ---- long-press the Dynamic Island (anywhere) opens voice ---- */
+  let islandLpT=null, islandMoved=false;
+  islandEl.addEventListener('pointerdown', (e)=>{
+    islandMoved=false;
+    clearTimeout(islandLpT);
+    islandLpT=setTimeout(()=>{ if(!islandMoved){ const b=document.getElementById('btn-voice'); if(b) b.click(); } }, 500);
   }, true);
+  islandEl.addEventListener('pointermove', ()=>{ islandMoved=true; clearTimeout(islandLpT); }, true);
+  ['pointerup','pointercancel'].forEach(ev=> islandEl.addEventListener(ev, ()=>clearTimeout(islandLpT), true));
 
   /* ---- auto screen-off: idle on home/app -> clock + AOD ---- */
   let autoOffT = null;
