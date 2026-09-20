@@ -1157,6 +1157,13 @@ body[data-anim-style="none"] .digit-change{ animation:none; }
   padding:4px 0;
 }
 .settings-row .field-label{ font-size:12px; color:var(--text); text-transform:none; letter-spacing:0.01em; }
+.num-input{
+  width:88px; text-align:right;
+  background:rgba(255,255,255,0.06); border:1px solid var(--border);
+  color:var(--text); border-radius:10px; padding:7px 10px; font-size:14px;
+  font-variant-numeric:tabular-nums; -moz-appearance:textfield;
+}
+.num-input::-webkit-outer-spin-button, .num-input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
 
 .sw-display{
   text-align:center; font-size:44px; font-weight:200;
@@ -2696,6 +2703,10 @@ body.widgets-editing .widget-card .wg-remove{ display:flex; }
       <span class="field-label">화면 뒤집기</span>
       <div class="switch" id="toggle-flip"><div class="switch-knob"></div></div>
     </div>
+    <div class="settings-row">
+      <span class="field-label">AOD 자동 진입 (초)</span>
+      <input type="number" id="aod-idle-input" class="num-input" min="5" step="5" value="120" inputmode="numeric">
+    </div>
     <div class="field-label">숫자 전환 애니메이션</div>
     <div class="chip-row" id="anim-style-chips"></div>
     <div class="field-label">배경</div>
@@ -4147,6 +4158,23 @@ const appEl = document.querySelector('.app');
 function applyFlip(){ appEl.classList.toggle('flipped', state.flipped); }
 makeToggle(document.getElementById('toggle-flip'), ()=>state.flipped, v=>{ state.flipped = v; applyFlip(); });
 applyFlip();
+
+/* AOD auto-enter delay (seconds). Source of truth is localStorage so the
+   AOD module can read the live value. Min 5s, no maximum. */
+const AOD_IDLE_KEY = 'dynamicClock.aodIdleSec';
+const aodIdleInput = document.getElementById('aod-idle-input');
+if(aodIdleInput){
+  const saved = parseInt(localStorage.getItem(AOD_IDLE_KEY) || '120', 10);
+  aodIdleInput.value = (saved >= 5 ? saved : 120);
+  const commit = ()=>{
+    let v = parseInt(aodIdleInput.value, 10);
+    if(!(v >= 5)) v = 5;
+    aodIdleInput.value = v;
+    try{ localStorage.setItem(AOD_IDLE_KEY, String(v)); }catch(e){}
+  };
+  aodIdleInput.addEventListener('change', commit);
+  aodIdleInput.addEventListener('blur', commit);
+}
 
 const animStyleChips = document.getElementById('anim-style-chips');
 function renderAnimStyleChips(){
@@ -7781,7 +7809,11 @@ if(restoredActive){
   const PAUSE_SVG= '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
   const LOCK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
 
-  const IDLE_MS = 120000;             // 2 min no input -> AOD
+  function idleMs(){                  // configurable: min 5s, no max
+    let v = parseInt(localStorage.getItem('dynamicClock.aodIdleSec') || '120', 10);
+    if(!(v >= 5)) v = 120;
+    return v * 1000;
+  }
   const WAKE_GRACE = 1100;            // ignore wake right after entering
   let active = false, enteredAt = 0;
   let shiftT = null, idleT = null, pressT = null;
@@ -7898,7 +7930,7 @@ if(restoredActive){
   function resetIdle(){
     clearTimeout(idleT);
     if(active) return;
-    idleT = setTimeout(()=>{ enter(); }, IDLE_MS);
+    idleT = setTimeout(()=>{ enter(); }, idleMs());
   }
 
   /* ---- triggers ---- */
