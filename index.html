@@ -8998,7 +8998,7 @@ if(restoredActive){
      desktop Chrome) it falls back to a simulated ~1.2s scan so the
      animation is still demonstrable. Real Face ID only on iPhone Safari. */
   const FACE_KEY = 'dynamicClock.faceCredId';
-  const FACE_DEMO = true;   // 데모 모드: 실제 WebAuthn 대신 시뮬 인식(항상 성공)
+  const FACE_DEMO = false;  // 실제 WebAuthn 패스키 사용(플랫폼 인증기 없으면 시뮬로 폴백)
   const FACE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6.5A2.5 2.5 0 0 1 6.5 4H8"/><path d="M16 4h1.5A2.5 2.5 0 0 1 20 6.5V8"/><path d="M20 16v1.5a2.5 2.5 0 0 1-2.5 2.5H16"/><path d="M8 20H6.5A2.5 2.5 0 0 1 4 17.5V16"/><path d="M9 9.5v1.3"/><path d="M15 9.5v1.3"/><path d="M12 9.4v2.3"/><path d="M9.2 14.6c.8.8 1.8 1.2 2.8 1.2s2-.4 2.8-1.2"/></svg>';
   const CHECK_SVG= '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>';
   let faceBusy = false;
