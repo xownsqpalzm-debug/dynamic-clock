@@ -118,12 +118,15 @@ html,body{
   /* The pill is meant to sit where the real one does, so it has to
      start below the notch rather than under it. env() is 0 on
      everything without an inset, so this is a no-op on desktop. */
-  top:calc(18px + env(safe-area-inset-top, 0px));
+  top:calc(18px + env(safe-area-inset-top, 0px) + var(--island-y, 0px));
   left:0; right:0;
   display:flex;
   align-items:flex-start;
   gap:9px;
   justify-content:center;
+  /* User-set free position: shift the whole pill cluster horizontally
+     and vertically (var set from Settings). */
+  transform:translateX(var(--island-x, 0px));
   /* Above the weather screen (200) and the sheets (90) — it should
      never be covered by anything it can sit in front of.
 
@@ -140,6 +143,8 @@ html,body{
   pointer-events:none;
 }
 body.island-panel-open .island-wrap{ z-index:700; }
+
+.island-wrap{ padding:0 12px; }
 
 .island{
   pointer-events:auto;
@@ -1633,6 +1638,19 @@ body[data-anim-style="none"] .digit-change{ animation:none; }
   font-variant-numeric:tabular-nums; -moz-appearance:textfield;
 }
 .num-input::-webkit-outer-spin-button, .num-input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+.set-range{
+  width:150px; -webkit-appearance:none; appearance:none;
+  height:4px; border-radius:2px; background:rgba(255,255,255,0.18);
+  outline:none; cursor:pointer;
+}
+.set-range::-webkit-slider-thumb{
+  -webkit-appearance:none; appearance:none; width:18px; height:18px;
+  border-radius:50%; background:var(--text); border:none; cursor:pointer;
+}
+.set-range::-moz-range-thumb{
+  width:18px; height:18px; border-radius:50%;
+  background:var(--text); border:none; cursor:pointer;
+}
 
 .sw-display{
   text-align:center; font-size:44px; font-weight:200;
@@ -2221,6 +2239,7 @@ body.ambient-open .ambient-screen{
 /* Bars are centred, not bottom-aligned, and fully rounded, so a
    quiet band collapses to a dot rather than to a stub sitting on an
    invisible floor. That is what gives the meter its tapered look. */
+/* --- v1.0 (default) full meter: bars fill the whole width --- */
 .music-spectrum{
   display:flex; align-items:center; gap:3px;
   height:30px; width:100%;
@@ -2239,6 +2258,13 @@ body.ambient-open .ambient-screen{
   gap:2.5px;
 }
 .music-pill-content .music-spectrum i{ min-width:2.5px; }
+
+/* --- v2.0 slim 5-strand meter: thin fixed-width bars, centred.
+   Only active once the 2.0 update is installed (body.v2). --- */
+body.v2 .music-spectrum{ justify-content:center; gap:5px; }
+body.v2 .music-spectrum i{ flex:0 0 3px; width:3px; min-width:0; }
+body.v2 .music-pill-content .music-spectrum{ width:42px; flex:0 0 42px; gap:3.5px; }
+body.v2 .music-pill-content .music-spectrum i{ flex:0 0 2.5px; width:2.5px; }
 /* The expanded panel is the one place with room for colour. */
 .island.expanded .music-spectrum i{
   background:linear-gradient(to top, var(--accent), #ffd2b4);
@@ -2609,6 +2635,172 @@ body.dropping .drop-hint{ display:flex; }
   .onboard-art svg{ width:28px; height:28px; }
   .onboard-title{ font-size:20px; }
   .onboard-stage{ gap:14px; }
+}
+
+/* ============================================================
+   SOFTWARE UPDATE  (iOS-style)
+   ============================================================ */
+/* The update detail page — slides over the Settings sheet. */
+.sw-update{
+  position:absolute; inset:0;
+  z-index:950;
+  background:var(--bg, #000);
+  display:none; flex-direction:column;
+  padding-top:calc(14px + env(safe-area-inset-top, 0px));
+  transform:translateX(100%);
+  transition:transform .32s cubic-bezier(.3,1,.4,1);
+}
+.sw-update.open{ display:flex; transform:translateX(0); }
+.swu-head{
+  display:flex; align-items:center; gap:4px;
+  padding:4px 14px 12px; position:relative;
+}
+.swu-back{
+  background:none; border:none; color:var(--accent);
+  font-family:inherit; font-size:15px; cursor:pointer; padding:4px 6px;
+  display:flex; align-items:center; gap:2px;
+}
+.swu-head .swu-h-title{
+  position:absolute; left:0; right:0; text-align:center;
+  font-size:15px; font-weight:600; color:var(--text); pointer-events:none;
+}
+.swu-body{ flex:1 1 auto; overflow-y:auto; padding:10px 20px 30px; }
+.swu-card{
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:18px; padding:20px 18px; text-align:center;
+  margin-bottom:22px;
+}
+.swu-logo{
+  width:60px; height:60px; margin:0 auto 14px;
+  border-radius:15px; background:linear-gradient(160deg,#2b2b33,#101015);
+  border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center; color:var(--accent);
+}
+.swu-logo svg{ width:32px; height:32px; }
+.swu-title{ font-size:19px; font-weight:400; color:var(--text); }
+.swu-meta{ font-size:12px; color:var(--text-faint); margin-top:4px; }
+.swu-notes{
+  text-align:left; margin-top:16px; font-size:12.5px; line-height:1.8;
+  color:var(--text-dim);
+}
+.swu-notes b{ color:var(--text); font-weight:500; display:block; margin-bottom:4px; }
+.swu-notes ul{ margin:0; padding-left:18px; }
+.swu-actions{ display:flex; flex-direction:column; gap:10px; }
+.swu-beta{
+  background:transparent; color:var(--accent);
+  border:1px solid var(--accent); border-radius:14px; padding:12px;
+  font-size:12px; letter-spacing:0.04em; cursor:pointer; font-family:inherit;
+}
+.swu-beta:disabled{ opacity:0.5; cursor:default; color:var(--text-dim); border-color:var(--border); }
+.swu-beta-note{ font-size:11px; color:var(--text-faint); line-height:1.6; text-align:center; margin-top:2px; }
+
+/* The install screen — blocks the whole app like a real OS update. */
+.sw-install{
+  position:absolute; inset:0;
+  z-index:2000;
+  background:#000;
+  display:none; flex-direction:column;
+  align-items:center; justify-content:center;
+  gap:26px; text-align:center;
+  pointer-events:auto;
+}
+.sw-install.open{ display:flex; }
+.swi-logo{ color:#fff; opacity:0.95; }
+.swi-logo svg{ width:60px; height:60px; }
+.swi-bar{
+  width:min(62vw, 260px); height:4px; border-radius:3px;
+  background:rgba(255,255,255,0.22); overflow:hidden;
+}
+.swi-bar-fill{
+  height:100%; width:0%; border-radius:3px; background:#fff;
+  transition:width .4s linear;
+}
+.swi-status{ font-size:13px; color:rgba(255,255,255,0.85); letter-spacing:0.02em; }
+.swi-eta{ font-size:11px; color:rgba(255,255,255,0.45); margin-top:-16px; }
+
+/* BETA watermark + exit chip (persistent while beta mode is on). */
+body.beta .beta-badge{ display:flex; }
+.beta-badge{
+  position:absolute; z-index:1800;
+  top:calc(8px + env(safe-area-inset-top,0px)); right:10px;
+  display:none; align-items:center; gap:6px;
+  background:rgba(255,70,90,0.16); border:1px solid rgba(255,70,90,0.5);
+  color:#ff6b7d; font-size:10px; font-weight:700; letter-spacing:0.12em;
+  padding:4px 9px; border-radius:20px; pointer-events:auto; cursor:pointer;
+}
+
+/* Lightweight toast for "준비 중" teasers. */
+.app-toast{
+  position:absolute; left:50%; bottom:calc(70px + env(safe-area-inset-bottom,0px));
+  transform:translateX(-50%) translateY(14px);
+  z-index:2100;
+  background:rgba(30,30,36,0.94); border:1px solid var(--border);
+  color:var(--text); font-size:12.5px; padding:11px 18px; border-radius:14px;
+  max-width:80vw; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.5);
+  opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease;
+}
+.app-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* Beta-only controls appear only while beta mode is on. */
+.beta-only{ display:none; }
+body.beta .beta-only{ display:block; }
+
+/* v2.0 feature controls only appear once the 2.0 update is installed. */
+body:not(.v2) .island-feat{ display:none; }
+
+/* ============================================================
+   BLUETOOTH CONNECT POPUP  (iOS-style, white, slides up)
+   ============================================================ */
+.bt-scrim{
+  position:absolute; inset:0; z-index:1850;
+  background:rgba(0,0,0,0.28);
+  opacity:0; pointer-events:none; transition:opacity .3s ease;
+}
+.bt-scrim.show{ opacity:1; pointer-events:auto; }
+.bt-pop{
+  position:absolute; left:8px; right:8px;
+  bottom:calc(8px + env(safe-area-inset-bottom,0px));
+  z-index:1860;
+  background:#ffffff; color:#000;
+  border-radius:38px;
+  padding:30px 24px 40px;
+  box-shadow:0 -10px 40px rgba(0,0,0,0.35);
+  transform:translateY(130%);
+  transition:transform .46s cubic-bezier(.2,.9,.25,1);
+  text-align:center;
+}
+.bt-pop.show{ transform:translateY(0); }
+.bt-pop-close{
+  position:absolute; top:18px; right:18px;
+  width:30px; height:30px; border-radius:50%;
+  border:none; background:rgba(120,120,128,0.18); color:#555;
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+}
+.bt-pop-close svg{ width:15px; height:15px; }
+.bt-pop-name{
+  font-size:28px; font-weight:700; letter-spacing:-0.02em;
+  color:#000; margin:6px 20px 24px;
+  font-family:-apple-system,"SF Pro Display",sans-serif;
+}
+.bt-pop-img{ width:100%; display:flex; justify-content:center; }
+.bt-pop-img img{ width:auto; max-width:72%; max-height:300px; height:auto; display:block; }
+
+.bt-scan{
+  position:absolute; left:50%; top:calc(60px + env(safe-area-inset-top,0px));
+  transform:translateX(-50%) translateY(-10px);
+  z-index:1870;
+  background:rgba(30,30,36,0.94); border:1px solid var(--border);
+  color:var(--text); font-size:12.5px; padding:10px 18px; border-radius:20px;
+  opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease;
+}
+.bt-scan.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* iOS-style red badge on the Settings update row. */
+.update-badge{
+  display:inline-flex; align-items:center; justify-content:center;
+  min-width:18px; height:18px; padding:0 5px; margin-left:8px;
+  background:#ff3b30; color:#fff; font-size:11px; font-weight:700;
+  border-radius:9px; vertical-align:middle;
 }
 
 /* On narrow screens the expanded/ringing pill is nearly as wide as
@@ -3173,6 +3365,18 @@ body.widgets-editing .widget-card .wg-remove{ display:flex; }
   <div class="sheet-overlay" id="overlay"></div>
   <div class="drop-hint" id="drop-hint">음악 · 이미지를 놓으세요</div>
 
+  <!-- Bluetooth connect popup (iOS-style, slides up from the bottom) -->
+  <div class="bt-scrim" id="bt-scrim" aria-hidden="true"></div>
+  <div class="bt-pop" id="bt-pop" aria-hidden="true" role="dialog">
+    <button class="bt-pop-close" id="bt-pop-close" aria-label="닫기">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+    <div class="bt-pop-name" id="bt-pop-name">AirPods Pro</div>
+    <div class="bt-pop-img"><img src="airpods.png" alt=""></div>
+  </div>
+  <!-- Scanning toast while the picker/connection is in flight -->
+  <div class="bt-scan" id="bt-scan" aria-hidden="true">블루투스 기기를 찾는 중…</div>
+
   <!-- ===== Home screen (slides up from the lock screen) ===== -->
   <div class="home-screen" id="home-screen" aria-hidden="true">
     <div class="home-spot">
@@ -3253,11 +3457,60 @@ body.widgets-editing .widget-card .wg-remove{ display:flex; }
     </div>
   </div>
 
+  <!-- Software update detail page -->
+  <div class="sw-update" id="sw-update" aria-hidden="true">
+    <div class="swu-head">
+      <button class="swu-back" id="swu-back">‹ 설정</button>
+      <span class="swu-h-title">소프트웨어 업데이트</span>
+    </div>
+    <div class="swu-body">
+      <div class="swu-card">
+        <div class="swu-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></div>
+        <div class="swu-title">다이나믹 클록 2.0</div>
+        <div class="swu-meta" id="swu-meta">38.4 MB · 이 업데이트에는 새로운 기능과 개선 사항이 포함되어 있습니다.</div>
+        <div class="swu-notes">
+          <b>이번 버전의 새로운 기능</b>
+          <ul>
+            <li>다이나믹 아일랜드의 위치를 자유롭게 조절할 수 있습니다.</li>
+            <li>음악 오디오 스펙트럼이 더 얇은 5가닥으로 깔끔해졌습니다.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="swu-actions">
+        <button class="primary-btn" id="swu-install">다운로드 및 설치</button>
+        <button class="swu-beta" id="swu-beta">베타 체험해보기</button>
+        <div class="swu-beta-note">다음 버전(3.0)을 미리 체험합니다.<br>일부 기능은 아직 동작하지 않습니다. 준비까지 15초 정도 걸립니다.</div>
+        <button class="swu-beta beta-only" id="swu-request-release" style="margin-top:14px; background:var(--accent); color:#1a1008; border:none;">정식 버전 신청하기</button>
+        <div class="swu-beta-note beta-only" id="swu-release-note"></div>
+        <button class="swu-beta" id="swu-downgrade" style="display:none; margin-top:16px; border-color:rgba(255,80,90,0.5); color:#ff6b7d;">이전 버전(1.0)으로 되돌리기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Install progress (blocks the app, like a real OS update) -->
+  <div class="sw-install" id="sw-install" aria-hidden="true">
+    <div class="swi-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></div>
+    <div class="swi-bar"><div class="swi-bar-fill" id="swi-bar-fill"></div></div>
+    <div class="swi-status" id="swi-status">업데이트 준비 중…</div>
+    <div class="swi-eta" id="swi-eta">남은 시간 계산 중…</div>
+  </div>
+
+  <!-- Persistent BETA badge (tap to leave beta) -->
+  <div class="beta-badge" id="beta-badge" title="베타 종료">BETA 3.0 ✕</div>
+
+  <!-- Toast -->
+  <div class="app-toast" id="app-toast"></div>
+
   <!-- Settings sheet -->
   <div class="sheet" id="sheet-settings">
     <div class="sheet-title">설정
       <button class="sheet-close" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>
+    <button class="ghost-btn" id="software-update-btn" style="display:flex; align-items:center; justify-content:space-between; text-align:left;">
+      <span>소프트웨어 업데이트<span class="update-badge" id="update-badge">1</span></span>
+      <span style="color:var(--text-faint);">›</span>
+    </button>
+    <button class="ghost-btn beta-only" id="beta-ai-btn">✨ AI 비서 (베타)</button>
     <div class="settings-row">
       <span class="field-label">24시간 표시</span>
       <div class="switch" id="toggle-24h"><div class="switch-knob"></div></div>
@@ -3274,8 +3527,26 @@ body.widgets-editing .widget-card .wg-remove{ display:flex; }
       <span class="field-label">화면 뒤집기</span>
       <div class="switch" id="toggle-flip"><div class="switch-knob"></div></div>
     </div>
+    <div class="settings-row">
+      <span class="field-label">화면 잠금</span>
+      <div class="switch" id="toggle-lock"><div class="switch-knob"></div></div>
+    </div>
     <div class="field-label">기기 모델</div>
     <div class="chip-row" id="device-chips"></div>
+    <div class="field-label island-feat">다이나믹 아일랜드 위치</div>
+    <div class="settings-row island-pos-row island-feat">
+      <span class="field-label">아일랜드 좌우 위치</span>
+      <input type="range" id="island-x" class="set-range" min="-130" max="130" step="1" value="0">
+    </div>
+    <div class="settings-row island-pos-row island-feat">
+      <span class="field-label">아일랜드 상하 위치</span>
+      <input type="range" id="island-y" class="set-range" min="0" max="80" step="1" value="0">
+    </div>
+    <button class="ghost-btn island-feat" id="island-pos-reset">아일랜드 위치 초기화</button>
+    <div class="settings-row">
+      <span class="field-label">블루투스 기기 이름</span>
+      <input type="text" id="bt-name-input" class="num-input" style="width:150px; text-align:left;" placeholder="AirPods Pro">
+    </div>
     <div class="settings-row">
       <span class="field-label">AOD 자동 진입 (초)</span>
       <input type="number" id="aod-idle-input" class="num-input" min="5" step="5" value="120" inputmode="numeric">
@@ -4199,7 +4470,7 @@ function buildIslandDOM(r){
       <div class="music-right">
         <div class="music-title">${esc(t.title || '재생할 곡 없음')}</div>
         <div class="music-artist">${esc(t.artist || '알 수 없는 아티스트')}${t.album ? ' · ' + esc(t.album) : ''}</div>
-        <div class="music-spectrum" id="music-bars">${'<i></i>'.repeat(30)}</div>
+        <div class="music-spectrum" id="music-bars">${'<i></i>'.repeat(featuresUnlocked() ? 5 : 30)}</div>
         <div class="music-progress">
           <span class="music-time" id="music-cur">00:00</span>
           <div class="music-bar" id="music-bar"><div class="music-bar-fill" id="music-bar-fill"></div></div>
@@ -4227,7 +4498,7 @@ function buildIslandDOM(r){
       html = `<div class="island-content music-pill-content" data-action="expand"
                    style="cursor:pointer;" role="button" aria-label="${esc(t.title || '음악')} · 플레이어 열기">
         <div class="music-thumb" ${t.art ? `style="background-image:url('${t.art}')"` : ''}>${t.art ? '' : NOTE_SVG}</div>
-        <div class="music-spectrum" id="music-mini-bars" data-ramp="1">${'<i></i>'.repeat(8)}</div>
+        <div class="music-spectrum" id="music-mini-bars" data-ramp="1">${'<i></i>'.repeat(featuresUnlocked() ? 5 : 8)}</div>
       </div>`;
     }
   } else if(mode === 'ambient'){
@@ -4618,7 +4889,7 @@ function openPanel(name){
   });
   iconBtns.ambient.classList.remove('on');
   overlay.classList.add('open');
-
+  if(name === 'settings' && typeof syncLockToggle === 'function') syncLockToggle();
 }
 function closePanel(){
   state.activePanel = null;
@@ -4759,6 +5030,18 @@ function applyFlip(){ appEl.classList.toggle('flipped', state.flipped); }
 makeToggle(document.getElementById('toggle-flip'), ()=>state.flipped, v=>{ state.flipped = v; applyFlip(); });
 applyFlip();
 
+/* Screen-lock toggle: turns the lock on (and off) from Settings.
+   Locking closes the panel, so the lock screen shows immediately. */
+const lockToggle = document.getElementById('toggle-lock');
+function syncLockToggle(){ if(lockToggle) lockToggle.classList.toggle('on', isLocked()); }
+if(lockToggle){
+  lockToggle.addEventListener('click', ()=>{
+    if(isLocked()) unlockScreen(); else lockScreen();
+    syncLockToggle();
+  });
+  syncLockToggle();
+}
+
 /* AOD auto-enter delay (seconds). Source of truth is localStorage so the
    AOD module can read the live value. Min 5s, no maximum. */
 const AOD_IDLE_KEY = 'dynamicClock.aodIdleSec';
@@ -4846,6 +5129,49 @@ function renderDeviceChips(){
 }
 applyDevice(currentDevice());
 renderDeviceChips();
+
+/* Version/beta keys live up here so load-time code (island position,
+   feature gate) can read them without hitting the temporal dead zone. */
+const VERSION_KEY = 'dynamicClock.version';
+const BETA_KEY    = 'dynamicClock.beta';
+const CURRENT_VERSION = '2.0';   // the standard software update
+const RELEASE_VERSION = '4.0';   // shipped when a beta user requests the official build (adds Bluetooth)
+
+/* ---- Dynamic Island: free position ----
+   Stored separately so wiping clock state doesn't reset the physical
+   placement of the pill. x/y pixel offsets applied as CSS vars. */
+const ISLAND_POS_KEY = 'dynamicClock.islandPos';
+let islandPos = { x:0, y:0 };
+try{
+  const saved = JSON.parse(localStorage.getItem(ISLAND_POS_KEY) || 'null');
+  if(saved){
+    if(typeof saved.x === 'number') islandPos.x = saved.x;
+    if(typeof saved.y === 'number') islandPos.y = saved.y;
+  }
+}catch(e){}
+function saveIslandPos(){
+  try{ localStorage.setItem(ISLAND_POS_KEY, JSON.stringify(islandPos)); }catch(e){}
+}
+function applyIslandPos(){
+  /* This is a 2.0 feature — before the update is installed the pill
+     stays centred, regardless of any saved offset. */
+  const on = (typeof featuresUnlocked === 'function') ? featuresUnlocked() : true;
+  document.documentElement.style.setProperty('--island-x', (on ? islandPos.x : 0) + 'px');
+  document.documentElement.style.setProperty('--island-y', (on ? islandPos.y : 0) + 'px');
+}
+(function wireIslandPos(){
+  const xEl = document.getElementById('island-x');
+  const yEl = document.getElementById('island-y');
+  const resetEl = document.getElementById('island-pos-reset');
+  if(xEl){ xEl.value = islandPos.x; xEl.addEventListener('input', ()=>{ islandPos.x = parseInt(xEl.value,10)||0; applyIslandPos(); saveIslandPos(); }); }
+  if(yEl){ yEl.value = islandPos.y; yEl.addEventListener('input', ()=>{ islandPos.y = parseInt(yEl.value,10)||0; applyIslandPos(); saveIslandPos(); }); }
+  if(resetEl){ resetEl.addEventListener('click', ()=>{
+    islandPos = { x:0, y:0 };
+    if(xEl) xEl.value = 0; if(yEl) yEl.value = 0;
+    applyIslandPos(); saveIslandPos();
+  }); }
+})();
+applyIslandPos();
 
 /* ---- Background: solid black (default) or a custom photo ---- */
 const BG_MODES = [
@@ -6909,6 +7235,8 @@ const onboardSkip  = document.getElementById('onboard-skip');
 
 let onboardIndex = 0;
 let onboardDone = null;   // what to run once the walkthrough closes
+let onboardPages = ONBOARD_PAGES;   // which deck is showing (app intro vs. what's-new)
+let onboardMarkSeen = true;          // whether closing should set INTRO_SEEN_KEY
 
 function renderOnboardDevicePicker(){
   const host = document.getElementById('onboard-devices');
@@ -6925,7 +7253,7 @@ function renderOnboardDevicePicker(){
 }
 
 function renderOnboardPage(){
-  const p = ONBOARD_PAGES[onboardIndex];
+  const p = onboardPages[onboardIndex];
   onboardStage.classList.remove('enter');
   if(p.pick === 'device'){
     onboardStage.innerHTML = `
@@ -6946,15 +7274,18 @@ function renderOnboardPage(){
   void onboardStage.offsetWidth;
   onboardStage.classList.add('enter');
 
-  onboardDots.innerHTML = ONBOARD_PAGES
+  onboardDots.innerHTML = onboardPages
     .map((_, i)=>`<i class="${i === onboardIndex ? 'on' : ''}"></i>`).join('');
 
-  const last = onboardIndex === ONBOARD_PAGES.length - 1;
-  onboardNext.textContent = last ? '시작하기' : '다음';
+  const last = onboardIndex === onboardPages.length - 1;
+  onboardNext.textContent = p.cta || (last ? '시작하기' : '다음');
   onboardSkip.style.visibility = last ? 'hidden' : '';
 }
 
-function openOnboard(onDone){
+function openOnboard(onDone, opts){
+  opts = opts || {};
+  onboardPages = opts.pages || ONBOARD_PAGES;
+  onboardMarkSeen = opts.markSeen !== false;
   onboardIndex = 0;
   onboardDone = onDone || null;
   onboardEl.classList.add('open');
@@ -6963,14 +7294,16 @@ function openOnboard(onDone){
 
 function closeOnboard(){
   onboardEl.classList.remove('open');
-  try{ localStorage.setItem(INTRO_SEEN_KEY, '1'); }catch(e){}
+  if(onboardMarkSeen){ try{ localStorage.setItem(INTRO_SEEN_KEY, '1'); }catch(e){} }
   const done = onboardDone;
   onboardDone = null;
+  onboardPages = ONBOARD_PAGES;
+  onboardMarkSeen = true;
   if(done) done();
 }
 
 onboardNext.addEventListener('click', ()=>{
-  if(onboardIndex >= ONBOARD_PAGES.length - 1){ closeOnboard(); return; }
+  if(onboardIndex >= onboardPages.length - 1){ closeOnboard(); return; }
   onboardIndex++;
   renderOnboardPage();
 });
@@ -6981,10 +7314,360 @@ document.getElementById('replay-intro').addEventListener('click', ()=>{
   openOnboard(null);
 });
 
+/* ================= Software update (iOS-style, fake) ================= */
+/* VERSION_KEY / BETA_KEY / CURRENT_VERSION are declared near the top. */
+
+/* What's-new deck shown right after the (fake) install completes. */
+const WHATS_NEW_PAGES = [
+  { art:'island', title:'새로워진 다이나믹 아일랜드',
+    body:'이제 알약의 <b>위치</b>를 자유롭게 옮길 수 있습니다.<br>설정에서 좌우·상하로 조절해보세요.' },
+  { art:'wave', title:'더 얇아진 오디오 스펙트럼',
+    body:'음악 스펙트럼이 <b>5가닥</b>으로 더 얇고 깔끔해졌습니다.', cta:'완료' },
+];
+/* Beta deck — proposes next-version ideas (AI 등), mostly "준비 중". */
+const BETA_PAGES = [
+  { art:'island', title:'다이나믹 클록 3.0 베타',
+    body:'다음 버전을 미리 만나보세요.<br>일부 기능은 <b>아직 준비 중</b>이라 동작하지 않을 수 있어요.' },
+  { art:'clock', title:'AI 비서 (예정)',
+    body:'“30분 뒤에 깨워줘”처럼 말하면 알아서 처리하는 <b>AI 비서</b>를 준비하고 있어요.' },
+  { art:'music', title:'AI 추천 (예정)',
+    body:'지금 분위기에 어울리는 음악과 배경을 <b>AI가 제안</b>합니다.', cta:'체험 시작' },
+];
+/* What's-new shown after the official beta release (4.0) lands. */
+const RELEASE_PAGES = [
+  { art:'island', title:'다이나믹 클록 4.0',
+    body:'정식 버전이 설치되었습니다.<br>2.0의 기능에 더해 <b>블루투스 연결</b>이 추가되었어요.' },
+  { art:'island', title:'블루투스 연결',
+    body:'<b>잠금화면을 두 번 터치</b>하면 기기를 찾아 연결합니다.<br>연결되면 아래에서 팝업이 올라와요. 기기 이름은 설정에서 바꿀 수 있어요.', cta:'완료' },
+];
+
+function appInstalledVersion(){
+  try{ return localStorage.getItem(VERSION_KEY) || '1.0'; }catch(e){ return '1.0'; }
+}
+function vNum(v){ const n = parseFloat(v); return isFinite(n) ? n : 1.0; }
+function installedNum(){ return vNum(appInstalledVersion()); }
+/* The main "소프트웨어 업데이트" ships 2.0 (island position, slim spectrum).
+   Anything 2.0 or higher counts as installed. */
+function updateAvailable(){ return installedNum() < vNum(CURRENT_VERSION); }
+function featuresUnlocked(){ return installedNum() >= vNum(CURRENT_VERSION); }
+/* Bluetooth is a 4.0 feature — only works once the beta release lands. */
+function bluetoothUnlocked(){ return installedNum() >= vNum(RELEASE_VERSION); }
+function applyFeatureGate(){
+  document.body.classList.toggle('v2', featuresUnlocked());
+  document.body.classList.toggle('v4', bluetoothUnlocked());
+  applyIslandPos();
+  islandMode = null;      // force the pill to rebuild so the bar count updates
+  try{ renderIsland(); }catch(e){}
+  refreshUpdateBadge();
+}
+
+function refreshUpdateBadge(){
+  const badge = document.getElementById('update-badge');
+  if(badge) badge.style.display = updateAvailable() ? '' : 'none';
+  const installBtn = document.getElementById('swu-install');
+  const meta = document.getElementById('swu-meta');
+  if(installBtn){
+    if(updateAvailable()){ installBtn.disabled = false; installBtn.textContent = '다운로드 및 설치'; }
+    else { installBtn.disabled = true; installBtn.textContent = '최신 버전입니다'; }
+  }
+  if(meta) meta.textContent = updateAvailable()
+    ? '38.4 MB · 이 업데이트에는 새로운 기능과 개선 사항이 포함되어 있습니다.'
+    : '다이나믹 클록이 최신 상태입니다. (2.0)';
+  const dg = document.getElementById('swu-downgrade');
+  if(dg) dg.style.display = featuresUnlocked() ? '' : 'none';
+}
+
+/* ---- Toast ---- */
+let toastTimer = null;
+function showToast(msg){
+  const el = document.getElementById('app-toast');
+  if(!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ el.classList.remove('show'); }, 2600);
+}
+
+/* ---- Update detail page ---- */
+const swUpdateEl = document.getElementById('sw-update');
+function openUpdatePage(){
+  refreshUpdateBadge();
+  resetBetaButton();
+  if(typeof updateReleaseNote === 'function') updateReleaseNote();
+  swUpdateEl.classList.add('open');
+  swUpdateEl.setAttribute('aria-hidden','false');
+}
+function closeUpdatePage(){
+  swUpdateEl.classList.remove('open');
+  swUpdateEl.setAttribute('aria-hidden','true');
+}
+document.getElementById('software-update-btn').addEventListener('click', openUpdatePage);
+document.getElementById('swu-back').addEventListener('click', closeUpdatePage);
+
+/* ---- The install: ~60s of fake progress that blocks the whole app ---- */
+const INSTALL_STEPS = [
+  { at:0,   text:'업데이트 준비 중…' },
+  { at:8,   text:'다운로드하는 중…' },
+  { at:42,  text:'설치 준비 중…' },
+  { at:62,  text:'업데이트 설치 중…' },
+  { at:88,  text:'마무리하는 중…' },
+  { at:100, text:'설치 완료' },
+];
+let installTimer = null;
+function runInstall(){
+  closeUpdatePage();
+  closePanel();
+  const screen = document.getElementById('sw-install');
+  const fill   = document.getElementById('swi-bar-fill');
+  const status = document.getElementById('swi-status');
+  const eta    = document.getElementById('swi-eta');
+  screen.classList.add('open');
+  screen.setAttribute('aria-hidden','false');
+  const TOTAL = 60000;                 // ~1 minute, like a real update
+  const started = performance.now();
+  fill.style.width = '0%';
+  status.textContent = INSTALL_STEPS[0].text;
+  clearInterval(installTimer);
+  installTimer = setInterval(()=>{
+    const elapsed = performance.now() - started;
+    const pct = Math.min(100, (elapsed / TOTAL) * 100);
+    fill.style.width = pct.toFixed(1) + '%';
+    for(let i = INSTALL_STEPS.length - 1; i >= 0; i--){
+      if(pct >= INSTALL_STEPS[i].at){ status.textContent = INSTALL_STEPS[i].text; break; }
+    }
+    const remain = Math.max(0, Math.ceil((TOTAL - elapsed) / 1000));
+    eta.textContent = remain > 0 ? `남은 시간 약 ${remain}초` : '곧 완료됩니다…';
+    if(pct >= 100){
+      clearInterval(installTimer); installTimer = null;
+      finishInstall();
+    }
+  }, 300);
+}
+function finishInstall(){
+  try{ localStorage.setItem(VERSION_KEY, CURRENT_VERSION); }catch(e){}
+  applyFeatureGate();     // new features switch on now
+  const screen = document.getElementById('sw-install');
+  /* Brief pause on "설치 완료", then the Hello intro, then what's new. */
+  setTimeout(()=>{
+    screen.classList.remove('open');
+    screen.setAttribute('aria-hidden','true');
+    playHello(()=>{
+      openOnboard(()=>{ refreshUpdateBadge(); }, { pages: WHATS_NEW_PAGES, markSeen:false });
+    });
+  }, 900);
+}
+
+/* Reuse the boot "Hello" veil, then run a callback. */
+function playHello(done){
+  const hello = document.getElementById('hello-intro');
+  if(!hello){ if(done) done(); return; }
+  hello.classList.remove('show');
+  void hello.offsetWidth;
+  hello.classList.add('show');
+  setTimeout(()=>{ hello.classList.remove('show'); if(done) done(); }, 2500);
+}
+
+document.getElementById('swu-install').addEventListener('click', ()=>{
+  if(updateAvailable()) runInstall();
+});
+
+/* ---- Beta: available after a 15s "download", fake, partly working ---- */
+const betaBtn = document.getElementById('swu-beta');
+let betaCountdownTimer = null;
+function resetBetaButton(){
+  clearInterval(betaCountdownTimer); betaCountdownTimer = null;
+  if(!betaBtn) return;
+  if(isBetaOn()){ betaBtn.disabled = false; betaBtn.textContent = '베타 다시 보기'; }
+  else { betaBtn.disabled = false; betaBtn.textContent = '베타 체험해보기'; }
+}
+betaBtn.addEventListener('click', ()=>{
+  if(isBetaOn()){ playBetaDeck(); return; }
+  let left = 15;
+  betaBtn.disabled = true;
+  betaBtn.textContent = `베타 받는 중… ${left}초`;
+  clearInterval(betaCountdownTimer);
+  betaCountdownTimer = setInterval(()=>{
+    left--;
+    if(left > 0){ betaBtn.textContent = `베타 받는 중… ${left}초`; return; }
+    clearInterval(betaCountdownTimer); betaCountdownTimer = null;
+    enterBeta();
+  }, 1000);
+});
+
+function isBetaOn(){ try{ return localStorage.getItem(BETA_KEY) === '1'; }catch(e){ return false; } }
+function applyBetaMode(){ document.body.classList.toggle('beta', isBetaOn()); }
+function enterBeta(){
+  try{ localStorage.setItem(BETA_KEY, '1'); }catch(e){}
+  applyBetaMode();
+  closeUpdatePage();
+  closePanel();
+  playHello(()=>{ playBetaDeck(); });
+}
+function playBetaDeck(){
+  openOnboard(()=>{ resetBetaButton(); }, { pages: BETA_PAGES, markSeen:false });
+}
+function exitBeta(){
+  try{ localStorage.setItem(BETA_KEY, '0'); }catch(e){}
+  applyBetaMode();
+  showToast('베타를 종료했습니다.');
+  resetBetaButton();
+}
+document.getElementById('beta-badge').addEventListener('click', exitBeta);
+document.getElementById('beta-ai-btn').addEventListener('click', ()=>{
+  showToast('이 기능은 아직 준비 중입니다. (베타)');
+});
+
+/* ---- Downgrade: roll back to 1.0 so the new features turn off ---- */
+document.getElementById('swu-downgrade').addEventListener('click', ()=>{
+  if(!featuresUnlocked()) return;
+  if(!confirm('이전 버전(1.0)으로 되돌리면 새 기능이 모두 꺼집니다.\n계속할까요?')) return;
+  try{ localStorage.setItem(VERSION_KEY, '1.0'); }catch(e){}
+  if(isBetaOn()) exitBeta();
+  applyFeatureGate();
+  resetBetaButton();
+  showToast('1.0으로 되돌렸습니다.');
+});
+
+/* ---- Beta → official release: requested from beta, ships in 2–5 min ---- */
+const RELEASE_KEY = 'dynamicClock.releaseAt';
+let releaseTimer = null;
+function releaseAt(){ try{ return parseInt(localStorage.getItem(RELEASE_KEY) || '0', 10) || 0; }catch(e){ return 0; } }
+function updateReleaseNote(){
+  const note = document.getElementById('swu-release-note');
+  const btn  = document.getElementById('swu-request-release');
+  const at = releaseAt();
+  if(at && at > Date.now()){
+    const secs = Math.max(1, Math.ceil((at - Date.now()) / 1000));
+    if(note) note.textContent = `정식 버전을 준비하고 있습니다. 약 ${secs}초 내로 출시되면 자동으로 설치됩니다.`;
+    if(btn){ btn.disabled = true; btn.textContent = '정식 버전 출시 대기 중…'; }
+  } else {
+    if(note) note.textContent = '';
+    if(btn){ btn.disabled = false; btn.textContent = '정식 버전 신청하기'; }
+  }
+}
+function scheduleRelease(){
+  clearTimeout(releaseTimer); releaseTimer = null;
+  const at = releaseAt();
+  if(!at) return;
+  const ms = at - Date.now();
+  if(ms <= 0){ runRelease(); return; }
+  releaseTimer = setTimeout(runRelease, ms);
+  updateReleaseNote();
+}
+function requestRelease(){
+  if(!isBetaOn()) return;
+  if(releaseAt() > Date.now()) return;        // already pending
+  const delay = 30000 + Math.floor(Math.random() * 30001);   // 30–60 sec
+  try{ localStorage.setItem(RELEASE_KEY, String(Date.now() + delay)); }catch(e){}
+  showToast('정식 버전을 신청했습니다. 출시되면 자동으로 설치됩니다.');
+  scheduleRelease();
+}
+function runRelease(){
+  clearTimeout(releaseTimer); releaseTimer = null;
+  try{ localStorage.removeItem(RELEASE_KEY); }catch(e){}
+  try{ localStorage.setItem(BETA_KEY, '0'); }catch(e){}       // leave beta → official
+  try{ localStorage.setItem(VERSION_KEY, RELEASE_VERSION); }catch(e){}
+  applyBetaMode();
+  applyFeatureGate();
+  closeUpdatePage(); closePanel();
+  showToast('정식 버전이 출시되었습니다!');
+  playHello(()=>{
+    openOnboard(()=>{ refreshUpdateBadge(); updateReleaseNote(); resetBetaButton(); },
+      { pages: RELEASE_PAGES, markSeen:false });
+  });
+}
+document.getElementById('swu-request-release').addEventListener('click', requestRelease);
+
+applyBetaMode();
+applyFeatureGate();
+scheduleRelease();
+
+/* ================= Bluetooth connect (lock-screen double-tap) ================= */
+const BT_NAME_KEY = 'dynamicClock.btName';
+function btName(){ try{ return (localStorage.getItem(BT_NAME_KEY) || '').trim() || 'AirPods Pro'; }catch(e){ return 'AirPods Pro'; } }
+(function wireBtName(){
+  const el = document.getElementById('bt-name-input');
+  if(!el) return;
+  el.value = btName();
+  el.addEventListener('input', ()=>{ try{ localStorage.setItem(BT_NAME_KEY, el.value); }catch(e){} });
+})();
+
+const btPop   = document.getElementById('bt-pop');
+const btScrim = document.getElementById('bt-scrim');
+const btScanEl= document.getElementById('bt-scan');
+function showBtScan(on){
+  if(!btScanEl) return;
+  btScanEl.classList.toggle('show', on);
+  btScanEl.setAttribute('aria-hidden', on ? 'false' : 'true');
+}
+function showBtPopup(){
+  document.getElementById('bt-pop-name').textContent = btName();
+  btScrim.classList.add('show');
+  btPop.classList.add('show');
+  btPop.setAttribute('aria-hidden','false');
+}
+function hideBtPopup(){
+  btPop.classList.remove('show');
+  btScrim.classList.remove('show');
+  btPop.setAttribute('aria-hidden','true');
+}
+document.getElementById('bt-pop-close').addEventListener('click', hideBtPopup);
+btScrim.addEventListener('click', hideBtPopup);
+
+let btBusy = false;
+async function startBtScan(){
+  if(btBusy) return;
+  btBusy = true;
+  try{
+    if(navigator.bluetooth && navigator.bluetooth.requestDevice){
+      showBtScan(true);
+      let device = null;
+      try{
+        /* Opens the real OS/browser device chooser (needs a user gesture —
+           we're inside the double-tap handler). */
+        device = await navigator.bluetooth.requestDevice({
+          acceptAllDevices:true, optionalServices:['battery_service']
+        });
+      }catch(err){
+        showBtScan(false);
+        /* NotFoundError/AbortError = the user closed the chooser → do nothing.
+           Anything else (blocked origin like file://, unsupported) → still
+           show the popup so the UI works. */
+        if(err && (err.name === 'NotFoundError' || err.name === 'AbortError')){ btBusy = false; return; }
+        showBtPopup(); btBusy = false; return;
+      }
+      try{ if(device && device.gatt) await device.gatt.connect(); }catch(e){}  // actually connect
+      showBtScan(false);
+      showBtPopup();
+    } else {
+      showBtPopup();   // Web Bluetooth unsupported here → still show the popup
+    }
+  } finally {
+    btBusy = false;
+  }
+}
+
+/* Double-tap the lock/clock screen to start scanning. */
+(function wireBtDoubleTap(){
+  let lastTap = 0;
+  document.addEventListener('pointerup', (e)=>{
+    if(!bluetoothUnlocked()) return;    // Bluetooth is a 4.0 feature
+    if(document.body.classList.contains('home-open')) return;
+    if(document.body.classList.contains('app-open')) return;
+    if(document.body.classList.contains('aod')) return;
+    if(btPop.classList.contains('show')) return;
+    if(state.activePanel || islandPanel) return;
+    if(e.target.closest('.island, .sheet, .voice-orb, .lock-slide, .ring-screen, .bt-pop, #home-search, .app-view')) return;
+    const now = Date.now();
+    if(now - lastTap < 330){ lastTap = 0; startBtScan(); }
+    else lastTap = now;
+  });
+})();
+
 /* ================= Erase all data =================
    Every key this app writes, listed in one place so the reset cannot
    silently miss one that gets added later. */
-const ALL_STORAGE_KEYS = [STORAGE_KEY, BG_STORAGE_KEY, INTRO_SEEN_KEY];
+const ALL_STORAGE_KEYS = [STORAGE_KEY, BG_STORAGE_KEY, INTRO_SEEN_KEY, ISLAND_POS_KEY, VERSION_KEY, BETA_KEY, RELEASE_KEY, BT_NAME_KEY];
 
 const eraseBtn  = document.getElementById('erase-data');
 const eraseNote = document.getElementById('erase-note');
