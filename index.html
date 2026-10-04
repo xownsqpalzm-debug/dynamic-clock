@@ -7615,36 +7615,42 @@ document.getElementById('bt-pop-close').addEventListener('click', hideBtPopup);
 btScrim.addEventListener('click', hideBtPopup);
 
 let btBusy = false;
+let btScanTimer = null;
+/* Fallback for platforms with no Web Bluetooth (iOS Safari / home-screen
+   web apps): there's no real device chooser, so show a short "searching"
+   indicator and then the popup, so it still reads as a scan+connect. */
+function demoScanThenPopup(){
+  showBtScan(true);
+  clearTimeout(btScanTimer);
+  btScanTimer = setTimeout(()=>{ showBtScan(false); showBtPopup(); btBusy = false; }, 1500);
+}
 async function startBtScan(){
   if(btBusy) return;
   btBusy = true;
-  try{
-    if(navigator.bluetooth && navigator.bluetooth.requestDevice){
-      showBtScan(true);
-      let device = null;
-      try{
-        /* Opens the real OS/browser device chooser (needs a user gesture —
-           we're inside the double-tap handler). */
-        device = await navigator.bluetooth.requestDevice({
-          acceptAllDevices:true, optionalServices:['battery_service']
-        });
-      }catch(err){
-        showBtScan(false);
-        /* NotFoundError/AbortError = the user closed the chooser → do nothing.
-           Anything else (blocked origin like file://, unsupported) → still
-           show the popup so the UI works. */
-        if(err && (err.name === 'NotFoundError' || err.name === 'AbortError')){ btBusy = false; return; }
-        showBtPopup(); btBusy = false; return;
-      }
-      try{ if(device && device.gatt) await device.gatt.connect(); }catch(e){}  // actually connect
+  if(navigator.bluetooth && navigator.bluetooth.requestDevice){
+    showBtScan(true);
+    let device = null;
+    try{
+      /* Opens the real OS/browser device chooser (needs a user gesture —
+         we're inside the double-tap handler). */
+      device = await navigator.bluetooth.requestDevice({
+        acceptAllDevices:true, optionalServices:['battery_service']
+      });
+    }catch(err){
       showBtScan(false);
-      showBtPopup();
-    } else {
-      showBtPopup();   // Web Bluetooth unsupported here → still show the popup
+      /* NotFoundError/AbortError = user closed the chooser → do nothing.
+         Anything else (blocked origin, etc.) → fall back to the scan demo. */
+      if(err && (err.name === 'NotFoundError' || err.name === 'AbortError')){ btBusy = false; return; }
+      demoScanThenPopup(); return;
     }
-  } finally {
+    try{ if(device && device.gatt) await device.gatt.connect(); }catch(e){}  // actually connect
+    showBtScan(false);
+    showBtPopup();
     btBusy = false;
+    return;
   }
+  /* No Web Bluetooth (iPhone): searching demo → popup. */
+  demoScanThenPopup();
 }
 
 /* Double-tap the lock/clock screen to start scanning. */
@@ -8033,6 +8039,37 @@ function showRainLive(sub){
 }
 window.__rainDemo = ()=> showRainLive('약 25분 뒤 · 강수 70%');
 
+/* Current weather as a Dynamic Island live activity: place + temp + sky.
+   Fetches first if we don't have it yet. */
+function showWeatherLive(){
+  const paint = (w)=>{
+    if(document.body.classList.contains('aod')
+       || document.body.classList.contains('home-open')
+       || document.body.classList.contains('app-open')
+       || window.__faceidRender) return;
+    let title, sub;
+    if(!w || w.error){ title = '날씨'; sub = weatherErrorText(w && w.reason); }
+    else { title = w.place || '현재 날씨'; sub = `${w.temp}° · ${weatherDesc(w.code)}`; }
+    const icon = (!w || w.error)
+      ? RAIN_CLOUD_SVG
+      : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${weatherIconSvg(w.code)}</svg>`;
+    window.__weatherRender = ()=>{
+      islandEl.className = 'island rainlive';
+      islandEl.innerHTML =
+        '<div class="rl-icon">' + icon + '</div>'
+        + '<div class="rl-text"><span class="rl-title">' + title + '</span>'
+        + '<span class="rl-sub">' + sub + '</span></div>';
+    };
+    islandMode = 'rainlive';
+    renderIsland();
+    clearTimeout(rainLiveTimer);
+    rainLiveTimer = setTimeout(()=>{ window.__weatherRender = null; islandMode = null; renderIsland(); }, 6500);
+  };
+  if(cachedWeather && !cachedWeather.error) paint(cachedWeather);
+  else prefetchWeather().then(paint);
+}
+window.__weatherLive = showWeatherLive;
+
 function checkRainSoon(){
   const w = cachedWeather;
   if(!w || w.error || !w.hourly || !w.hourly.time) return;
@@ -8059,7 +8096,7 @@ setInterval(()=>{ try{ if(cachedWeather && !cachedWeather.error) checkRainSoon()
 document.addEventListener('keydown', (e)=>{
   const tag = (e.target && e.target.tagName || '').toLowerCase();
   if(tag === 'input' || tag === 'textarea' || (e.target && e.target.isContentEditable)) return;
-  if(e.key === 'r' || e.key === 'R' || e.key === 'ㄱ'){ window.__rainDemo(); }
+  if(e.key === 'r' || e.key === 'R' || e.key === 'ㄱ'){ showWeatherLive(); }
 });
 
 /* ================= Flashlight =================
@@ -9077,6 +9114,27 @@ if(restoredActive){
     const STOP  = ['정지','중지','중단','멈춰','멈춤','멈춰줘','꺼','끄','꺼줘','스톱','스탑','스토프','그만','그만해','취소','종료','없애'];
     const PAUSE = ['일시정지','일시 정지','잠깐','잠시','일단 멈'];
     const RESUME= ['다시','계속','재개','이어','이어서'];
+    const OPEN  = ['열어','열어줘','열기','띄워','띄워줘','실행','들어가','들어가줘'];
+
+    /* ---- App open ("…앱 열어") — checked first so an explicit open verb
+       beats the timer/alarm/music routers below. ---- */
+    if(hasAny(OPEN)){
+      const APP_WORDS = [
+        ['timer',   ['타이머'],                 '타이머'],
+        ['alarm',   ['알람'],                   '알람'],
+        ['stopwatch',['스톱워치','스탑워치','초시계'], '스톱워치'],
+        ['music',   ['음악','노래','뮤직','음원'], '음악'],
+        ['photos',  ['사진','갤러리','앨범'],      '사진'],
+        ['camera',  ['카메라','셀카'],            '카메라'],
+        ['settings',['설정','세팅','환경설정'],    '설정'],
+      ];
+      if(hasAny(['날씨','기상','기온'])){ showWeatherLive(); return '현재 날씨를 알약에 띄웠어요'; }
+      for(const [key, words, label] of APP_WORDS){
+        if(hasAny(words)){
+          if(typeof window.openApp === 'function'){ window.openApp(key); return label + ' 앱을 열었어요'; }
+        }
+      }
+    }
 
     /* ---- Timer ---- */
     if(has('타이머') || hasAny(['알람 말고','카운트다운'])
@@ -9162,6 +9220,12 @@ if(restoredActive){
       }
       toggleMusic();
       return '음악을 전환했어요';
+    }
+
+    /* ---- Weather → current weather on the Dynamic Island ---- */
+    if(hasAny(['날씨','기온','기상','더워','추워','비 와','비와','비 올','비올','우산'])){
+      showWeatherLive();
+      return '현재 날씨를 알약에 띄웠어요';
     }
 
     return null;
