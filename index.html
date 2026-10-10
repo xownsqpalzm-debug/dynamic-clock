@@ -595,6 +595,176 @@ body.aod .clock-stack{ transition:transform 2s ease-in-out; }
 .island.aod-lock .aod-i-lock{ display:flex; color:rgba(255,255,255,0.82); }
 .island.aod-lock .aod-i-lock svg{ width:15px; height:15px; }
 
+/* ================= 6.0: Pet living INSIDE the Dynamic Island =================
+   The pill stays a pill; a round little creature with eyes sits inside it.
+   Tap to expand the pill and reveal the care buttons (밥 · 산책 · 청소). */
+.island.pet{
+  display:flex; align-items:center; justify-content:center; gap:9px;
+  width:var(--isl-w); height:var(--isl-h); border-radius:26px;
+  background:#000; cursor:pointer; overflow:visible;
+}
+.island.pet.expanded{
+  width:min(290px,78vw); height:66px; border-radius:33px;
+  justify-content:flex-start; padding:0 14px;
+}
+/* the round pet itself */
+.pet-blob{
+  position:relative; flex:0 0 auto;
+  width:28px; height:28px; border-radius:50%;
+  background:radial-gradient(130% 130% at 50% 25%, #ffe0a3, #ff9e78 68%, #ff7fa0);
+  box-shadow:inset 0 -3px 6px rgba(150,40,40,0.25);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  transition:transform .25s var(--pill-ease);
+}
+.island.pet.expanded .pet-blob{ width:40px; height:40px; }
+.pet-blob .pet-eyes{ display:flex; gap:7px; }
+.island.pet.expanded .pet-blob .pet-eyes{ gap:10px; }
+.pet-eye{ width:5px; height:6px; border-radius:50%; background:#2a1510; transform-origin:center; animation:petBlink 4.4s infinite; }
+.island.pet.expanded .pet-eye{ width:7px; height:8px; }
+@keyframes petBlink{ 0%,93%,100%{ transform:scaleY(1); } 96%{ transform:scaleY(0.1); } }
+.pet-mouth{ width:8px; height:4px; margin-top:2.5px; border-bottom:2px solid #2a1510; border-radius:0 0 10px 10px; }
+.island.pet.expanded .pet-mouth{ width:11px; height:6px; }
+/* moods change the little face */
+.island.pet.mood-happy .pet-mouth{ height:6px; }
+.island.pet.mood-hungry .pet-mouth{ width:7px; height:7px; border:2px solid #2a1510; border-radius:50%; margin-top:3px; }
+.island.pet.mood-hungry .pet-eye{ height:4px; }
+.island.pet.mood-sleepy .pet-eye{ height:2px; border-radius:2px; animation:none; }
+.island.pet.mood-sleepy .pet-mouth{ width:5px; }
+.island.pet.mood-poop .pet-blob{ filter:brightness(0.95) saturate(0.85); }
+.pet-poop{ position:absolute; right:-7px; bottom:-5px; font-size:13px; line-height:1; filter:none; }
+.pet-info{ flex:1 1 auto; min-width:0; color:#fff; font-family:-apple-system,sans-serif; }
+.pet-name{ font-size:14px; font-weight:700; }
+.pet-stats{ font-size:11px; color:rgba(255,255,255,0.65); white-space:nowrap; }
+.pet-acts{ display:flex; gap:7px; flex:0 0 auto; }
+.pet-act{
+  width:34px; height:34px; border-radius:50%; border:none;
+  background:rgba(255,255,255,0.14); color:#fff; font-size:16px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+.pet-act:active{ transform:scale(0.88); }
+.pet-act.alert{ background:#ffce3a; box-shadow:0 0 0 0 rgba(255,206,58,0.6); animation:petPulse 1.3s infinite; }
+@keyframes petPulse{ 0%{ box-shadow:0 0 0 0 rgba(255,206,58,0.55); } 70%{ box-shadow:0 0 0 9px rgba(255,206,58,0); } 100%{ box-shadow:0 0 0 0 rgba(255,206,58,0); } }
+/* bounce when fed/played with */
+.island.pet.react .pet-blob{ animation:petHop .5s ease; }
+@keyframes petHop{ 0%,100%{ transform:translateY(0) scale(1); } 35%{ transform:translateY(-7px) scale(1.12); } 70%{ transform:translateY(0) scale(0.96); } }
+
+/* ---- Pet full-screen app ---- */
+.pet-app{ display:flex; flex-direction:column; align-items:stretch; }
+.pet-hero{ display:flex; justify-content:center; margin:14px 0 6px; }
+.pet-hero.off{ opacity:0.5; filter:grayscale(0.6); }
+.pet-hero-blob{
+  position:relative; width:120px; height:120px; border-radius:50%;
+  background:radial-gradient(130% 130% at 50% 24%, #ffe0a3, #ff9e78 66%, #ff7fa0);
+  box-shadow:inset 0 -10px 20px rgba(150,40,40,0.22), 0 14px 34px rgba(255,120,120,0.25);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  animation:petFloat 3.6s ease-in-out infinite;
+}
+@keyframes petFloat{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-8px); } }
+.pet-hero-blob .pet-eyes{ display:flex; gap:22px; }
+.pet-hero-blob .pet-eye{ width:15px; height:18px; border-radius:50%; background:#2a1510; }
+.pet-hero-blob .pet-mouth{ width:26px; height:13px; margin-top:10px; border-bottom:4px solid #2a1510; border-radius:0 0 22px 22px; }
+.pet-hero-blob.mood-hungry .pet-mouth{ width:16px; height:16px; border:4px solid #2a1510; border-radius:50%; }
+.pet-hero-blob.mood-sleepy .pet-eye{ height:4px; border-radius:3px; }
+.pet-hero-blob .pet-poop{ right:4px; bottom:6px; font-size:34px; }
+.pet-hero-name{ text-align:center; color:#fff; font-size:24px; font-weight:800; margin-top:14px; font-family:-apple-system,sans-serif; }
+.pet-hero-sub{ text-align:center; color:var(--text-dim); font-size:14px; margin-top:4px; }
+.pet-name-in{ background:none; border:none; outline:none; color:#0a84ff; font-size:16px; text-align:right; width:120px; font-family:-apple-system,sans-serif; }
+.pet-bars{ display:flex; flex-direction:column; gap:12px; margin:20px 2px; }
+.pet-bar{ display:flex; align-items:center; gap:12px; }
+.pet-bar span{ color:var(--text-dim); font-size:13px; width:48px; flex:0 0 auto; }
+.pet-track{ flex:1 1 auto; height:10px; border-radius:6px; background:rgba(255,255,255,0.12); overflow:hidden; }
+.pet-fill{ height:100%; border-radius:6px; background:linear-gradient(90deg,#ff9f5a,#ff6f91); transition:width .4s ease; }
+.pet-fill.energy{ background:linear-gradient(90deg,#5ad1ff,#5b7cff); }
+.pet-app-acts{ display:flex; gap:12px; margin:6px 0 10px; }
+.pet-big{
+  flex:1 1 0; display:flex; flex-direction:column; align-items:center; gap:6px;
+  padding:16px 0; border:none; border-radius:18px; cursor:pointer;
+  background:rgba(255,255,255,0.08); color:#fff; font-family:-apple-system,sans-serif;
+}
+.pet-big b{ font-size:26px; line-height:1; }
+.pet-big span{ font-size:13px; font-weight:600; }
+.pet-big:active{ transform:scale(0.95); }
+.pet-big.alert{ background:rgba(255,206,58,0.22); animation:petPulse 1.3s infinite; }
+
+/* ================= 6.0: Good Mode styling ================= */
+/* custom island colour / opacity */
+body.good-tint .island.idle, body.good-tint .island.active{ background:var(--island-bg) !important; }
+/* edit mode: the pill wobbles and shows it's grabbable */
+body.good-edit-island .island{ animation:wgJiggle .5s ease-in-out infinite; outline:2px dashed rgba(255,255,255,0.55); outline-offset:3px; cursor:grab; }
+body.good-edit-island .island.idle{ min-width:60px; }
+
+/* screen mode — liquid glass (translucent UI) */
+/* Liquid glass re-skins the UI surfaces but NOT the Dynamic Island. */
+body.screen-glass .sheet, body.screen-glass .as-card, body.screen-glass .app-view,
+body.screen-glass .home-spot, body.screen-glass .av-list{
+  background:rgba(32,32,44,0.45) !important;
+  backdrop-filter:blur(26px) saturate(165%); -webkit-backdrop-filter:blur(26px) saturate(165%);
+}
+
+/* screen mode — pixel */
+body.screen-pixel img{ image-rendering:pixelated; }
+body.screen-pixel .clock-wrap, body.screen-pixel .clock-stack, body.screen-pixel .big-time, body.screen-pixel .date-label{
+  font-family:"Courier New",ui-monospace,monospace !important; letter-spacing:1.5px; text-shadow:2px 2px 0 rgba(0,0,0,0.55);
+}
+body.screen-pixel .island{ border-radius:5px !important; }
+body.screen-pixel .app-ico{ border-radius:6px !important; }
+
+/* screen mode — board (split-flap departure board) */
+body.screen-board .clock-wrap, body.screen-board .clock-stack, body.screen-board .big-time{
+  font-family:"Courier New",ui-monospace,monospace !important; font-weight:800 !important; letter-spacing:2px;
+  text-shadow:0 2px 0 #000, 0 -1px 0 rgba(255,255,255,0.14);
+}
+body.screen-board{ background:#07080a; }
+
+/* AOD options */
+body.aod .aod-veil{ opacity:var(--aod-dim, 1) !important; }   /* 투명도 슬라이더 */
+body.good-aod-nobar .aod-music{ display:none !important; }
+body.good-aod-ctrl .aod-music .aod-mus-ctrl{ display:flex !important; }
+body.good-aod-ctrl .aod-music .aod-mus-artist{ display:block !important; }
+body.good-aod-bigcover .aod-music{ height:auto !important; flex-direction:column; align-items:center; gap:10px; padding:16px; }
+body.good-aod-bigcover .aod-mus-art{ width:150px !important; height:150px !important; border-radius:14px; }
+
+/* Good Mode app screen */
+.good-app{ display:flex; flex-direction:column; }
+.good-sec-h{ display:flex; align-items:center; justify-content:space-between; color:var(--text-dim); font-size:13px; font-weight:600; margin:20px 4px 8px; }
+.good-reset{ background:none; border:none; color:#0a84ff; font-size:13px; cursor:pointer; padding:2px 4px; font-family:-apple-system,sans-serif; }
+.good-reset:active{ opacity:0.6; }
+.good-chips{ display:flex; flex-wrap:wrap; gap:8px; padding:12px; }
+.good-chip{ padding:9px 15px; border-radius:20px; border:1px solid rgba(255,255,255,0.18); background:rgba(255,255,255,0.06); color:#fff; font-size:14px; cursor:pointer; font-family:-apple-system,sans-serif; }
+.good-chip.on{ background:#0a84ff; border-color:#0a84ff; }
+.good-color{ width:48px; height:30px; border:none; background:none; cursor:pointer; padding:0; }
+.good-range{ width:140px; accent-color:#0a84ff; }
+
+/* recoloured spectrum bars */
+body.good-spectrum-color .music-spectrum i{ background:var(--spectrum-color) !important; }
+/* 집중 / 수면 모드 — dim the clock + wallpaper, hide the quick icons */
+body.good-focus .clock-layer{ filter:brightness(0.45); transition:filter .6s ease; }
+body.good-focus .bg-image-layer{ filter:brightness(0.4); }
+body.good-focus .icons-row{ opacity:0 !important; pointer-events:none; }
+body.good-focus #island-glow{ opacity:0 !important; }
+/* 시간대별 자동 테마 — warm, dimmed night look */
+body.good-night .clock-layer{ filter:sepia(0.2) brightness(0.9) saturate(1.05); transition:filter 1s ease; }
+body.good-night .bg-image-layer{ filter:brightness(0.72) sepia(0.14); }
+/* lock-screen memo line under the clock */
+.lock-memo{ text-align:center; color:rgba(255,255,255,0.8); font-size:15px; margin-top:12px; font-family:-apple-system,sans-serif; letter-spacing:0.2px; }
+body.home-open .lock-memo, body.app-open .lock-memo, body.aod .lock-memo{ display:none !important; }
+
+/* ================= live wallpaper ================= */
+.live-bg{ position:absolute; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
+.live-flow{ background:linear-gradient(130deg,#1a1030,#203a43,#3a1c4a,#2c5364,#1a1030); background-size:400% 400%; animation:liveFlow 20s ease infinite; }
+@keyframes liveFlow{ 0%{ background-position:0% 50%; } 50%{ background-position:100% 50%; } 100%{ background-position:0% 50%; } }
+.live-aurora{ background:#06060a; }
+.live-aurora::before, .live-aurora::after{ content:""; position:absolute; width:72vmax; height:72vmax; border-radius:50%; filter:blur(64px); opacity:0.5; }
+.live-aurora::before{ background:radial-gradient(circle,#5b7cff,transparent 60%); animation:liveAur1 15s ease-in-out infinite; }
+.live-aurora::after{ background:radial-gradient(circle,#ff6fae,transparent 60%); animation:liveAur2 18s ease-in-out infinite; }
+@keyframes liveAur1{ 0%,100%{ transform:translate(-12%,-10%); } 50%{ transform:translate(32%,22%); } }
+@keyframes liveAur2{ 0%,100%{ transform:translate(58%,52%); } 50%{ transform:translate(18%,-12%); } }
+.live-stars{ background:radial-gradient(circle at 50% 18%, #10131f, #05060a); }
+.live-stars span{ position:absolute; width:2px; height:2px; border-radius:50%; background:#fff; opacity:0.7; animation:liveTwinkle 3s ease-in-out infinite; }
+@keyframes liveTwinkle{ 0%,100%{ opacity:0.2; transform:scale(0.8); } 50%{ opacity:1; transform:scale(1.4); } }
+/* canvas-driven rain/snow/weather wallpaper */
+.live-canvas{ position:absolute; inset:0; width:100%; height:100%; }
+
 /* Bottom music bar during AOD */
 .aod-music{
   position:absolute; left:50%; bottom:calc(env(safe-area-inset-bottom,0px) + 22px);
@@ -674,7 +844,23 @@ body.home-open .home-screen{ transform:translateY(0); pointer-events:auto; }
   display:flex; flex-direction:column; align-items:center; gap:7px;
   cursor:pointer; user-select:none; -webkit-user-select:none;
 }
-.app-tile:active{ transform:scale(0.92); }
+.app-tile{ transition:transform .18s cubic-bezier(.3,1.1,.4,1); }
+.app-tile:active{ transform:scale(0.9); }
+/* 5.3: home icons spring in with a gentle stagger when the grid appears.
+   The entrance lives on the inner icon/label so the tile's own :active
+   press scale stays free of any animation fill-lock. */
+@keyframes homeTileIn{ from{ opacity:0; transform:translateY(16px) scale(0.78); } to{ opacity:1; transform:none; } }
+body.home-open .app-tile .app-ico,
+body.home-open .app-tile .app-label{ animation:homeTileIn .46s var(--pill-ease) both; }
+body.home-open .app-tile:nth-child(1) .app-ico, body.home-open .app-tile:nth-child(1) .app-label{ animation-delay:.02s; }
+body.home-open .app-tile:nth-child(2) .app-ico, body.home-open .app-tile:nth-child(2) .app-label{ animation-delay:.05s; }
+body.home-open .app-tile:nth-child(3) .app-ico, body.home-open .app-tile:nth-child(3) .app-label{ animation-delay:.08s; }
+body.home-open .app-tile:nth-child(4) .app-ico, body.home-open .app-tile:nth-child(4) .app-label{ animation-delay:.11s; }
+body.home-open .app-tile:nth-child(5) .app-ico, body.home-open .app-tile:nth-child(5) .app-label{ animation-delay:.14s; }
+body.home-open .app-tile:nth-child(6) .app-ico, body.home-open .app-tile:nth-child(6) .app-label{ animation-delay:.17s; }
+body.home-open .app-tile:nth-child(7) .app-ico, body.home-open .app-tile:nth-child(7) .app-label{ animation-delay:.20s; }
+body.home-open .app-tile:nth-child(8) .app-ico, body.home-open .app-tile:nth-child(8) .app-label{ animation-delay:.23s; }
+body.home-open .app-tile:nth-child(n+9) .app-ico, body.home-open .app-tile:nth-child(n+9) .app-label{ animation-delay:.26s; }
 .app-ico{
   width:62px; height:62px; border-radius:15px;
   display:flex; align-items:center; justify-content:center;
@@ -706,6 +892,8 @@ body.home-open .home-screen{ transform:translateY(0); pointer-events:auto; }
 .app-ico.grad-music{ background:linear-gradient(160deg,#ff2d55,#ff375f); }
 .app-ico.grad-voice{ background:linear-gradient(160deg,#0a84ff,#0060df); }
 .app-ico.grad-weather{ background:linear-gradient(160deg,#64b5f6,#1976d2); }
+.app-ico.grad-pet{ background:linear-gradient(160deg,#ffb86c,#ff6f91); }
+.app-ico.grad-good{ background:linear-gradient(160deg,#a78bfa,#5b7cff); }
 .app-ico.grad-add{ background:rgba(255,255,255,0.10); border:1px dashed rgba(255,255,255,0.4); color:rgba(255,255,255,0.7); }
 .app-label{
   font-size:12px; color:#fff; text-align:center; max-width:72px;
@@ -784,6 +972,28 @@ body.home-open .home-screen{ transform:translateY(0); pointer-events:auto; }
   pointer-events:none;
 }
 body.app-open .app-view{ transform:scale(1); opacity:1; pointer-events:auto; }
+
+/* ===== 5.3: apps launch straight out of the Dynamic Island =====
+   The surface unfurls from a pill at the top — as if the island stretched
+   open into the whole app — then settles to full screen. On close it genies
+   back up into the island because the transform-origin lives there. */
+body.v53 .app-view{ transform-origin:50% calc(24px + env(safe-area-inset-top,0px)); overflow:hidden; }
+body.v53 .app-runner{ transform-origin:50% calc(24px + env(safe-area-inset-top,0px)); }
+@keyframes appFromIsland{
+  0%{   transform:translateY(0) scaleX(0.30) scaleY(0.05); opacity:0.25; border-radius:999px; }
+  26%{  opacity:1; }
+  62%{  transform:translateY(0) scaleX(1) scaleY(1); border-radius:34px; }
+  100%{ transform:translateY(0) scale(1); border-radius:0; }
+}
+body.v53.app-launch .app-view{ animation:appFromIsland .52s cubic-bezier(.32,1.02,.34,1) both; }
+body.v53.app-launch .app-runner.show{ transform:translateY(0); animation:appFromIsland .52s cubic-bezier(.32,1.02,.34,1) both; }
+/* The island swells and dissolves as it hands the screen to the app. */
+@keyframes islandSwallow{
+  0%{   transform:scale(1); }
+  40%{  transform:scale(1.22); filter:brightness(1.3); }
+  100%{ transform:scale(1.5); opacity:0; }
+}
+body.v53.app-launch .island{ animation:islandSwallow .34s ease both; }
 .av-head{
   display:flex; align-items:center; gap:10px; flex:0 0 auto;
   padding:calc(58px + env(safe-area-inset-top,0px)) 18px 12px;
@@ -3087,89 +3297,10 @@ body.music-full-open.music-full-closing .music-full{ opacity:0; }
 .ve-times{ display:flex; justify-content:space-between; font-size:12px; color:var(--text-dim); font-variant-numeric:tabular-nums; }
 .ve-btns{ display:flex; gap:10px; justify-content:flex-end; }
 
-/* ---------- Lock-screen widgets ---------- */
+/* ---------- Clock stack ---------- */
 .clock-stack{ display:flex; flex-direction:column; align-items:center; }
-.widget-row{
-  display:flex; flex-wrap:wrap; justify-content:center; align-items:stretch;
-  gap:12px; margin-top:22px; padding:0 20px;
-  max-width:min(92vw,560px);
-}
-.widget-row:empty{ display:none; }
-.widget-card{
-  position:relative; overflow:hidden;
-  min-width:104px; min-height:72px;
-  padding:12px 14px; border-radius:20px;
-  /* Liquid glass: translucent tinted pane, saturated blur, glossy top
-     highlight + inner rim, soft drop shadow. */
-  background:linear-gradient(150deg, rgba(255,255,255,0.22), rgba(255,255,255,0.06) 55%, rgba(255,255,255,0.02));
-  border:1px solid rgba(255,255,255,0.22);
-  backdrop-filter:blur(22px) saturate(180%); -webkit-backdrop-filter:blur(22px) saturate(180%);
-  color:var(--text);
-  display:flex; flex-direction:column; justify-content:space-between; gap:6px;
-  box-shadow:0 12px 32px -14px rgba(0,0,0,0.55),
-             inset 0 1px 0 rgba(255,255,255,0.45),
-             inset 0 -8px 18px -10px rgba(0,0,0,0.35);
-  transition:transform .18s ease;
-}
-/* Moving specular sheen sweeping the top of each glass card. */
-.widget-card::before{
-  content:''; position:absolute; left:-30%; right:-30%; top:-60%; height:130%;
-  background:radial-gradient(60% 55% at 30% 20%, rgba(255,255,255,0.35), rgba(255,255,255,0) 70%);
-  pointer-events:none; opacity:0.7;
-}
-.widget-card > *{ position:relative; z-index:1; }
-.widget-card .wg-head{
-  display:flex; align-items:center; gap:6px;
-  font-size:11px; letter-spacing:0.02em; color:var(--text-dim); text-transform:uppercase;
-}
-.widget-card .wg-head svg{ width:13px; height:13px; }
-.widget-card .wg-main{ font-size:26px; font-weight:600; line-height:1; font-variant-numeric:tabular-nums; }
-.widget-card .wg-sub{ font-size:12px; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.widget-card.wg-date .wg-main{ font-size:30px; }
-.widget-card.wg-weather .wg-main{ display:flex; align-items:center; gap:8px; }
-.widget-card.wg-weather .wg-main svg{ width:26px; height:26px; }
-.widget-card.wg-battery .wg-main{ display:flex; align-items:center; gap:8px; }
-.widget-card.wg-battery .wg-main svg{ width:28px; height:20px; }
-.widget-card.wg-seconds .wg-main{ font-size:34px; }
-
-/* Edit mode: widgets wobble + show a remove badge, like iOS jiggle. */
-body.widgets-editing .widget-card{ animation:wgJiggle .4s ease-in-out infinite alternate; cursor:pointer; }
-body.widgets-editing .widget-card .wg-remove{ display:flex; }
-.widget-card .wg-remove{
-  display:none; position:absolute; top:-8px; left:-8px;
-  width:22px; height:22px; border-radius:50%;
-  background:#fff; color:#111; align-items:center; justify-content:center;
-  font-size:15px; font-weight:700; line-height:1; z-index:2;
-  box-shadow:0 2px 8px rgba(0,0,0,0.4);
-}
-.widget-card .wg-remove svg{ width:12px; height:12px; }
+/* (6.0: lock-screen / island widget styles removed) */
 @keyframes wgJiggle{ from{ transform:rotate(-1.1deg); } to{ transform:rotate(1.1deg); } }
-
-/* Compact, read-only widget strip inside the island touch (mirror) panel. */
-.mirror-widgets{ flex:0 0 auto; display:flex; gap:8px; overflow-x:auto; }
-.mirror-widgets:empty{ display:none; }
-.mirror-widgets .widget-card{
-  min-width:84px; min-height:auto; padding:8px 10px; border-radius:14px; gap:3px;
-}
-.mirror-widgets .widget-card .wg-head{ font-size:9px; }
-.mirror-widgets .widget-card .wg-main{ font-size:19px; }
-.mirror-widgets .widget-card.wg-date .wg-main{ font-size:21px; }
-.mirror-widgets .widget-card.wg-weather .wg-main svg{ width:19px; height:19px; }
-.mirror-widgets .widget-card .wg-sub{ font-size:10px; }
-.mirror-widgets .wg-remove{ display:none !important; }
-
-/* Widget picker chips in the edit sheet. */
-.widget-picker{ display:flex; flex-wrap:wrap; gap:8px; }
-.wg-chip{
-  display:flex; align-items:center; gap:6px;
-  padding:8px 12px; border-radius:12px; cursor:pointer;
-  background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14);
-  color:var(--text); font-size:13px;
-  transition:background .15s ease, transform .15s ease;
-}
-.wg-chip svg{ width:15px; height:15px; opacity:0.85; }
-.wg-chip.on{ background:var(--accent,#6AB0FF); border-color:transparent; color:#111; }
-.wg-chip:active{ transform:scale(0.95); }
 
 /* Wide screens: cover to the left, info + controls to the right. */
 @media (min-width:760px){
@@ -3597,9 +3728,6 @@ body.widgets-editing .widget-card .wg-remove{ display:flex; }
       <span class="range-val" id="edit-scrim-val">100%</span>
     </div>
 
-    <div class="field-label">위젯</div>
-    <div class="widget-picker" id="edit-widget-picker"></div>
-
     <div class="field-label">시계 색</div>
     <div class="swatch-row" id="edit-color-row"></div>
 
@@ -3790,7 +3918,7 @@ const state = {
   clockColor: null,   // null = 기본(--text)
   clockScale: 1,      // 0.5 ~ 1.8 배
   scrimOpacity: 1,    // 0 ~ 1, 시계 뒤 어둡기
-  widgets: ['date'],  // lock-screen widget ids, in display order
+  widgets: [],  // (6.0: widget feature removed)
   activePanel: null // 'settings'|'music' — the two that are still sheets
 };
 
@@ -3871,7 +3999,7 @@ if(persisted){
   if(persisted.clockColor === null || typeof persisted.clockColor === 'string') state.clockColor = persisted.clockColor;
   if(typeof persisted.clockScale === 'number') state.clockScale = persisted.clockScale;
   if(typeof persisted.scrimOpacity === 'number') state.scrimOpacity = persisted.scrimOpacity;
-  if(Array.isArray(persisted.widgets)) state.widgets = persisted.widgets.filter(id=>typeof id==='string');
+  state.widgets = [];   // 6.0: widget feature removed — ignore any saved widgets
   if(persisted.music){
     const m = persisted.music;
     if(typeof m.shuffle === 'boolean') music.shuffle = m.shuffle;
@@ -4700,6 +4828,8 @@ function renderIsland(){
   if(aodIsland){ aodIsland(); return; }
   /* Weather live activity (rain-soon banner) sits over the resting pill. */
   if(window.__weatherRender){ window.__weatherRender(); return; }
+  /* 6.0 Pet: when nothing else needs the pill, the creature lives in it. */
+  if(typeof petIslandActive === 'function' && petIslandActive()){ islandMode = 'pet'; paintPet(); return; }
   /* Anything ringing evicts an open panel for good. Relying on the
      alarm's own fire path to do this left the panel state set, so
      dismissing the alarm sprang it straight back up. */
@@ -4776,6 +4906,7 @@ function cancelTimer(){
 
 islandEl.addEventListener('click', (e)=>{
   e.stopPropagation();
+  if(typeof petIslandActive === 'function' && petIslandActive()) return;   // 6.0 pet owns pill taps
   if(isLocked()){ if(!suppressNextClick) showUnlock(); suppressNextClick = false; return; }
   if(suppressNextClick){ suppressNextClick = false; return; }
 
@@ -5134,8 +5265,20 @@ renderDeviceChips();
    feature gate) can read them without hitting the temporal dead zone. */
 const VERSION_KEY = 'dynamicClock.version';
 const BETA_KEY    = 'dynamicClock.beta';
-const CURRENT_VERSION = '2.0';   // the standard software update
+const CURRENT_VERSION = '6.0';   // the latest shippable version
 const RELEASE_VERSION = '4.0';   // shipped when a beta user requests the official build (adds Bluetooth)
+/* Software updates install ONE step at a time, like real iOS point updates.
+   2.0 is the historical baseline; 5.3 and 6.0 are the staged updates. */
+const VERSION_LADDER = ['2.0', '5.3', '6.0'];
+/* Per-version "what's new" copy painted onto the update card. */
+const VERSION_INFO = {
+  '5.3': { title:'다이나믹 클록 5.3', size:'52.1 MB', notes:[
+    '잠금을 해제하면 다이나믹 아일랜드가 크게 확장되며 앱이 그 안에서 열립니다.',
+    '전반적인 전환과 애니메이션이 더 부드럽고 자연스러워졌습니다.' ] },
+  '6.0': { title:'다이나믹 클록 6.0', size:'88.6 MB', notes:[
+    '새 앱 <b>펫</b> — 다이나믹 아일랜드에서 반려동물을 키웁니다. 밥 주기·산책·청소.',
+    '새 앱 <b>Good Mode</b> — 리퀴드 글라스 UI, 아일랜드 색·투명도, 잠금화면 아일랜드 드래그, 애니메이션 선택, AOD 사용자화 등을 세밀하게 설정합니다.' ] },
+};
 
 /* ---- Dynamic Island: free position ----
    Stored separately so wiping clock state doesn't reset the physical
@@ -5333,22 +5476,16 @@ function renderEditPanel(){
   const scale = document.getElementById('edit-scale');
   scale.value = Math.round(state.clockScale*100);
   document.getElementById('edit-scale-val').textContent = scale.value + '%';
-
-  renderWidgetPicker();
 }
 
 function openEditPanel(){
   closePanel(); closeIslandPanel();
   sheetEdit.classList.add('open');
   overlay.classList.add('open');
-  document.body.classList.add('widgets-editing');
   renderEditPanel();
-  renderWidgets();
 }
 function closeEditPanel(){
   sheetEdit.classList.remove('open');
-  document.body.classList.remove('widgets-editing');
-  renderWidgets();
   if(!state.activePanel && !islandPanel) overlay.classList.remove('open');
 }
 
@@ -5490,23 +5627,7 @@ function toggleWidget(id, force){
   renderWidgets(); renderWidgetPicker(); scheduleSave();
 }
 
-document.getElementById('edit-widget-picker').addEventListener('click', (e)=>{
-  const chip = e.target.closest('[data-wg]');
-  if(!chip) return;
-  toggleWidget(chip.dataset.wg);
-});
-if(widgetRowEl) widgetRowEl.addEventListener('click', (e)=>{
-  const rm = e.target.closest('.wg-remove');
-  if(!rm) return;
-  e.stopPropagation();
-  const card = rm.closest('[data-widget]');
-  if(card) toggleWidget(card.dataset.widget, false);
-});
-
-/* Kick off data sources for any widgets enabled at load. */
-if(state.widgets.includes('battery')) initBattery();
-if(state.widgets.includes('weather')) prefetchWeather().then(renderWidgets);
-renderWidgets();
+/* 6.0: the widget feature was removed — no pickers, listeners, or data kick-off. */
 
 document.getElementById('edit-bg-swatches').addEventListener('click', (e)=>{
   const sw = e.target.closest('[data-bg]');
@@ -7346,18 +7467,31 @@ function appInstalledVersion(){
 }
 function vNum(v){ const n = parseFloat(v); return isFinite(n) ? n : 1.0; }
 function installedNum(){ return vNum(appInstalledVersion()); }
-/* The main "소프트웨어 업데이트" ships 2.0 (island position, slim spectrum).
-   Anything 2.0 or higher counts as installed. */
+/* An update is available whenever a newer step exists on the ladder. */
 function updateAvailable(){ return installedNum() < vNum(CURRENT_VERSION); }
-function featuresUnlocked(){ return installedNum() >= vNum(CURRENT_VERSION); }
+/* The next single step to install (one point-update at a time), or null. */
+function nextUpdateVersion(){
+  const cur = installedNum();
+  for(const v of VERSION_LADDER){ if(vNum(v) > cur) return v; }
+  return null;
+}
+/* 2.0 features (island position, slim spectrum) unlock at 2.0 and stay on. */
+function featuresUnlocked(){ return installedNum() >= 2.0; }
 /* Bluetooth is a 4.0 feature — only works once the beta release lands. */
 function bluetoothUnlocked(){ return installedNum() >= vNum(RELEASE_VERSION); }
+/* 5.3 features: island-expand app launch, polished animations. */
+function v53Unlocked(){ return installedNum() >= 5.3; }
+/* 6.0 features: Pet app, Good Mode app. */
+function v6Unlocked(){ return installedNum() >= 6.0; }
 function applyFeatureGate(){
   document.body.classList.toggle('v2', featuresUnlocked());
   document.body.classList.toggle('v4', bluetoothUnlocked());
+  document.body.classList.toggle('v53', v53Unlocked());
+  document.body.classList.toggle('v6', v6Unlocked());
   applyIslandPos();
   islandMode = null;      // force the pill to rebuild so the bar count updates
   try{ renderIsland(); }catch(e){}
+  try{ if(typeof window.renderGrid === 'function') window.renderGrid(); }catch(e){}  // show/hide 6.0 apps
   refreshUpdateBadge();
 }
 
@@ -7370,9 +7504,20 @@ function refreshUpdateBadge(){
     if(updateAvailable()){ installBtn.disabled = false; installBtn.textContent = '다운로드 및 설치'; }
     else { installBtn.disabled = true; installBtn.textContent = '최신 버전입니다'; }
   }
+  const next = nextUpdateVersion();
+  const info = next ? VERSION_INFO[next] : null;
   if(meta) meta.textContent = updateAvailable()
-    ? '38.4 MB · 이 업데이트에는 새로운 기능과 개선 사항이 포함되어 있습니다.'
-    : '다이나믹 클록이 최신 상태입니다. (2.0)';
+    ? ((info ? info.size : '38.4 MB') + ' · 이 업데이트에는 새로운 기능과 개선 사항이 포함되어 있습니다.')
+    : ('다이나믹 클록이 최신 상태입니다. (' + appInstalledVersion() + ')');
+  /* Paint the card title + release notes for the version being offered,
+     or the installed version when up to date. */
+  const titleEl = document.querySelector('#sw-update .swu-title');
+  const notesEl = document.querySelector('#sw-update .swu-notes');
+  if(titleEl) titleEl.textContent = info ? info.title : ('다이나믹 클록 ' + appInstalledVersion());
+  if(notesEl){
+    if(info) notesEl.innerHTML = '<b>이번 버전의 새로운 기능</b><ul>' + info.notes.map(n=>'<li>'+n+'</li>').join('') + '</ul>';
+    else notesEl.innerHTML = '<b>최신 상태</b><ul><li>모든 최신 기능이 설치되어 있습니다.</li></ul>';
+  }
   const dg = document.getElementById('swu-downgrade');
   if(dg) dg.style.display = featuresUnlocked() ? '' : 'none';
 }
@@ -7380,6 +7525,7 @@ function refreshUpdateBadge(){
 /* ---- Toast ---- */
 let toastTimer = null;
 function showToast(msg){
+  if(typeof good !== 'undefined' && good.focus) return;   // 집중/수면 모드: 알림 숨김
   const el = document.getElementById('app-toast');
   if(!el) return;
   el.textContent = msg;
@@ -7444,15 +7590,23 @@ function runInstall(){
   }, 300);
 }
 function finishInstall(){
-  try{ localStorage.setItem(VERSION_KEY, CURRENT_VERSION); }catch(e){}
+  /* Install only the next step on the ladder, so 2.0 → 5.3 → 6.0 arrive as
+     separate updates — just like real OS point updates. */
+  const target = nextUpdateVersion() || CURRENT_VERSION;
+  try{ localStorage.setItem(VERSION_KEY, target); }catch(e){}
   applyFeatureGate();     // new features switch on now
   const screen = document.getElementById('sw-install');
   /* Brief pause on "설치 완료", then the Hello intro, then what's new. */
   setTimeout(()=>{
     screen.classList.remove('open');
     screen.setAttribute('aria-hidden','true');
+    const info = VERSION_INFO[target];
+    const pages = info
+      ? info.notes.map((n,i)=>({ art:'island', title: info.title + (info.notes.length>1? '' : ''),
+          body:n, cta: i===info.notes.length-1 ? '완료' : undefined }))
+      : WHATS_NEW_PAGES;
     playHello(()=>{
-      openOnboard(()=>{ refreshUpdateBadge(); }, { pages: WHATS_NEW_PAGES, markSeen:false });
+      openOnboard(()=>{ refreshUpdateBadge(); }, { pages, markSeen:false });
     });
   }, 900);
 }
@@ -7847,6 +8001,7 @@ let longPressTimer = null;
 let suppressNextClick = false;
 
 function openMirror(){
+  return;   // 6.0: the island widget panel was removed entirely
   if(mirrorOpen) return;
   if(islandEl.classList.contains('intro')) return;
   const base = resolveIsland();
@@ -8154,6 +8309,461 @@ document.addEventListener('pointerup', ()=>{
 document.addEventListener('click', (e)=>{
   if(flSuppressClick){ flSuppressClick = false; e.stopPropagation(); e.preventDefault(); }
 }, true);
+
+/* ================= 6.0: Pet =================
+   A tamagotchi that lives inside the Dynamic Island. When pet mode is on and
+   nothing else is using the pill, a round creature with eyes appears inside
+   it. Tap the pill to reveal 밥(feed) · 산책(walk) · 청소(clean). Needs decay
+   over time; neglect makes it hungry, sleepy, and leaves a mess. */
+const PET_KEY = 'dynamicClock.pet';
+const pet = { on:false, name:'모찌', hunger:30, energy:80, poop:false, mood:'happy', expanded:false, last:0 };
+(function loadPet(){
+  try{ const s = JSON.parse(localStorage.getItem(PET_KEY)||'null'); if(s) Object.assign(pet, s, { expanded:false }); }catch(e){}
+})();
+function savePet(){
+  try{ localStorage.setItem(PET_KEY, JSON.stringify({ on:pet.on, name:pet.name, hunger:pet.hunger, energy:pet.energy, poop:pet.poop, mood:pet.mood, last:pet.last })); }catch(e){}
+}
+function petDecay(){
+  const now = Date.now();
+  if(!pet.last){ pet.last = now; }
+  const mins = (now - pet.last) / 60000;
+  if(mins > 0){
+    pet.last = now;
+    pet.hunger = Math.min(100, pet.hunger + mins * 1.1);
+    pet.energy = Math.max(0,   pet.energy - mins * 0.8);
+    if(!pet.poop && Math.random() < mins * 0.06) pet.poop = true;
+  }
+  petMood();
+}
+function petMood(){
+  if(pet.poop) pet.mood = 'poop';
+  else if(pet.hunger > 75) pet.mood = 'hungry';
+  else if(pet.energy < 25) pet.mood = 'sleepy';
+  else if(pet.hunger < 38 && pet.energy > 55) pet.mood = 'happy';
+  else pet.mood = 'ok';
+}
+/* Pet owns the pill only when nothing else is active. */
+function petIslandActive(){
+  return pet.on && !document.body.classList.contains('aod')
+    && !window.__faceidRender && !window.__flashRender && !window.__weatherRender
+    && computeActivities().length === 0;
+}
+function petBlobHTML(){
+  return '<div class="pet-blob">'
+    + '<div class="pet-eyes"><span class="pet-eye"></span><span class="pet-eye"></span></div>'
+    + '<div class="pet-mouth"></div>'
+    + (pet.poop ? '<div class="pet-poop">💩</div>' : '')
+    + '</div>';
+}
+let petReactTimer = null, petCollapseTimer = null;
+function paintPet(){
+  petDecay();
+  islandEl.className = 'island pet mood-' + pet.mood + (pet.expanded ? ' expanded' : '');
+  if(pet.expanded){
+    islandEl.innerHTML = petBlobHTML()
+      + '<div class="pet-info"><div class="pet-name">' + petEsc(pet.name) + '</div>'
+      + '<div class="pet-stats">배부름 ' + Math.round(100-pet.hunger) + '% · 기운 ' + Math.round(pet.energy) + '%</div></div>'
+      + '<div class="pet-acts">'
+      + '<button class="pet-act" data-pet="feed" title="밥 주기">🍖</button>'
+      + '<button class="pet-act" data-pet="walk" title="산책">🦮</button>'
+      + '<button class="pet-act' + (pet.poop ? ' alert' : '') + '" data-pet="clean" title="청소">🧹</button>'
+      + '</div>';
+  } else {
+    islandEl.innerHTML = petBlobHTML();
+  }
+}
+function petEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function petReact(){
+  islandEl.classList.add('react');
+  clearTimeout(petReactTimer);
+  petReactTimer = setTimeout(()=>{ islandEl.classList.remove('react'); }, 520);
+}
+function petAct(kind){
+  petDecay();
+  if(kind==='feed'){ pet.hunger = Math.max(0, pet.hunger - 45); showToast('🍖 냠냠!'); }
+  else if(kind==='walk'){ pet.energy = Math.min(100, pet.energy + 35); pet.hunger = Math.min(100, pet.hunger + 8); if(Math.random()<0.5) pet.poop = true; showToast('🦮 신난다!'); }
+  else if(kind==='clean'){ pet.poop = false; showToast('✨ 깨끗해졌어요'); }
+  petMood(); savePet();
+  if(petIslandActive()){ paintPet(); petReact(); }
+}
+function petSetOn(v){
+  pet.on = !!v;
+  if(!pet.on) pet.expanded = false;
+  pet.last = Date.now();
+  savePet();
+  islandMode = null;
+  renderIsland();
+}
+/* tap the pill while the pet lives there → toggle the care panel */
+islandEl.addEventListener('click', (e)=>{
+  if(!petIslandActive()) return;
+  const act = e.target.closest('[data-pet]');
+  if(act){ e.stopPropagation(); petAct(act.dataset.pet); return; }
+  pet.expanded = !pet.expanded;
+  paintPet();
+  clearTimeout(petCollapseTimer);
+  if(pet.expanded) petCollapseTimer = setTimeout(()=>{ pet.expanded = false; if(petIslandActive()) paintPet(); }, 7000);
+});
+/* slow life tick so it gets hungry / messy while you watch */
+setInterval(()=>{ if(pet.on){ petDecay(); savePet(); if(petIslandActive() && !pet.expanded) paintPet(); } }, 20000);
+
+/* ================= 6.0: Good Mode (customisation hub) =================
+   One place to re-skin and re-wire the whole clock: screen look, island
+   colour/opacity, drag-to-place island, animation on/off, AOD behaviour,
+   and the Face ID lock. Every option maps to a real body class / CSS var /
+   runtime hook — nothing here is cosmetic-only. */
+const GOOD_KEY = 'dynamicClock.good';
+const GOOD_DEFAULT = {
+  screenMode:'default',      // default | glass | pixel | board
+  islandTint:false, islandColor:'#000000', islandAlpha:1,
+  aodTrans:0,                // AOD veil transparency 0(검정)~100(배경 완전 보임)
+  aodBar:true,               // music bar visible in AOD
+  aodCtrl:false,             // pause/play/next buttons in the AOD bar
+  aodBigCover:false,         // large album cover in AOD
+  aodKeepOnBarTouch:true,    // tapping the AOD bar won't wake the screen
+  aodNotify:true,            // show the "AOD 시작됨" banner
+  faceLock:true,             // require Face ID to unlock
+  editIsland:false,          // drag the island around the lock screen
+  animOff:{},                // { animKey:true } -> that animation is disabled
+  /* ---- extra Good Mode features ---- */
+  spectrumStyle:'bars',      // bars | mirror | wave (mirrors music.style)
+  spectrumTint:false, spectrumColor:'#ffffff',   // recolour the meter bars
+  focus:false,               // 집중/수면 모드 (dim + no notifications)
+  islandDoubleTap:'none',    // none | flashlight | music | weather
+  autoTheme:false,           // warm, dimmed look at night automatically
+  lockMemo:'',               // a line of text under the lock-screen clock
+  downSwipeAction:'lock',    // none | lock | aod | flashlight
+  liveBg:'off',              // off | flow | aurora | stars | rain
+};
+const good = Object.assign({}, GOOD_DEFAULT);
+(function loadGood(){ try{ const s = JSON.parse(localStorage.getItem(GOOD_KEY)||'null'); if(s){ Object.assign(good, s); good.animOff = Object.assign({}, s.animOff||{}); } good.editIsland = false; }catch(e){} })();
+function saveGood(){ try{ localStorage.setItem(GOOD_KEY, JSON.stringify(good)); }catch(e){} }
+
+/* Animations the picker can switch off, each mapped to the element(s) to
+   silence. Turning one off injects an `animation:none` rule. */
+const GOOD_ANIMS = [
+  { key:'homeTileIn',     label:'홈 아이콘 등장',   sel:'body.home-open .app-ico, body.home-open .app-label' },
+  { key:'appFromIsland',  label:'앱 펼쳐짐',        sel:'body.app-launch .app-view, body.app-launch .app-runner.show' },
+  { key:'islandGlowSpin', label:'아일랜드 글로우',  sel:'#island-glow' },
+  { key:'colonBreathe',   label:'시계 콜론 깜빡임', sel:'.colon, .clk-colon, .time-colon' },
+  { key:'petBlink',       label:'펫 눈 깜빡임',     sel:'.pet-eye' },
+  { key:'petFloat',       label:'펫 둥실둥실',      sel:'.pet-hero-blob' },
+  { key:'twinkle',        label:'날씨 별 반짝임',   sel:'.wx-star, .twinkle' },
+];
+function applyGoodAnims(){
+  let css = '';
+  GOOD_ANIMS.forEach(a=>{ if(good.animOff[a.key]) css += a.sel + '{ animation:none !important; }\n'; });
+  let st = document.getElementById('good-anim-style');
+  if(!st){ st = document.createElement('style'); st.id = 'good-anim-style'; document.head.appendChild(st); }
+  st.textContent = css;
+}
+function goodHexRgba(hex, a){
+  let h = String(hex||'#000000').replace('#','');
+  if(h.length === 3) h = h.split('').map(c=>c+c).join('');
+  const n = parseInt(h, 16) || 0;
+  return 'rgba(' + ((n>>16)&255) + ',' + ((n>>8)&255) + ',' + (n&255) + ',' + a + ')';
+}
+function applyGood(){
+  const b = document.body;
+  ['default','glass','pixel','board'].forEach(m=> b.classList.toggle('screen-'+m, good.screenMode===m));
+  b.classList.toggle('good-tint',         !!good.islandTint);
+  b.classList.toggle('good-aod-nobar',    !good.aodBar);
+  b.classList.toggle('good-aod-ctrl',     !!good.aodCtrl);
+  b.classList.toggle('good-aod-bigcover', !!good.aodBigCover);
+  b.classList.toggle('good-edit-island',  !!good.editIsland);
+  b.classList.toggle('good-focus',        !!good.focus);
+  b.classList.toggle('good-spectrum-color', !!good.spectrumTint);
+  document.documentElement.style.setProperty('--island-bg', goodHexRgba(good.islandColor, good.islandAlpha));
+  document.documentElement.style.setProperty('--spectrum-color', good.spectrumColor);
+  document.documentElement.style.setProperty('--aod-dim', ((100 - (good.aodTrans||0)) / 100).toFixed(3));
+  /* spectrum shape is the music player's own setting — keep them in sync */
+  if(typeof music !== 'undefined' && music.style !== good.spectrumStyle){ music.style = good.spectrumStyle; try{ renderIsland(); }catch(e){} }
+  applyGoodAnims();
+  applyAutoTheme();
+  updateLockMemo();
+  applyLiveBg();
+}
+/* Pick a live effect from the current weather code (WMO). */
+function liveWeatherMode(){
+  const w = (typeof cachedWeather !== 'undefined') ? cachedWeather : null;
+  if(!w || w.error) return 'flow';
+  const c = w.code;
+  if((c>=71 && c<=77) || (c>=85 && c<=86)) return 'snow';
+  if((c>=51 && c<=67) || (c>=80 && c<=82) || c>=95) return 'rain';
+  if(c===0 || c===1) return 'stars';
+  return 'flow';   // cloud / fog
+}
+/* Animated "live" wallpaper behind everything. CSS for flow/aurora/stars;
+   a physics canvas for rain (splash + rising puddle) and snow (accumulation).
+   "weather" follows the real forecast. */
+let liveRAF = null, liveEngine = null;
+function stopLiveCanvas(){
+  if(liveRAF){ cancelAnimationFrame(liveRAF); liveRAF = null; }
+  if(liveEngine && liveEngine.cv){ try{ if(liveEngine.cv._cleanup) liveEngine.cv._cleanup(); liveEngine.cv.remove(); }catch(e){} }
+  liveEngine = null;
+}
+function applyLiveBg(){
+  let el = document.getElementById('live-bg');
+  if(!el){ el = document.createElement('div'); el.id = 'live-bg'; const app = document.querySelector('.app') || document.body; app.insertBefore(el, app.firstChild); }
+  const mode = good.liveBg || 'off';
+  if(mode === 'off'){ el.style.display = 'none'; el.className = 'live-bg'; el.innerHTML = ''; el.dataset.sig = ''; stopLiveCanvas(); return; }
+  el.style.display = '';
+  const eff = (mode === 'weather') ? liveWeatherMode() : mode;
+  const sig = mode + ':' + eff;
+  if(el.dataset.sig === sig) return;     // nothing changed — don't rebuild
+  el.dataset.sig = sig;
+  stopLiveCanvas(); el.innerHTML = '';
+  if(eff === 'flow' || eff === 'aurora'){ el.className = 'live-bg live-' + eff; }
+  else if(eff === 'stars'){
+    el.className = 'live-bg live-stars';
+    let h = ''; for(let i=0;i<60;i++) h += '<span style="left:'+(Math.random()*100).toFixed(1)+'%;top:'+(Math.random()*100).toFixed(1)+'%;animation-delay:'+(Math.random()*3).toFixed(1)+'s"></span>';
+    el.innerHTML = h;
+  }
+  else if(eff === 'rain' || eff === 'snow'){ el.className = 'live-bg live-' + eff; startLiveCanvas(el, eff); }
+  else { el.className = 'live-bg live-flow'; }
+}
+function startLiveCanvas(container, mode){
+  stopLiveCanvas();
+  const cv = document.createElement('canvas'); cv.className = 'live-canvas'; container.appendChild(cv);
+  const ctx = cv.getContext('2d');
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  let W = 1, H = 1, cols = 0;
+  const drops = [], flakes = [], splashes = [];
+  let water = 0, pile = [];
+  function resize(){
+    const r = container.getBoundingClientRect();
+    W = Math.max(1, r.width); H = Math.max(1, r.height);
+    cv.width = W*dpr; cv.height = H*dpr; cv.style.width = W+'px'; cv.style.height = H+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    cols = Math.max(8, Math.floor(W/8));
+    if(pile.length !== cols) pile = new Array(cols).fill(0);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+  cv._cleanup = ()=> window.removeEventListener('resize', resize);
+  /* Seed particles spread across the whole screen so the effect is visible
+     the instant it's switched on (snow falls slowly, so an empty start read
+     as "nothing happening"). Top-ups later spawn just above the top edge. */
+  if(mode === 'rain'){ for(let i=0;i<150;i++) drops.push({ x:Math.random()*W, y:Math.random()*H, len:8+Math.random()*14, sp:8+Math.random()*7 }); }
+  else { for(let i=0;i<140;i++) flakes.push({ x:Math.random()*W, y:Math.random()*H, r:1.5+Math.random()*2.5, sp:0.7+Math.random()*1.3, dr:Math.random()*0.6-0.3, ph:Math.random()*6 }); }
+  function bg(){
+    const g = ctx.createLinearGradient(0,0,0,H);
+    if(mode === 'rain'){ g.addColorStop(0,'#0a0e16'); g.addColorStop(1,'#05070c'); }
+    else { g.addColorStop(0,'#0e1320'); g.addColorStop(1,'#070910'); }
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+  }
+  function frame(){
+    bg();
+    if(mode === 'rain'){
+      while(drops.length < 150) drops.push({ x:Math.random()*W, y:-10-Math.random()*40, len:8+Math.random()*14, sp:8+Math.random()*7 });
+      const surface = H - water;
+      ctx.strokeStyle = 'rgba(170,200,255,0.5)'; ctx.lineWidth = 1.2;
+      for(const d of drops){
+        d.y += d.sp;
+        ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x+1, d.y+d.len); ctx.stroke();
+        if(d.y >= surface){
+          for(let k=0;k<4;k++) splashes.push({ x:d.x, y:surface, vx:(Math.random()*2-1)*1.7, vy:-(1+Math.random()*2.2), life:1 });
+          water = Math.min(H*0.22, water + 0.06);
+          d.x = Math.random()*W; d.y = -10; d.len = 8+Math.random()*14; d.sp = 8+Math.random()*7;
+        }
+      }
+      for(let i=splashes.length-1;i>=0;i--){ const s = splashes[i]; s.x += s.vx; s.y += s.vy; s.vy += 0.2; s.life -= 0.045;
+        if(s.life <= 0){ splashes.splice(i,1); continue; }
+        ctx.globalAlpha = Math.max(0,s.life)*0.75; ctx.fillStyle = 'rgba(190,215,255,0.95)';
+        ctx.beginPath(); ctx.arc(s.x, s.y, 1.5, 0, 6.3); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      if(water > 0.5){ ctx.fillStyle = 'rgba(90,130,200,0.32)'; ctx.fillRect(0, surface, W, water); ctx.fillStyle = 'rgba(160,195,255,0.14)'; ctx.fillRect(0, surface, W, 2); }
+      water = Math.max(0, water - 0.02);     // slowly drains
+    } else {
+      while(flakes.length < 140) flakes.push({ x:Math.random()*W, y:-10-Math.random()*40, r:1.5+Math.random()*2.5, sp:0.7+Math.random()*1.3, dr:Math.random()*0.6-0.3, ph:Math.random()*6 });
+      ctx.fillStyle = 'rgba(255,255,255,0.92)';
+      for(const f of flakes){
+        f.ph += 0.02; f.x += f.dr + Math.sin(f.ph)*0.3; f.y += f.sp;
+        if(f.x < 0) f.x += W; else if(f.x > W) f.x -= W;
+        const col = Math.max(0, Math.min(cols-1, Math.floor(f.x/W*cols)));
+        if(f.y >= H - pile[col]){
+          pile[col] = Math.min(H*0.3, pile[col] + 0.8);
+          if(col>0) pile[col-1] = Math.min(H*0.3, pile[col-1] + 0.25);
+          if(col<cols-1) pile[col+1] = Math.min(H*0.3, pile[col+1] + 0.25);
+          f.x = Math.random()*W; f.y = -8; f.sp = 0.6+Math.random()*1.1;
+        } else { ctx.globalAlpha = 0.92; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, 6.3); ctx.fill(); }
+      }
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = 'rgba(240,245,255,0.96)';
+      ctx.beginPath(); ctx.moveTo(0, H);
+      for(let c=0;c<cols;c++) ctx.lineTo(c/cols*W, H - pile[c]);
+      ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
+    }
+    liveRAF = requestAnimationFrame(frame);
+  }
+  liveEngine = { cv };
+  liveRAF = requestAnimationFrame(frame);
+}
+/* Warm, dimmed palette between 19:00 and 06:00 when auto theme is on. */
+function applyAutoTheme(){
+  let night = false;
+  if(good.autoTheme){ const h = new Date().getHours(); night = (h >= 19 || h < 6); }
+  document.body.classList.toggle('good-night', night);
+}
+/* A single line of text under the lock-screen clock. */
+function updateLockMemo(){
+  let el = document.getElementById('lock-memo');
+  const stack = document.querySelector('.clock-stack');
+  if(!el && stack){ el = document.createElement('div'); el.id = 'lock-memo'; el.className = 'lock-memo'; stack.appendChild(el); }
+  if(el){ el.textContent = good.lockMemo || ''; el.style.display = good.lockMemo ? '' : 'none'; }
+}
+applyGood();
+/* re-evaluate the night theme + weather-driven wallpaper periodically */
+setInterval(()=>{ applyAutoTheme(); if(good.liveBg === 'weather') applyLiveBg(); }, 180000);
+
+/* Drag the Dynamic Island freely while edit mode is on (works locked too). */
+(function goodIslandDrag(){
+  let dragging = false, sx=0, sy=0, ox=0, oy=0;
+  islandEl.addEventListener('pointerdown', (e)=>{
+    if(!good.editIsland) return;
+    dragging = true; sx=e.clientX; sy=e.clientY; ox=islandPos.x; oy=islandPos.y;
+    e.stopPropagation(); e.preventDefault();
+    try{ islandEl.setPointerCapture(e.pointerId); }catch(_){}
+  }, true);
+  islandEl.addEventListener('pointermove', (e)=>{
+    if(!dragging) return;
+    islandPos.x = Math.round(ox + (e.clientX - sx));
+    islandPos.y = Math.round(oy + (e.clientY - sy));
+    document.documentElement.style.setProperty('--island-x', islandPos.x + 'px');
+    document.documentElement.style.setProperty('--island-y', islandPos.y + 'px');
+  }, true);
+  const endDrag = ()=>{ if(dragging){ dragging = false; saveIslandPos(); } };
+  islandEl.addEventListener('pointerup', endDrag, true);
+  islandEl.addEventListener('pointercancel', endDrag, true);
+})();
+
+/* Double-tap the island → the quick action chosen in Good Mode. */
+islandEl.addEventListener('dblclick', (e)=>{
+  if(!good.islandDoubleTap || good.islandDoubleTap === 'none' || good.editIsland) return;
+  e.preventDefault(); e.stopPropagation();
+  const a = good.islandDoubleTap;
+  if(a === 'flashlight'){ if(typeof openFlashlight === 'function') openFlashlight(); }
+  else if(a === 'music'){
+    if(music.index < 0 && music.tracks.length) playTrack(0);
+    if(music.index >= 0 && typeof openMusicFull === 'function') openMusicFull();
+    else if(typeof openIslandPanel === 'function') openIslandPanel('music');
+  }
+  else if(a === 'weather'){
+    if(typeof showWeatherLive === 'function') showWeatherLive();
+    else if(typeof openWeatherScreen === 'function') openWeatherScreen();
+  }
+});
+
+/* ---- Good Mode full-screen app ---- */
+function goodRow(label, ctrl){ return '<div class="av-row2"><span style="color:#fff;font-size:16px;">'+label+'</span>'+ctrl+'</div>'; }
+function goodSwitch(id, on){ return '<div class="switch'+(on?' on':'')+'" data-good-sw="'+id+'"><div class="switch-knob"></div></div>'; }
+/* which settings each section's 초기화 button restores to default */
+const GOOD_RESET_GROUPS = {
+  screen:['screenMode'],
+  island:['islandTint','islandColor','islandAlpha','editIsland'],
+  aod:['aodNotify','aodTrans','aodBar','aodCtrl','aodBigCover','aodKeepOnBarTouch'],
+  spectrum:['spectrumStyle','spectrumTint','spectrumColor'],
+  livebg:['liveBg'],
+  lock:['faceLock','lockMemo'],
+  mode:['focus','autoTheme'],
+  gesture:['islandDoubleTap','downSwipeAction'],
+  anim:['animOff'],
+};
+function goodSecH(label, key){ return '<div class="good-sec-h"><span>'+label+'</span><button class="good-reset" data-good-reset="'+key+'">초기화</button></div>'; }
+function goodOpts(field, opts){ return '<div class="good-chips">' + opts.map(o=>'<button class="good-chip'+(good[field]===o[0]?' on':'')+'" data-good-opt="'+field+'" data-val="'+o[0]+'">'+o[1]+'</button>').join('') + '</div>'; }
+function paintGoodMode(container){
+  const modes = [['default','기본'],['glass','리퀴드 글라스'],['pixel','픽셀'],['board','보드']];
+  let html = '<div class="good-app">';
+
+  html += goodSecH('화면 모드','screen') + '<div class="av-list">';
+  html += '<div class="good-chips">' + modes.map(m=>'<button class="good-chip'+(good.screenMode===m[0]?' on':'')+'" data-good-mode="'+m[0]+'">'+m[1]+'</button>').join('') + '</div></div>';
+
+  html += goodSecH('라이브 배경','livebg') + '<div class="av-list">';
+  html += goodOpts('liveBg', [['off','끔'],['weather','현재 날씨'],['flow','그라데이션'],['aurora','오로라'],['stars','별'],['rain','비'],['snow','눈']]);
+  html += '</div>';
+
+  html += goodSecH('다이나믹 아일랜드','island') + '<div class="av-list">';
+  html += goodRow('색·투명도 적용', goodSwitch('islandTint', good.islandTint));
+  html += '<div class="av-row2"><span style="color:#fff;font-size:16px;">색상</span><input type="color" class="good-color" id="good-island-color" value="'+good.islandColor+'"></div>';
+  html += '<div class="av-row2"><span style="color:#fff;font-size:16px;">투명도</span><input type="range" class="good-range" id="good-island-alpha" min="0" max="100" value="'+Math.round(good.islandAlpha*100)+'"></div>';
+  html += goodRow('편집 모드 (드래그로 위치 이동)', goodSwitch('editIsland', good.editIsland));
+  html += goodRow('위치', '<button class="good-reset" data-good-posreset="1">위치 초기화</button>');
+  html += '</div>';
+
+  html += goodSecH('AOD (상시 표시)','aod') + '<div class="av-list">';
+  html += goodRow('시작 알림 표시', goodSwitch('aodNotify', good.aodNotify));
+  html += '<div class="av-row2"><span style="color:#fff;font-size:16px;">투명도 (배경 보이기)</span><input type="range" class="good-range" id="good-aod-trans" min="0" max="100" value="'+(good.aodTrans||0)+'"></div>';
+  html += goodRow('음악 바 표시', goodSwitch('aodBar', good.aodBar));
+  html += goodRow('재생 컨트롤 표시', goodSwitch('aodCtrl', good.aodCtrl));
+  html += goodRow('앨범 커버 크게', goodSwitch('aodBigCover', good.aodBigCover));
+  html += goodRow('음악 바 터치해도 AOD 유지', goodSwitch('aodKeepOnBarTouch', good.aodKeepOnBarTouch));
+  html += '</div>';
+
+  html += goodSecH('오디오 스펙트럼','spectrum') + '<div class="av-list">';
+  html += goodOpts('spectrumStyle', [['bars','바'],['mirror','미러'],['wave','파형']]);
+  html += goodRow('막대 색상 적용', goodSwitch('spectrumTint', good.spectrumTint));
+  html += '<div class="av-row2"><span style="color:#fff;font-size:16px;">색상</span><input type="color" class="good-color" id="good-spectrum-color" value="'+good.spectrumColor+'"></div>';
+  html += '</div>';
+
+  html += goodSecH('모드','mode') + '<div class="av-list">';
+  html += goodRow('집중 / 수면 모드 (어둡게·알림 숨김)', goodSwitch('focus', good.focus));
+  html += goodRow('시간대별 자동 테마 (밤엔 따뜻·어둡게)', goodSwitch('autoTheme', good.autoTheme));
+  html += '</div>';
+
+  html += goodSecH('제스처','gesture') + '<div class="av-list">';
+  html += '<div class="av-row2" style="flex-direction:column;align-items:stretch;gap:8px;"><span style="color:#fff;font-size:16px;">아일랜드 더블탭</span>' + goodOpts('islandDoubleTap', [['none','없음'],['flashlight','손전등'],['music','음악'],['weather','날씨']]) + '</div>';
+  html += '<div class="av-row2" style="flex-direction:column;align-items:stretch;gap:8px;"><span style="color:#fff;font-size:16px;">아래로 스와이프</span>' + goodOpts('downSwipeAction', [['none','없음'],['lock','잠금'],['aod','AOD'],['flashlight','손전등']]) + '</div>';
+  html += '</div>';
+
+  html += goodSecH('잠금','lock') + '<div class="av-list">';
+  html += goodRow('잠금 해제 시 Face ID 요구', goodSwitch('faceLock', good.faceLock));
+  html += '<div class="av-row2"><span style="color:#fff;font-size:16px;">잠금화면 문구</span><input class="pet-name-in" id="good-memo" value="'+petEsc(good.lockMemo)+'" maxlength="30" placeholder="예: 운동 가기" style="width:160px;"></div>';
+  html += '</div>';
+
+  html += goodSecH('애니메이션','anim') + '<div class="av-list">';
+  GOOD_ANIMS.forEach(a=>{ html += goodRow(a.label, goodSwitch('anim:'+a.key, !good.animOff[a.key])); });
+  html += '</div>';
+
+  html += '<div class="av-note">모든 설정은 즉시 적용되고 저장됩니다.</div></div>';
+  container.innerHTML = html;
+
+  container.querySelectorAll('[data-good-mode]').forEach(btn=> btn.addEventListener('click', ()=>{
+    good.screenMode = btn.dataset.goodMode; saveGood(); applyGood(); paintGoodMode(container);
+  }));
+  container.querySelectorAll('[data-good-sw]').forEach(sw=> sw.addEventListener('click', ()=>{
+    const id = sw.dataset.goodSw;
+    if(id.indexOf('anim:') === 0){ const k = id.slice(5); good.animOff[k] = !good.animOff[k]; }
+    else { good[id] = !good[id]; }
+    saveGood(); applyGood(); paintGoodMode(container);
+  }));
+  container.querySelectorAll('[data-good-reset]').forEach(btn=> btn.addEventListener('click', ()=>{
+    const keys = GOOD_RESET_GROUPS[btn.dataset.goodReset] || [];
+    keys.forEach(k=>{ good[k] = (k==='animOff') ? {} : GOOD_DEFAULT[k]; });
+    saveGood(); applyGood(); paintGoodMode(container);
+  }));
+  const posBtn = container.querySelector('[data-good-posreset]');
+  if(posBtn) posBtn.addEventListener('click', ()=>{
+    islandPos.x = 0; islandPos.y = 0; saveIslandPos();
+    document.documentElement.style.setProperty('--island-x','0px');
+    document.documentElement.style.setProperty('--island-y','0px');
+    if(typeof applyIslandPos === 'function') applyIslandPos();
+    showToast('아일랜드 위치를 초기화했어요');
+  });
+  const col = container.querySelector('#good-island-color');
+  if(col) col.addEventListener('input', ()=>{ good.islandColor = col.value; good.islandTint = true; saveGood(); applyGood(); });
+  const al = container.querySelector('#good-island-alpha');
+  if(al) al.addEventListener('input', ()=>{ good.islandAlpha = (parseInt(al.value,10)||0)/100; good.islandTint = true; saveGood(); applyGood(); });
+  container.querySelectorAll('[data-good-opt]').forEach(btn=> btn.addEventListener('click', ()=>{
+    good[btn.dataset.goodOpt] = btn.dataset.val; saveGood(); applyGood(); paintGoodMode(container);
+  }));
+  const sc = container.querySelector('#good-spectrum-color');
+  if(sc) sc.addEventListener('input', ()=>{ good.spectrumColor = sc.value; good.spectrumTint = true; saveGood(); applyGood(); });
+  const memo = container.querySelector('#good-memo');
+  if(memo) memo.addEventListener('input', ()=>{ good.lockMemo = memo.value; saveGood(); updateLockMemo(); });
+  const aodT = container.querySelector('#good-aod-trans');
+  if(aodT) aodT.addEventListener('input', ()=>{ good.aodTrans = parseInt(aodT.value,10)||0; saveGood(); applyGood(); });
+}
 
 /* ---- Mirror panel readout ---- */
 function renderMirrorWeather(result){
@@ -9460,9 +10070,16 @@ if(restoredActive){
     veil.style.setProperty('--aodR','0px');
     /* island: "AOD 시작됨" banner (1.2s) -> smoothly shrinks to the lock
        badge. No empty in-between frame (that read as a flicker). */
-    lastPhase = ''; islandPhase = 'banner';
-    aodIsland = renderAodIsland; renderIsland();
-    phaseTimers.push(setTimeout(()=>{ islandPhase = 'lock'; renderIsland(); }, 1200));
+    lastPhase = '';
+    if(typeof good !== 'undefined' && !good.aodNotify){
+      /* Good Mode: skip the "AOD 시작됨" banner — go straight to the badge. */
+      islandPhase = 'lock';
+      aodIsland = renderAodIsland; renderIsland();
+    } else {
+      islandPhase = 'banner';
+      aodIsland = renderAodIsland; renderIsland();
+      phaseTimers.push(setTimeout(()=>{ islandPhase = 'lock'; renderIsland(); }, 1200));
+    }
     updateBar();
     scheduleShift();
   }
@@ -9505,7 +10122,11 @@ if(restoredActive){
 
   // 3s long-press to enter; any press/move wakes while active
   document.addEventListener('pointerdown', (e)=>{
-    if(active){ wake(e.clientX, e.clientY); return; }
+    if(active){
+      /* Good Mode: touching the AOD music bar controls it without waking. */
+      if(typeof good !== 'undefined' && good.aodKeepOnBarTouch && e.target.closest('.aod-music')) return;
+      wake(e.clientX, e.clientY); return;
+    }
     if(e.target.closest('button, input, .switch, .chip, a, [data-action], .icon-btn, .island, .sheet, .voice-orb, .aod-music')) return;
     clearTimeout(pressT);
     pressT = setTimeout(()=>{ enter(); }, 3000);
@@ -9516,6 +10137,7 @@ if(restoredActive){
   // unless the user turned that off in Settings.
   document.addEventListener('pointermove', (e)=>{
     if(!active) return;
+    if(typeof good !== 'undefined' && good.aodKeepOnBarTouch && e.target.closest('.aod-music')) return;
     if(e.pointerType === 'mouse' && localStorage.getItem('dynamicClock.aodMouseWake') === '0') return;
     wake(e.clientX, e.clientY);
   });
@@ -9564,6 +10186,9 @@ if(restoredActive){
     { key:'weather', name:'날씨', grad:'grad-weather', icon:svg('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/>'), open:()=>{ closeHome(); openWeatherScreen(); } },
     { key:'flashlight', name:'손전등', grad:'grad-set', icon:svg('<path d="M8 3h8l-1.2 4.5H9.2z"/><path d="M9.2 7.5h5.6l-.6 4.2a2.3 2.3 0 0 1-4.4 0z"/><path d="M12 16v5"/>'), open:()=>{ closeHome(); openFlashlight(); } },
     { key:'settings', name:'설정', grad:'grad-set', icon:svg('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'), open:()=>openPanel('settings') },
+    /* ===== 6.0 apps (only on the home grid once 6.0 is installed) ===== */
+    { key:'pet', name:'펫', grad:'grad-pet', v6:true, icon:svg('<circle cx="12" cy="12" r="9"/><circle cx="9" cy="11" r="1.4" fill="currentColor" stroke="none"/><circle cx="15" cy="11" r="1.4" fill="currentColor" stroke="none"/><path d="M9.5 15q2.5 1.6 5 0"/>'), open:()=>{ closeHome(); openApp('pet'); } },
+    { key:'goodmode', name:'Good Mode', grad:'grad-good', v6:true, icon:svg('<path d="M12 3l2.1 4.3 4.7.7-3.4 3.3.8 4.7L12 13.9 7.8 16l.8-4.7L5.2 8l4.7-.7z"/>'), open:()=>{ closeHome(); openApp('goodmode'); } },
   ];
   const ADD_SVG = svg('<path d="M12 5v14M5 12h14"/>');
 
@@ -9582,7 +10207,9 @@ if(restoredActive){
 
   function renderGrid(){
     let html = '';
+    const v6 = document.body.classList.contains('v6');
     BUILTIN.forEach(a=>{
+      if(a.v6 && !v6) return;   // Pet / Good Mode appear only after the 6.0 update
       html += `<div class="app-tile" data-builtin="${a.key}"><div class="app-ico ${a.grad}">${a.icon}</div><div class="app-label">${esc(a.name)}</div></div>`;
     });
     apps.forEach(a=>{
@@ -9591,6 +10218,7 @@ if(restoredActive){
     grid.innerHTML = html;
     applyFilter();
   }
+  window.renderGrid = renderGrid;   // let applyFeatureGate refresh the grid after an update
 
   /* Merged clock-tools icon → chooser sheet → opens timer/alarm/stopwatch. */
   const ctSheet = document.getElementById('ct-sheet');
@@ -9718,10 +10346,21 @@ if(restoredActive){
 
   /* ---- run / delete a custom app ---- */
   let currentApp = null;
+  /* 5.3: play the "unfurl from the Dynamic Island" launch animation. The
+     class is removed once the keyframes finish so the resting state falls
+     back to the standard open rule (and close genies back into the pill). */
+  let islandLaunchTimer = null;
+  function islandLaunch(){
+    if(!document.body.classList.contains('v53')) return;
+    document.body.classList.add('app-launch');
+    clearTimeout(islandLaunchTimer);
+    islandLaunchTimer = setTimeout(()=>{ document.body.classList.remove('app-launch'); }, 560);
+  }
   function runApp(a){
     currentApp = a;
     arTitle.textContent = a.name;
     frame.srcdoc = a.html;
+    islandLaunch();
     runner.classList.add('show'); runner.setAttribute('aria-hidden','false');
   }
   arBack.addEventListener('click', ()=>{
@@ -9745,7 +10384,7 @@ if(restoredActive){
      desktop Chrome) it falls back to a simulated ~1.2s scan so the
      animation is still demonstrable. Real Face ID only on iPhone Safari. */
   const FACE_KEY = 'dynamicClock.faceCredId';
-  const FACE_DEMO = false;  // 실제 WebAuthn 패스키 사용(플랫폼 인증기 없으면 시뮬로 폴백)
+  const FACE_DEMO = true;  // 데모 모드: 위로 스와이프 시 1.2초 뒤 무조건 잠금 해제(실제 패스키 요구 안 함)
   const FACE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6.5A2.5 2.5 0 0 1 6.5 4H8"/><path d="M16 4h1.5A2.5 2.5 0 0 1 20 6.5V8"/><path d="M20 16v1.5a2.5 2.5 0 0 1-2.5 2.5H16"/><path d="M8 20H6.5A2.5 2.5 0 0 1 4 17.5V16"/><path d="M9 9.5v1.3"/><path d="M15 9.5v1.3"/><path d="M12 9.4v2.3"/><path d="M9.2 14.6c.8.8 1.8 1.2 2.8 1.2s2-.4 2.8-1.2"/></svg>';
   const CHECK_SVG= '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>';
   let faceBusy = false;
@@ -9841,9 +10480,18 @@ if(restoredActive){
     const homeOpen = document.body.classList.contains('home-open');
     if(!homeOpen && dy < -55){
       if(faceBusy) return;
+      /* Good Mode: Face ID lock can be switched off — then just open up. */
+      if(typeof good !== 'undefined' && !good.faceLock){ unlockScreen(); openHome(); return; }
       faceUnlock().then(ok=>{ if(ok) openHome(); });
     }
     else if(homeOpen && dy > 55 && home.scrollTop <= 2){ closeHome(); }
+    else if(!homeOpen && dy > 55){
+      /* Good Mode: swipe down on the clock runs the chosen gesture. */
+      const act = (typeof good !== 'undefined') ? good.downSwipeAction : 'lock';
+      if(act === 'aod'){ if(typeof window.__aodEnter === 'function') window.__aodEnter(); }
+      else if(act === 'flashlight'){ if(typeof openFlashlight === 'function') openFlashlight(); }
+      else if(act === 'lock'){ if(typeof lockScreen === 'function') lockScreen(); }
+    }
   });
 
   document.addEventListener('keydown', (e)=>{
@@ -9863,7 +10511,7 @@ if(restoredActive){
   const avMusIn = document.getElementById('av-music-input');
   let currentAppKey = null;
 
-  const APP_NAMES = { timer:'타이머', alarm:'알람', stopwatch:'스톱워치', music:'음악', settings:'설정', camera:'카메라', photos:'사진' };
+  const APP_NAMES = { timer:'타이머', alarm:'알람', stopwatch:'스톱워치', music:'음악', settings:'설정', camera:'카메라', photos:'사진', pet:'펫', goodmode:'Good Mode' };
   const PHOTOS_KEY = 'dynamicClock.photos';
   const loadPhotos = ()=>{ try{ return JSON.parse(localStorage.getItem(PHOTOS_KEY)||'[]'); }catch(e){ return []; } };
   const savePhotos = a=>{ try{ localStorage.setItem(PHOTOS_KEY, JSON.stringify(a)); return true; }catch(e){ alert('사진 저장 공간이 부족합니다.'); return false; } };
@@ -9885,6 +10533,7 @@ if(restoredActive){
     avBody.classList.toggle('bleed', key==='camera' || key==='photos');
     renderApp();
     appView.setAttribute('aria-hidden','false');
+    islandLaunch();
     document.body.classList.add('app-open');
     if(key==='camera') startCamera();
     resetAutoOff();
@@ -9906,7 +10555,55 @@ if(restoredActive){
     else if(currentAppKey==='settings') renderSettingsApp();
     else if(currentAppKey==='camera') renderCameraApp();
     else if(currentAppKey==='photos') renderPhotosApp();
+    else if(currentAppKey==='pet') renderPetApp();
+    else if(currentAppKey==='goodmode') renderGoodModeApp();
   }
+
+  /* ---- 6.0: Pet app ---- */
+  function petMoodText(){
+    return ({ happy:'기분 최고예요! 😊', ok:'평온해요 🙂', hungry:'배고파요… 밥 주세요 🍖',
+      sleepy:'졸려요… 산책 갈까요? 🦮', poop:'앗, 치워주세요 💩' })[pet.mood] || '';
+  }
+  function renderPetApp(){
+    petDecay();
+    const full = Math.round(100 - pet.hunger), en = Math.round(pet.energy);
+    avBody.innerHTML = `
+      <div class="pet-app">
+        <div class="pet-hero ${pet.on?'':'off'}">
+          <div class="pet-hero-blob mood-${pet.mood}">
+            <div class="pet-eyes"><span class="pet-eye"></span><span class="pet-eye"></span></div>
+            <div class="pet-mouth"></div>
+            ${pet.poop?'<div class="pet-poop">💩</div>':''}
+          </div>
+        </div>
+        <div class="pet-hero-name">${petEsc(pet.name)}</div>
+        <div class="pet-hero-sub">${pet.on? petMoodText() : '펫 모드가 꺼져 있어요'}</div>
+        <div class="av-list" style="margin-top:14px;">
+          <div class="av-row2"><span style="color:#fff;font-size:16px;">펫 모드</span>
+            <div class="switch ${pet.on?'on':''}" id="pet-toggle"><div class="switch-knob"></div></div></div>
+          <div class="av-row2"><span style="color:#fff;font-size:16px;">이름</span>
+            <input class="pet-name-in" id="pet-name" value="${petEsc(pet.name)}" maxlength="8"></div>
+        </div>
+        <div class="pet-bars">
+          <div class="pet-bar"><span>배부름</span><div class="pet-track"><div class="pet-fill" style="width:${full}%"></div></div></div>
+          <div class="pet-bar"><span>기운</span><div class="pet-track"><div class="pet-fill energy" style="width:${en}%"></div></div></div>
+        </div>
+        <div class="pet-app-acts">
+          <button class="pet-big" data-pet="feed"><b>🍖</b><span>밥 주기</span></button>
+          <button class="pet-big" data-pet="walk"><b>🦮</b><span>산책</span></button>
+          <button class="pet-big ${pet.poop?'alert':''}" data-pet="clean"><b>🧹</b><span>청소</span></button>
+        </div>
+        <div class="av-note">펫 모드를 켜면 다이나믹 아일랜드 안에 펫이 나타나요.<br>아일랜드를 탭하면 바로 돌볼 수 있어요.</div>
+      </div>`;
+    const tg = document.getElementById('pet-toggle');
+    if(tg) tg.addEventListener('click', ()=>{ petSetOn(!pet.on); renderPetApp(); });
+    const nm = document.getElementById('pet-name');
+    if(nm) nm.addEventListener('change', ()=>{ pet.name = (nm.value||'모찌').slice(0,8); savePet(); if(petIslandActive()) paintPet(); renderPetApp(); });
+    avBody.querySelectorAll('[data-pet]').forEach(b=> b.addEventListener('click', ()=>{ petAct(b.dataset.pet); renderPetApp(); }));
+  }
+
+  /* ---- 6.0: Good Mode app (filled in below) ---- */
+  function renderGoodModeApp(){ if(typeof paintGoodMode === 'function') paintGoodMode(avBody); else avBody.innerHTML = '<div class="av-note">준비 중…</div>'; }
 
   /* ---- Camera ---- */
   function renderCameraApp(){
