@@ -2996,12 +2996,17 @@ body.ambient-open .ambient-screen{
 /* 가사 모드: 스펙트럼 자리에 가사. 위아래는 서서히 사라지고(마스크),
    지금 재생 줄만 선명, 나머지는 살짝 블러. */
 .music-lyrics{
-  flex:1 1 auto; width:100%; min-height:44px; max-height:96px;
+  flex:1 1 auto; width:100%; min-height:60px; max-height:104px;
   overflow:hidden; position:relative; text-align:left;
-  -webkit-mask-image:linear-gradient(to bottom, transparent 0, #000 26%, #000 74%, transparent 100%);
-          mask-image:linear-gradient(to bottom, transparent 0, #000 26%, #000 74%, transparent 100%);
+  -webkit-mask-image:linear-gradient(to bottom, transparent 0, #000 24%, #000 76%, transparent 100%);
+          mask-image:linear-gradient(to bottom, transparent 0, #000 24%, #000 76%, transparent 100%);
   scrollbar-width:none;
 }
+/* 빈/싱크없는 가사는 마스크 끄고 또렷하게(안 보이는 문제 방지) */
+.music-lyrics.empty, .music-lyrics.unsynced{
+  -webkit-mask-image:none; mask-image:none; overflow-y:auto;
+}
+.music-lyrics.unsynced .ml-line{ filter:none; opacity:0.9; }
 .music-lyrics::-webkit-scrollbar{ display:none; }
 .ml-line{
   font-size:14px; line-height:1.55; color:rgba(255,255,255,0.55);
@@ -5410,7 +5415,13 @@ function renderMusicLyrics(){
   _mlLines = (typeof parseLyrics==='function') ? parseLyrics(raw) : [];
   _mlSynced = _mlLines.some(l=>l.t!=null);
   _mlActive = -1;
-  if(!_mlLines.length){ box.innerHTML = '<div class="ml-empty">가사가 없어요<br>전체화면 플레이어에서 가사를 넣어보세요</div>'; return; }
+  box.classList.remove('empty','unsynced');
+  if(!_mlLines.length){
+    box.classList.add('empty');
+    box.innerHTML = '<div class="ml-empty">가사가 없어요<br>전체화면 플레이어 ‘편집’에서 넣어보세요</div>';
+    return;
+  }
+  if(!_mlSynced) box.classList.add('unsynced');   // 시간표시 없는 가사는 흐림 없이 또렷하게
   box.innerHTML = _mlLines.map((l,i)=>`<div class="ml-line" data-i="${i}">${esc(l.text||'♪')}</div>`).join('');
 }
 function syncMusicLyrics(){
