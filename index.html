@@ -135,14 +135,13 @@ html,body{
      pill rather than for a sheet. Raising it only in that state keeps
      the original behaviour for real sheets, which still need to slide
      over the pill on narrow screens. */
-  /* Top-most of every runtime layer — weather (200), music full (250),
-     video trim (300), scrim (380/390), lock slide (410), ring (450),
-     drop hint (600). Sits above them all so the pill is never covered.
-     (The one-time onboarding, 900, still comes over it.) */
-  z-index:700;
+  /* 모든 레이어 위 — 배경 갤러리(1500)·오늘 요약(1400)·업데이트
+     (1850~2100)·온보딩까지 전부 위에 떠 있어, 진짜 하드웨어처럼
+     절대 가려지지 않는다. */
+  z-index:2200;
   pointer-events:none;
 }
-body.island-panel-open .island-wrap{ z-index:700; }
+body.island-panel-open .island-wrap{ z-index:2200; }
 
 .island-wrap{ padding:0 12px; }
 
@@ -237,9 +236,11 @@ body.island-panel-open .island-wrap{ z-index:700; }
 .island.idle::before{ content:none; }
 
 .island.active{
-  width:230px;
-  height:44px;
-  border-radius:24px;
+  /* 실행 중 알약: 아래로는 안 커지게 높이는 idle(37)과 거의 같게,
+     가로로만 살짝 넓어진다. */
+  width:200px;
+  height:37px;
+  border-radius:20px;
 }
 /* Vertical wash: used by states that stretch mainly downward. The
    solid black camera-housing region now covers roughly the top
@@ -270,6 +271,229 @@ body.island-panel-open .island-wrap{ z-index:700; }
    pill only has horizontal padding. */
 .island.ringing{ padding:12px 18px; }
 .island.expanded{ padding:10px 16px; }
+
+/* ---- 다이나믹 아일랜드 양옆 정보 칩 ----
+   섬(카메라)의 왼쪽/오른쪽에 날짜·날씨·배터리 등 작은 칩을
+   띄운다. 섬이 펼쳐지는 동안(idle 아님)엔 가려지지 않게 숨긴다. */
+.island-side{
+  /* island-wrap(positioned ancestor)이 이미 상단 오프셋을 갖고 있으니
+     여기서는 알약(높이 37) 중앙에 칩(높이 26)을 맞추는 값만 준다. */
+  position:absolute;
+  top:6px;
+  display:flex; gap:6px; align-items:center;
+  pointer-events:auto;
+  transition:opacity .3s var(--soft-ease);
+}
+.island-side-l{ right:calc(50% + 74px); justify-content:flex-end; flex-direction:row-reverse; }
+.island-side-r{ left:calc(50% + 74px); }
+/* 섬이 알약 밖으로 커지면(타이머·음악·알람 등) 칩을 숨긴다. */
+.island-wrap:has(.island:not(.idle)) .island-side{ opacity:0; pointer-events:none; }
+.isl-chip{
+  display:flex; align-items:center; gap:4px;
+  height:26px; padding:0 9px; border-radius:14px;
+  background:#000; color:#fff;
+  font:600 12px/1 -apple-system,system-ui,sans-serif;
+  border:1px solid rgba(255,255,255,0.14);
+  white-space:nowrap;
+  box-shadow:0 3px 10px rgba(0,0,0,0.3);
+}
+.isl-chip svg{ width:13px; height:13px; flex:0 0 auto; }
+
+/* ============================================================
+   배경화면 갤러리 (잠금화면 꾹 누르면 나오는 iOS식 화면)
+   ============================================================ */
+.wp-gallery{
+  position:absolute; inset:0; z-index:1500;
+  background:#000;
+  display:flex;
+  flex-direction:column;
+  opacity:0; visibility:hidden; transform:scale(1.06);
+  pointer-events:none;
+  transition:opacity .34s var(--soft-ease, ease),
+             transform .34s var(--soft-ease, ease),
+             visibility .34s;
+  font-family:-apple-system,system-ui,sans-serif;
+}
+.wp-gallery.open{ opacity:1; visibility:visible; transform:none; pointer-events:auto; }
+/* 카드가 열릴 때마다 새로 그려지므로(renderWpCarousel) 매번 등장 애니메이션이 재생된다. */
+.wpg-card{ animation:wpgCardIn .46s cubic-bezier(.22,1.1,.32,1) both; }
+.wpg-track .wpg-card:nth-child(1){ animation-delay:.02s; }
+.wpg-track .wpg-card:nth-child(2){ animation-delay:.07s; }
+.wpg-track .wpg-card:nth-child(3){ animation-delay:.12s; }
+.wpg-track .wpg-card:nth-child(4){ animation-delay:.17s; }
+.wpg-track .wpg-card:nth-child(n+5){ animation-delay:.2s; }
+@keyframes wpgCardIn{ from{ opacity:0; transform:translateY(22px) scale(0.93); } to{ opacity:1; transform:none; } }
+.wpg-thumb{ animation:wpgCardIn .4s cubic-bezier(.22,1.1,.32,1) both; }
+.wpg-add-view:not([hidden]){ animation:wpgViewIn .3s var(--soft-ease, ease) both; }
+.wpg-carousel:not([hidden]){ animation:wpgViewIn .3s var(--soft-ease, ease) both; }
+@keyframes wpgViewIn{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:none; } }
+.wpg-view{ flex:1 1 auto; display:flex; flex-direction:column; min-height:0; }
+.wpg-view[hidden]{ display:none; }
+.wpg-top{
+  display:flex; align-items:center; gap:12px;
+  padding:calc(20px + env(safe-area-inset-top,0px)) 20px 10px;
+  flex:0 0 auto;
+}
+.wpg-title{ flex:1 1 auto; text-align:center; color:#fff; font-size:17px; font-weight:600; }
+.wpg-x{
+  min-width:60px; text-align:left;
+  background:none; border:none; color:#0a84ff; font-size:17px; cursor:pointer;
+  font-family:inherit;
+}
+.wpg-top .wpg-spacer{ min-width:60px; }
+/* 캐러셀: 옆으로 넘기는 큰 미리보기 */
+.wpg-track{
+  flex:1 1 auto; min-height:0;
+  display:flex; gap:16px;
+  overflow-x:auto; overflow-y:hidden;
+  scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;
+  padding:10px 15vw; align-items:center;
+  scrollbar-width:none;
+  cursor:grab; user-select:none; -webkit-user-select:none; touch-action:pan-x;
+}
+.wp-gallery .wpg-track:active{ cursor:grabbing; }
+.wpg-track::-webkit-scrollbar{ display:none; }
+.wpg-card{
+  flex:0 0 70vw; max-width:360px;
+  aspect-ratio:9/16; max-height:72vh;
+  border-radius:34px; overflow:hidden; position:relative;
+  scroll-snap-align:center;
+  background:#111; cursor:pointer;
+  border:2px solid transparent;
+  box-shadow:0 18px 50px rgba(0,0,0,0.6);
+  transition:border-color .2s ease, transform .2s ease;
+}
+.wpg-card.selected{ border-color:#fff; }
+.wpg-card:active{ transform:scale(0.97); }
+.wpg-card-bg{ position:absolute; inset:0; background-position:center; background-size:cover; }
+.wpg-card-clock{
+  position:absolute; top:12%; left:0; right:0; text-align:center;
+  color:#fff; text-shadow:0 2px 10px rgba(0,0,0,0.5);
+  pointer-events:none;
+}
+.wpg-card-date{ font-size:15px; opacity:0.95; }
+.wpg-card-time{ font-size:64px; font-weight:300; line-height:1.05; letter-spacing:-0.01em; }
+.wpg-card-add{
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(255,255,255,0.08);
+  border:2px dashed rgba(255,255,255,0.35);
+}
+.wpg-card-add span{ font-size:64px; color:rgba(255,255,255,0.6); font-weight:200; }
+.wpg-dots{ display:flex; gap:7px; justify-content:center; padding:14px 0 6px; flex:0 0 auto; }
+.wpg-dot{ width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,0.3); transition:background .2s ease; }
+.wpg-dot.on{ background:#fff; }
+.wpg-actions{
+  display:flex; align-items:center; justify-content:center; gap:16px;
+  padding:6px 20px calc(24px + env(safe-area-inset-bottom,0px));
+  flex:0 0 auto;
+}
+.wpg-btn{
+  background:rgba(120,120,128,0.36); color:#fff; border:none;
+  padding:12px 26px; border-radius:22px; font-size:16px; font-weight:500;
+  cursor:pointer; font-family:inherit;
+}
+.wpg-btn:active{ transform:scale(0.96); }
+.wpg-add{
+  width:48px; height:48px; border-radius:50%; flex:0 0 auto;
+  background:rgba(120,120,128,0.36); color:#fff; border:none;
+  font-size:28px; line-height:1; cursor:pointer;
+}
+.wpg-add:active{ transform:scale(0.92); }
+/* 추가 갤러리: 배경 썸네일 그리드 */
+.wpg-grid{
+  flex:1 1 auto; min-height:0; overflow-y:auto;
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr));
+  gap:14px; padding:14px 20px calc(24px + env(safe-area-inset-bottom,0px));
+  align-content:start;
+}
+.wpg-thumb{
+  aspect-ratio:9/16; border-radius:18px; overflow:hidden; position:relative;
+  background:#111 center/cover no-repeat; cursor:pointer;
+  border:1px solid rgba(255,255,255,0.1);
+}
+.wpg-thumb:active{ transform:scale(0.96); }
+.wpg-thumb-label{
+  position:absolute; left:0; right:0; bottom:0; padding:6px 8px;
+  background:linear-gradient(to top, rgba(0,0,0,0.6), rgba(0,0,0,0));
+  color:#fff; font-size:12px; text-align:center;
+}
+.wpg-thumb.photo{ display:flex; align-items:center; justify-content:center;
+  background:rgba(255,255,255,0.08); border:1px dashed rgba(255,255,255,0.35); color:rgba(255,255,255,0.7); }
+.wpg-thumb.photo svg{ width:34px; height:34px; }
+
+/* ============================================================
+   오늘의 요약 (홈에서 위로 스와이프하면 올라오는 위젯 대시보드)
+   ============================================================ */
+.today-sheet{
+  position:absolute; inset:0; z-index:1400;
+  background:rgba(10,12,20,0.5);
+  backdrop-filter:blur(30px) saturate(130%);
+  -webkit-backdrop-filter:blur(30px) saturate(130%);
+  overflow-y:auto; overflow-x:hidden;
+  display:flex; flex-direction:column;
+  transform:translateY(100%);
+  transition:transform .5s cubic-bezier(.25,1.02,.35,1);
+  font-family:-apple-system,system-ui,sans-serif;
+}
+.today-sheet.open{ transform:translateY(0); }
+.today-grab{
+  width:40px; height:5px; border-radius:3px; background:rgba(255,255,255,0.35);
+  margin:calc(12px + env(safe-area-inset-top,0px)) auto 0; flex:0 0 auto;
+}
+/* 다이나믹 아일랜드(상단)에 제목이 가리지 않도록 내용 전체를 아래로 */
+.today-head{ margin-top:46px; }
+.today-head{ text-align:center; padding:22px 20px 6px; flex:0 0 auto; }
+.today-title{ color:#fff; font-size:28px; font-weight:800; letter-spacing:-0.02em; }
+.today-sub{ color:rgba(255,255,255,0.6); font-size:14px; margin-top:4px; }
+.today-grid{
+  display:grid; grid-template-columns:1fr 1fr; gap:14px;
+  padding:18px 18px 8px; flex:0 0 auto;
+}
+.today-card{
+  background:rgba(120,120,128,0.3);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:24px; padding:16px; min-height:118px;
+  color:#fff; position:relative;
+  display:flex; flex-direction:column;
+  animation:todayCardIn .5s cubic-bezier(.22,1.1,.32,1) both;
+}
+@keyframes todayCardIn{ 0%{ opacity:0; transform:translateY(16px) scale(0.96); } 100%{ opacity:1; transform:none; } }
+.today-card .wg-head{ display:flex; align-items:center; gap:8px; font-size:14px; font-weight:600; opacity:0.9; }
+.today-card .wg-head svg{ width:18px; height:18px; flex:0 0 auto; }
+.today-card .wg-main{ font-size:32px; font-weight:700; margin-top:auto; display:flex; align-items:center; gap:6px; line-height:1.1; }
+.today-card .wg-main svg{ width:28px; height:28px; }
+.today-card .wg-sub{ font-size:13px; opacity:0.6; margin-top:4px; }
+.today-grid.editing .today-card{ animation:todayWiggle .32s ease-in-out infinite; }
+@keyframes todayWiggle{ 0%,100%{ transform:rotate(-1.1deg); } 50%{ transform:rotate(1.1deg); } }
+.today-remove{
+  position:absolute; top:-7px; left:-7px; width:26px; height:26px; border-radius:50%;
+  background:#ff453a; color:#fff; border:2px solid #0a0c14; font-size:16px; line-height:1;
+  display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:2;
+}
+.today-picker{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; padding:4px 18px 12px; }
+.today-picker[hidden]{ display:none; }
+.today-bar{ display:flex; gap:14px; justify-content:center; padding:8px 20px calc(26px + env(safe-area-inset-bottom,0px)); }
+.today-bar[hidden]{ display:none; }
+
+/* ============================================================
+   생동감 보강 — 누르는 모든 곳에 또렷한 반응(스프링 눌림)
+   ============================================================ */
+.ghost-btn, .primary-btn, .sheet-close, .wpg-x, .wpg-add,
+.as-opt, .as-get, .swu-beta{
+  transition:transform .14s cubic-bezier(.3,1.3,.4,1), background .2s ease, opacity .2s ease, color .2s ease;
+}
+.ghost-btn:active{ transform:scale(0.95); }
+.primary-btn:active{ transform:scale(0.95); }
+.sheet-close:active{ transform:scale(0.82); }
+.wpg-x:active{ transform:scale(0.88); }
+.as-opt:active, .as-get:active{ transform:scale(0.95); }
+/* 기능 아이콘: 버튼 자체는 등장 애니(0.5s)를 쓰므로 안쪽 아이콘만 빠르게 눌림 */
+.icon-btn svg{ transition:transform .14s cubic-bezier(.3,1.3,.4,1); }
+.icon-btn:active svg{ transform:scale(0.8); }
+/* 오늘 요약 카드 눌림(흔들림 편집 모드가 아닐 때) */
+.today-grid:not(.editing) .today-card{ transition:transform .16s cubic-bezier(.3,1.2,.4,1); }
+.today-grid:not(.editing) .today-card:active{ transform:scale(0.97); }
 
 /* ---- Face ID unlock: the Dynamic Island morphs down into a rounded
    square (like the iOS Face ID card) with a green face glyph. ---- */
@@ -2694,7 +2918,7 @@ body.ambient-open .ambient-screen{
    song it is, and the expanded panel carries the text. */
 .island.active.music-pill{
   width:250px;
-  height:44px;
+  height:37px;             /* 타이머 알약과 같은 높이 — 아래로 안 처지게 */
   padding:0;               /* the artwork sits flush against the end cap */
 }
 .music-pill-content{
@@ -2769,6 +2993,26 @@ body.ambient-open .ambient-screen{
   height:10%;
   transition:height .09s cubic-bezier(.25,.9,.3,1);
 }
+/* 가사 모드: 스펙트럼 자리에 가사. 위아래는 서서히 사라지고(마스크),
+   지금 재생 줄만 선명, 나머지는 살짝 블러. */
+.music-lyrics{
+  flex:1 1 auto; width:100%; min-height:44px; max-height:96px;
+  overflow:hidden; position:relative; text-align:left;
+  -webkit-mask-image:linear-gradient(to bottom, transparent 0, #000 26%, #000 74%, transparent 100%);
+          mask-image:linear-gradient(to bottom, transparent 0, #000 26%, #000 74%, transparent 100%);
+  scrollbar-width:none;
+}
+.music-lyrics::-webkit-scrollbar{ display:none; }
+.ml-line{
+  font-size:14px; line-height:1.55; color:rgba(255,255,255,0.55);
+  filter:blur(1.3px); opacity:0.65; padding:2px 0;
+  transition:filter .25s ease, opacity .25s ease, color .25s ease;
+}
+.ml-line.active{
+  color:#fff; filter:none; opacity:1; font-weight:600;
+  text-shadow:0 1px 8px rgba(0,0,0,0.6);
+}
+.ml-empty{ font-size:12px; color:rgba(255,255,255,0.5); line-height:1.5; padding-top:8px; }
 /* In the pill the meter is a fixed-width block at the right end, and
    it stays white -- the reference reads as a status indicator on
    black glass, not as a coloured widget. */
@@ -3832,10 +4076,53 @@ body.music-full-open.music-full-closing .music-full{ opacity:0; }
        as part of the hardware, so it stays put and stays sharp when
        the clock recedes and the weather screen comes up. -->
   <div class="island-wrap">
+    <div class="island-side island-side-l" id="island-side-l"></div>
     <div class="island-glow" id="island-glow"></div>
     <div class="island idle" id="island"></div>
     <div id="island-dot" role="button" tabindex="0" aria-label="다른 활동으로 전환"></div>
+    <div class="island-side island-side-r" id="island-side-r"></div>
   </div>
+
+  <!-- 배경화면 갤러리 (잠금화면 꾹 누르면 열림) -->
+  <div class="wp-gallery" id="wp-gallery" aria-hidden="true">
+    <div class="wpg-view wpg-carousel" id="wpg-carousel">
+      <div class="wpg-top">
+        <button class="wpg-x" id="wpg-close">완료</button>
+        <div class="wpg-title">배경화면</div>
+        <div class="wpg-spacer"></div>
+      </div>
+      <div class="wpg-track" id="wpg-track"></div>
+      <div class="wpg-dots" id="wpg-dots"></div>
+      <div class="wpg-actions">
+        <button class="wpg-btn" id="wpg-customize">사용자화</button>
+        <button class="wpg-add" id="wpg-add" aria-label="배경 추가">＋</button>
+      </div>
+    </div>
+    <div class="wpg-view wpg-add-view" id="wpg-add-view" hidden>
+      <div class="wpg-top">
+        <button class="wpg-x" id="wpg-add-cancel">취소</button>
+        <div class="wpg-title">새 배경화면 추가</div>
+        <div class="wpg-spacer"></div>
+      </div>
+      <div class="wpg-grid" id="wpg-grid"></div>
+    </div>
+  </div>
+
+  <!-- 오늘 요약 (홈에서 위로 스와이프) -->
+  <div class="today-sheet" id="today-sheet" aria-hidden="true">
+    <div class="today-grab"></div>
+    <div class="today-head">
+      <div class="today-title">오늘의 요약</div>
+      <div class="today-sub">친구·앱·활동의 새로운 소식</div>
+    </div>
+    <div class="today-grid" id="today-grid"></div>
+    <div class="today-picker" id="today-picker" hidden></div>
+    <div class="today-bar" id="today-bar" hidden>
+      <button class="wpg-btn" id="today-add">위젯 추가</button>
+      <button class="wpg-btn" id="today-done">완료</button>
+    </div>
+  </div>
+
 
 
   <!-- Voice AI oval — sits just below the real Dynamic Island without
@@ -4191,6 +4478,11 @@ body.music-full-open.music-full-closing .music-full{ opacity:0; }
       <input type="range" id="island-y" class="set-range" min="0" max="80" step="1" value="0">
     </div>
     <button class="ghost-btn island-feat" id="island-pos-reset">아일랜드 위치 초기화</button>
+    <div class="field-label island-feat">다이나믹 아일랜드 정보 (최대 10개)</div>
+    <div class="field-label island-feat" style="font-size:12px; color:var(--text-dim); margin-top:2px;">왼쪽</div>
+    <div class="chip-row island-feat" id="isl-info-l"></div>
+    <div class="field-label island-feat" style="font-size:12px; color:var(--text-dim); margin-top:8px;">오른쪽</div>
+    <div class="chip-row island-feat" id="isl-info-r"></div>
     <div class="settings-row">
       <span class="field-label">AOD 자동 진입 (초)</span>
       <input type="number" id="aod-idle-input" class="num-input" min="5" step="5" value="120" inputmode="numeric">
@@ -4464,6 +4756,9 @@ const state = {
   clockScale: 1,      // 0.5 ~ 1.8 배
   scrimOpacity: 1,    // 0 ~ 1, 시계 뒤 어둡기
   widgets: [],  // (6.0: widget feature removed)
+  islandInfoL: [],  // 다이나믹 아일랜드 왼쪽 정보 칩 (widget id 배열)
+  islandInfoR: [],  // 다이나믹 아일랜드 오른쪽 정보 칩
+  summaryWidgets: ['date','weather','battery','alarm','seconds'],  // 홈 위로 스와이프 → 오늘 요약 위젯
   activePanel: null // 'settings'|'music' — the two that are still sheets
 };
 
@@ -4547,6 +4842,9 @@ if(persisted){
   if(typeof persisted.clockScale === 'number') state.clockScale = persisted.clockScale;
   if(typeof persisted.scrimOpacity === 'number') state.scrimOpacity = persisted.scrimOpacity;
   state.widgets = [];   // 6.0: widget feature removed — ignore any saved widgets
+  if(Array.isArray(persisted.islandInfoL)) state.islandInfoL = persisted.islandInfoL.slice(0,10);
+  if(Array.isArray(persisted.islandInfoR)) state.islandInfoR = persisted.islandInfoR.slice(0,10);
+  if(Array.isArray(persisted.summaryWidgets)) state.summaryWidgets = persisted.summaryWidgets;
   if(persisted.music){
     const m = persisted.music;
     if(typeof m.shuffle === 'boolean') music.shuffle = m.shuffle;
@@ -4612,7 +4910,10 @@ function saveState(){
       clockColor: state.clockColor,
       clockScale: state.clockScale,
       scrimOpacity: state.scrimOpacity,
-      widgets: state.widgets
+      widgets: state.widgets,
+      islandInfoL: state.islandInfoL,
+      islandInfoR: state.islandInfoR,
+      summaryWidgets: state.summaryWidgets
     }));
   }catch(e){ /* 설정 저장 실패 — 조용히 무시 */ }
 }
@@ -4960,7 +5261,8 @@ function resolveIsland(){
    drop the camera stream, so the build only runs when this key moves. */
 function islandKey(r){
   if(r.mode === 'idle' || r.mode === 'mirror' || r.panel) return r.mode;
-  return r.mode + (r.primary.id != null ? ':' + r.primary.id : '');
+  return r.mode + (r.primary.id != null ? ':' + r.primary.id : '')
+    + (r.mode === 'music-expanded' && musicLyricsOn ? ':ly' : '');
 }
 function dotKey(r){
   if(!r.secondary || r.panel || r.mode === 'mirror') return 'none';
@@ -5096,6 +5398,38 @@ function stopwatchPanelHTML(){
 
 /* ================= Island DOM ================= */
 
+/* 섬 확장 음악 플레이어: 가사 모드(스펙트럼 자리에 가사) */
+let musicLyricsOn = false;
+const LYRIC_MINI_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M4 12h16M4 18h12"/></svg>';
+let _mlLines = [], _mlSynced = false, _mlActive = -1, _mlKey = null;
+function renderMusicLyrics(){
+  const box = document.getElementById('music-lyrics');
+  if(!box) return;
+  _mlKey = (typeof lyKey==='function') ? lyKey() : null;
+  const raw = (typeof getRawLyrics==='function') ? getRawLyrics() : '';
+  _mlLines = (typeof parseLyrics==='function') ? parseLyrics(raw) : [];
+  _mlSynced = _mlLines.some(l=>l.t!=null);
+  _mlActive = -1;
+  if(!_mlLines.length){ box.innerHTML = '<div class="ml-empty">가사가 없어요<br>전체화면 플레이어에서 가사를 넣어보세요</div>'; return; }
+  box.innerHTML = _mlLines.map((l,i)=>`<div class="ml-line" data-i="${i}">${esc(l.text||'♪')}</div>`).join('');
+}
+function syncMusicLyrics(){
+  if(!musicLyricsOn) return;
+  const box = document.getElementById('music-lyrics');
+  if(!box) return;
+  if(((typeof lyKey==='function') ? lyKey() : null) !== _mlKey) renderMusicLyrics();
+  if(!_mlSynced || !_mlLines.length) return;
+  const cur = (music.el && isFinite(music.el.currentTime)) ? music.el.currentTime : 0;
+  let idx = -1;
+  for(let i=0;i<_mlLines.length;i++){ if(_mlLines[i].t==null) continue; if(_mlLines[i].t <= cur+0.15) idx=i; else break; }
+  if(idx === _mlActive) return;
+  _mlActive = idx;
+  const lines = box.querySelectorAll('.ml-line');
+  lines.forEach((el,i)=> el.classList.toggle('active', i===idx));
+  const act = lines[idx];
+  if(act){ try{ box.scrollTo({ top: act.offsetTop - box.clientHeight/2 + act.offsetHeight/2, behavior:'smooth' }); }catch(e){ box.scrollTop = act.offsetTop - box.clientHeight/2; } }
+}
+
 function buildIslandDOM(r){
   const mode = r.mode;
   let cls = 'island idle';
@@ -5182,7 +5516,9 @@ function buildIslandDOM(r){
       <div class="music-right">
         <div class="music-title">${esc(t.title || '재생할 곡 없음')}</div>
         <div class="music-artist">${esc(t.artist || '알 수 없는 아티스트')}${t.album ? ' · ' + esc(t.album) : ''}</div>
-        <div class="music-spectrum" id="music-bars">${'<i></i>'.repeat(featuresUnlocked() ? 5 : 30)}</div>
+        ${musicLyricsOn
+          ? `<div class="music-lyrics" id="music-lyrics"></div>`
+          : `<div class="music-spectrum" id="music-bars">${'<i></i>'.repeat(featuresUnlocked() ? 5 : 30)}</div>`}
         <div class="music-progress">
           <span class="music-time" id="music-cur">00:00</span>
           <div class="music-bar" id="music-bar"><div class="music-bar-fill" id="music-bar-fill"></div></div>
@@ -5194,6 +5530,7 @@ function buildIslandDOM(r){
           <button class="music-btn" data-action="music-next" aria-label="다음 곡">${NEXT_SVG}</button>
           <button class="music-btn mini${music.shuffle?' on':''}" data-action="music-shuffle" aria-label="셔플">${SHUFFLE_SVG}</button>
           <button class="music-btn mini${music.repeat!=='off'?' on':''}" data-action="music-repeat" aria-label="반복">${music.repeat==='one'?REPEAT1_SVG:REPEAT_SVG}</button>
+          <button class="music-btn mini${musicLyricsOn?' on':''}" data-action="music-lyrics" aria-label="가사">${LYRIC_MINI_SVG}</button>
           <button class="music-btn mini" data-action="music-close" aria-label="플레이어 닫기">${CLOSE_SVG}</button>
         </div>
       </div>
@@ -5249,6 +5586,7 @@ function buildIslandDOM(r){
   if(mode === 'panel-music'){ renderTrackList(); renderSpectrumChips(); renderArtBgToggle(); }
 
   if(mode === 'music-expanded'){
+    if(musicLyricsOn) renderMusicLyrics();
     const bar = islandEl.querySelector('#music-bar');
     if(bar) bar.addEventListener('click', (e)=>{
       const el = music.el;
@@ -5337,6 +5675,7 @@ function updateDotValues(act){
 
 function updateIslandValues(r){
   const mode = r.mode;
+  if(mode === 'music-expanded' && musicLyricsOn) syncMusicLyrics();
   const ring = islandEl.querySelector('#ring-progress');
   const valueEl = islandEl.querySelector('#island-value');
   const pauseBtn = islandEl.querySelector('#island-pause-btn');
@@ -5516,6 +5855,7 @@ islandEl.addEventListener('click', (e)=>{
       music.repeat = music.repeat==='off' ? 'all' : (music.repeat==='all' ? 'one' : 'off');
       renderIsland(); return;
     }
+    if(action==='music-lyrics'){ musicLyricsOn = !musicLyricsOn; renderIsland(); return; }
     if(action==='music-close'){ closeMusic(); return; }
     if(action==='music-full'){ openMusicFull(); return; }
     if(action==='toggle-art-bg'){
@@ -5929,6 +6269,8 @@ const BG_PRESETS = [
   { id:'diag',     label:'스트라이프', pattern:true, size:'40px 40px',
     css:'repeating-linear-gradient(45deg,#0d0d10 0 14px,#161620 14px 28px)' },
   { id:'glass',    label:'글래스',     img:'wallpaper-glass.jpg' },
+  { id:'unity',    label:'유니티',     img:'wallpaper-unity.jpg' },
+  { id:'blinds',   label:'블라인드',   img:'wallpaper-blinds.jpg' },
 ];
 function bgPresetById(id){ return BG_PRESETS.find(p=>p.id===id) || null; }
 let bgPreset = (persisted && persisted.bgPreset) || (persisted ? 'midnight' : 'glass');
@@ -6040,6 +6382,331 @@ function applyBgFile(file){
 bgImageInput.addEventListener('change', ()=>{
   applyBgFile(bgImageInput.files && bgImageInput.files[0]);
 });
+
+/* ================= 배경화면 갤러리 =================
+   잠금화면을 꾹 누르면 열리는 iOS식 배경화면 화면.
+   - 캐러셀: 저장된 배경을 옆으로 넘기며 고른다.
+   - "+" : 새 배경(유니티·블라인드 등 기본 + 내 사진)을 추가. */
+const WP_KEY = 'dynamicClock.wallpapers';
+let savedWallpapers = [];
+let wpDragMoved = false;   // 드래그로 넘겼으면 카드 클릭(적용) 무시
+try{ const s = JSON.parse(localStorage.getItem(WP_KEY) || 'null'); if(Array.isArray(s)) savedWallpapers = s; }catch(e){}
+if(!savedWallpapers.length){
+  savedWallpapers = ['unity','blinds','glass'].map(p=>({ kind:'preset', preset:p }));
+}
+function saveWallpapers(){ try{ localStorage.setItem(WP_KEY, JSON.stringify(savedWallpapers)); }catch(e){} }
+function capPhotos(){
+  /* 사진은 용량이 커서 최근 3장만 유지 */
+  const photos = savedWallpapers.filter(w=>w.kind==='photo');
+  if(photos.length > 3){
+    const drop = photos.slice(0, photos.length-3);
+    savedWallpapers = savedWallpapers.filter(w=> drop.indexOf(w) < 0);
+  }
+}
+function isCurrentWallpaper(w){
+  if(!w) return false;
+  if(w.kind==='preset') return bgMode==='preset' && bgPreset===w.preset;
+  if(w.kind==='photo')  return bgMode==='image'  && customBgDataUrl===w.url;
+  return false;
+}
+function applyWallpaperItem(w){
+  if(!w) return;
+  if(w.kind==='preset'){ bgMode='preset'; bgPreset=w.preset; }
+  else if(w.kind==='photo'){ customBgDataUrl=w.url; bgMode='image'; }
+  applyBgMode();
+  if(typeof renderBgModeChips==='function') renderBgModeChips();
+  scheduleSave();
+}
+function wpApplyBgTo(el, w){
+  el.style.backgroundRepeat=''; el.style.backgroundSize='cover'; el.style.backgroundImage='none';
+  if(w.kind==='photo'){ el.style.backgroundImage=`url("${w.url}")`; return; }
+  const p = bgPresetById(w.preset);
+  if(!p){ el.style.background='#111'; return; }
+  if(p.img){ el.style.backgroundImage=`url("${p.img}")`; }
+  else if(p.pattern){ el.style.backgroundImage=p.css; el.style.backgroundRepeat='repeat'; el.style.backgroundSize=p.size||'auto'; }
+  else { el.style.backgroundImage=p.css; }
+}
+function wpClockText(){
+  const d = new Date();
+  const h = d.getHours(), m = d.getMinutes();
+  const time = (typeof state!=='undefined' && state.use24h) ? `${pad(h)}:${pad(m)}` : `${((h%12)||12)}:${pad(m)}`;
+  const date = `${d.getMonth()+1}월 ${d.getDate()}일 (${WG_DAYS[d.getDay()]})`;
+  return { time, date };
+}
+function renderWpCarousel(){
+  const track = document.getElementById('wpg-track');
+  if(!track) return;
+  const { time, date } = wpClockText();
+  track.innerHTML='';
+  savedWallpapers.forEach((w)=>{
+    const card = document.createElement('div');
+    card.className = 'wpg-card' + (isCurrentWallpaper(w) ? ' selected' : '');
+    const bg = document.createElement('div'); bg.className='wpg-card-bg'; wpApplyBgTo(bg, w);
+    const clk = document.createElement('div'); clk.className='wpg-card-clock';
+    clk.innerHTML = `<div class="wpg-card-date">${esc(date)}</div><div class="wpg-card-time">${esc(time)}</div>`;
+    card.appendChild(bg); card.appendChild(clk);
+    card.addEventListener('click', ()=>{ if(wpDragMoved) return; applyWallpaperItem(w); renderWpCarousel(); });
+    track.appendChild(card);
+  });
+  const add = document.createElement('div');
+  add.className='wpg-card wpg-card-add';
+  add.innerHTML='<span>＋</span>';
+  add.addEventListener('click', ()=>{ if(wpDragMoved) return; showWpAddView(true); });
+  track.appendChild(add);
+  renderWpDots();
+}
+function renderWpDots(){
+  const dots = document.getElementById('wpg-dots');
+  if(!dots) return;
+  dots.innerHTML='';
+  savedWallpapers.forEach(()=>{ const d=document.createElement('div'); d.className='wpg-dot'; dots.appendChild(d); });
+  updateWpDots();
+}
+function updateWpDots(){
+  const track = document.getElementById('wpg-track');
+  const dots = document.getElementById('wpg-dots');
+  if(!track || !dots) return;
+  const cards = track.querySelectorAll('.wpg-card');
+  const center = track.scrollLeft + track.clientWidth/2;
+  let active = 0, best = Infinity;
+  cards.forEach((c,i)=>{ const cc=c.offsetLeft + c.offsetWidth/2; const dd=Math.abs(cc-center); if(dd<best){ best=dd; active=i; } });
+  dots.querySelectorAll('.wpg-dot').forEach((d,i)=> d.classList.toggle('on', i===active));
+}
+function scrollWpToIndex(i){
+  const track = document.getElementById('wpg-track'); if(!track) return;
+  const card = track.querySelectorAll('.wpg-card')[i]; if(!card) return;
+  requestAnimationFrame(()=>{ try{ card.scrollIntoView({ inline:'center', block:'nearest' }); }catch(e){} updateWpDots(); });
+}
+function renderWpGrid(){
+  const grid = document.getElementById('wpg-grid'); if(!grid) return;
+  grid.innerHTML='';
+  BG_PRESETS.forEach(p=>{
+    const t = document.createElement('div'); t.className='wpg-thumb';
+    wpApplyBgTo(t, { kind:'preset', preset:p.id });
+    t.innerHTML = `<div class="wpg-thumb-label">${esc(p.label)}</div>`;
+    t.addEventListener('click', ()=> addWallpaper({ kind:'preset', preset:p.id }));
+    grid.appendChild(t);
+  });
+  const photo = document.createElement('div'); photo.className='wpg-thumb photo';
+  photo.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg>';
+  photo.addEventListener('click', wpPickPhoto);
+  grid.appendChild(photo);
+}
+function addWallpaper(w){
+  let target = w;
+  if(w.kind==='preset'){
+    const exist = savedWallpapers.find(x=>x.kind==='preset' && x.preset===w.preset);
+    if(exist){ target = exist; }
+    else { savedWallpapers.push(w); saveWallpapers(); }
+  }
+  applyWallpaperItem(target);
+  showWpAddView(false);
+  renderWpCarousel();
+  const idx = savedWallpapers.indexOf(target);
+  if(idx>=0) scrollWpToIndex(idx);
+}
+function wpPickPhoto(){
+  const inp = document.createElement('input');
+  inp.type='file'; inp.accept='image/*';
+  inp.addEventListener('change', ()=>{
+    const f = inp.files && inp.files[0];
+    if(!f || !/^image\//.test(f.type)) return;
+    downscaleImage(f, 1600, (url)=>{
+      if(!url) return;
+      const w = { kind:'photo', url };
+      savedWallpapers.push(w); capPhotos(); saveWallpapers();
+      applyWallpaperItem(w);
+      showWpAddView(false);
+      renderWpCarousel();
+      const idx = savedWallpapers.indexOf(w);
+      if(idx>=0) scrollWpToIndex(idx);
+    });
+  });
+  inp.click();
+}
+function showWpAddView(on){
+  const car = document.getElementById('wpg-carousel');
+  const addv = document.getElementById('wpg-add-view');
+  if(car) car.hidden = on;
+  if(addv) addv.hidden = !on;
+  if(on) renderWpGrid();
+}
+function openWallpaperGallery(){
+  if(typeof closePanel==='function') closePanel();
+  if(typeof closeIslandPanel==='function') closeIslandPanel();
+  showWpAddView(false);
+  renderWpCarousel();
+  const g = document.getElementById('wp-gallery');
+  if(g){ g.classList.add('open'); g.setAttribute('aria-hidden','false'); }
+  let idx = savedWallpapers.findIndex(isCurrentWallpaper);
+  if(idx < 0) idx = 0;
+  scrollWpToIndex(idx);
+}
+function closeWallpaperGallery(){
+  const g = document.getElementById('wp-gallery');
+  if(g){ g.classList.remove('open'); g.setAttribute('aria-hidden','true'); }
+}
+(function wireWallpaperGallery(){
+  const close = document.getElementById('wpg-close');
+  const add = document.getElementById('wpg-add');
+  const cancel = document.getElementById('wpg-add-cancel');
+  const custom = document.getElementById('wpg-customize');
+  const track = document.getElementById('wpg-track');
+  if(close) close.addEventListener('click', closeWallpaperGallery);
+  if(add) add.addEventListener('click', ()=> showWpAddView(true));
+  if(cancel) cancel.addEventListener('click', ()=> showWpAddView(false));
+  if(custom) custom.addEventListener('click', ()=>{ closeWallpaperGallery(); if(typeof openEditPanel==='function') openEditPanel(); });
+  if(track) track.addEventListener('scroll', updateWpDots, { passive:true });
+
+  /* 마우스/터치로 끌어서 옆으로 넘기기 (데스크톱 마우스는 기본적으로
+     overflow 컨테이너를 드래그 스크롤하지 못하므로 직접 처리) */
+  if(track){
+    let down=false, startX=0, startScroll=0;
+    track.addEventListener('pointerdown', (e)=>{
+      down=true; wpDragMoved=false; startX=e.clientX; startScroll=track.scrollLeft;
+      track.style.scrollSnapType='none';
+    });
+    track.addEventListener('pointermove', (e)=>{
+      if(!down) return;
+      const dx = e.clientX - startX;
+      if(Math.abs(dx) > 6) wpDragMoved = true;
+      track.scrollLeft = startScroll - dx;
+    });
+    const endWpDrag = ()=>{
+      if(!down) return;
+      down=false;
+      track.style.scrollSnapType='';   // CSS의 mandatory 복귀 → 가까운 카드로 스냅
+      updateWpDots();
+      /* 클릭 억제 플래그는 이 클릭이 지나간 뒤에 해제 */
+      setTimeout(()=>{ wpDragMoved=false; }, 0);
+    };
+    track.addEventListener('pointerup', endWpDrag);
+    track.addEventListener('pointercancel', endWpDrag);
+    track.addEventListener('pointerleave', endWpDrag);
+  }
+})();
+
+/* ================= 오늘의 요약 (홈 위로 스와이프) =================
+   WIDGET_DEFS를 큰 카드로 보여주는 대시보드. 카드를 꾹 누르면
+   편집 모드(흔들림 + 삭제 + 위젯 추가). */
+let todayEditing = false;
+function todayCardInner(id){
+  const def = WIDGET_DEFS.find(w=>w.id===id);
+  if(!def) return '';
+  const c = def.render();
+  const main = c.raw ? c.main : esc(c.main);
+  return `${todayEditing ? `<button class="today-remove" data-rm="${id}" aria-label="삭제">−</button>` : ''}
+    <div class="wg-head">${def.icon}<span>${esc(c.head || def.label)}</span></div>
+    <div class="wg-main">${main}</div>
+    ${c.sub ? `<div class="wg-sub">${esc(c.sub)}</div>` : ''}`;
+}
+function renderTodaySummary(){
+  const grid = document.getElementById('today-grid');
+  if(!grid) return;
+  const ids = (state.summaryWidgets||[]).filter(id=>WIDGET_DEFS.some(w=>w.id===id));
+  grid.innerHTML = ids.map(id=>`<div class="today-card wg-${id}" data-widget="${id}">${todayCardInner(id)}</div>`).join('');
+  grid.classList.toggle('editing', todayEditing);
+  const bar = document.getElementById('today-bar');
+  const picker = document.getElementById('today-picker');
+  if(bar) bar.hidden = !todayEditing;
+  if(!todayEditing && picker){ picker.hidden = true; }
+}
+/* 값만 갱신 — 카드 DOM을 다시 만들지 않아 등장 애니메이션이
+   매초 반복되지 않는다(깜빡임 방지). */
+function updateTodaySummaryValues(){
+  const grid = document.getElementById('today-grid');
+  if(!grid) return;
+  grid.querySelectorAll('.today-card').forEach(card=>{
+    const id = card.dataset.widget;
+    const def = WIDGET_DEFS.find(w=>w.id===id);
+    if(!def) return;
+    const c = def.render();
+    const head = card.querySelector('.wg-head span');
+    const main = card.querySelector('.wg-main');
+    const sub  = card.querySelector('.wg-sub');
+    if(head) head.textContent = c.head || def.label;
+    if(main) main.innerHTML = c.raw ? c.main : esc(c.main);
+    if(sub && c.sub != null) sub.textContent = c.sub;
+  });
+}
+function renderTodayPicker(){
+  const picker = document.getElementById('today-picker');
+  if(!picker) return;
+  const missing = WIDGET_DEFS.filter(w=> (state.summaryWidgets||[]).indexOf(w.id) < 0);
+  if(!missing.length){ picker.innerHTML = '<span style="color:rgba(255,255,255,0.5);font-size:13px">추가할 위젯이 없어요</span>'; picker.hidden=false; return; }
+  picker.innerHTML = missing.map(w=>`<button class="chip" data-add-wg="${w.id}">${w.icon}<span>${esc(w.label)}</span></button>`).join('');
+  picker.hidden = false;
+}
+function openTodaySummary(){
+  todayEditing = false;
+  const need = state.summaryWidgets || [];
+  if(need.indexOf('weather') >= 0 && typeof prefetchWeather==='function') prefetchWeather().then(renderTodaySummary);
+  if(need.indexOf('battery') >= 0 && typeof initBattery==='function') initBattery();
+  renderTodaySummary();
+  const s = document.getElementById('today-sheet');
+  if(s){ s.classList.add('open'); s.setAttribute('aria-hidden','false'); s.scrollTop = 0; }
+}
+function closeTodaySummary(){
+  todayEditing = false;
+  const s = document.getElementById('today-sheet');
+  if(s){ s.classList.remove('open'); s.setAttribute('aria-hidden','true'); }
+}
+function todaySummaryOpen(){ const s=document.getElementById('today-sheet'); return s && s.classList.contains('open'); }
+(function wireTodaySummary(){
+  const sheet = document.getElementById('today-sheet');
+  const grid = document.getElementById('today-grid');
+  const add = document.getElementById('today-add');
+  const done = document.getElementById('today-done');
+  const picker = document.getElementById('today-picker');
+  if(!sheet) return;
+
+  /* 카드 꾹 누르면 편집 모드 */
+  let lpTimer = null, lpX = 0, lpY = 0;
+  grid.addEventListener('pointerdown', (e)=>{
+    if(todayEditing) return;
+    if(!e.target.closest('.today-card')) return;
+    lpX = e.clientX; lpY = e.clientY;
+    lpTimer = setTimeout(()=>{ lpTimer=null; todayEditing = true; renderTodaySummary(); }, 500);
+  });
+  grid.addEventListener('pointermove', (e)=>{
+    if(lpTimer && (Math.abs(e.clientX-lpX)>10 || Math.abs(e.clientY-lpY)>10)){ clearTimeout(lpTimer); lpTimer=null; }
+  });
+  const cancelLp = ()=>{ if(lpTimer){ clearTimeout(lpTimer); lpTimer=null; } };
+  grid.addEventListener('pointerup', cancelLp);
+  grid.addEventListener('pointercancel', cancelLp);
+
+  /* 삭제 버튼 */
+  grid.addEventListener('click', (e)=>{
+    const rm = e.target.closest('[data-rm]');
+    if(!rm) return;
+    const id = rm.dataset.rm;
+    state.summaryWidgets = (state.summaryWidgets||[]).filter(x=>x!==id);
+    renderTodaySummary();
+    if(!picker.hidden) renderTodayPicker();
+    scheduleSave();
+  });
+
+  if(add) add.addEventListener('click', ()=>{ if(picker.hidden) renderTodayPicker(); else picker.hidden = true; });
+  if(picker) picker.addEventListener('click', (e)=>{
+    const b = e.target.closest('[data-add-wg]');
+    if(!b) return;
+    const id = b.dataset.addWg;
+    if((state.summaryWidgets||[]).indexOf(id) < 0){
+      state.summaryWidgets.push(id);
+      if(id==='weather' && typeof prefetchWeather==='function') prefetchWeather().then(renderTodaySummary);
+      if(id==='battery' && typeof initBattery==='function') initBattery();
+    }
+    renderTodaySummary(); renderTodayPicker(); scheduleSave();
+  });
+  if(done) done.addEventListener('click', ()=>{ todayEditing=false; renderTodaySummary(); });
+
+  /* 맨 위에서 아래로 끌면 닫기 */
+  let dy0 = null;
+  sheet.addEventListener('pointerdown', (e)=>{ if(sheet.scrollTop <= 2 && !e.target.closest('.today-card, .chip, .wpg-btn')) dy0 = e.clientY; else dy0 = null; });
+  sheet.addEventListener('pointerup', (e)=>{ if(dy0!=null && e.clientY - dy0 > 60){ closeTodaySummary(); } dy0 = null; });
+
+  document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && todaySummaryOpen()){ closeTodaySummary(); } });
+})();
 
 /* ================= 사진 슬라이드쇼 배경 =================
    여러 장의 사진을 저장해 두고 몇 초마다 부드럽게 바꿔 보여준다.
@@ -6308,6 +6975,20 @@ function nextAlarmInfo(){
   return { main:`${pad(best.hour)}:${pad(best.min)}`, sub };
 }
 
+/* 오늘 요약 위젯용 추가 아이콘 */
+const CLK_SVG   = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+const CAL2_SVG  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>';
+const SUN2_SVG  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/></svg>';
+const HOUR_SVG  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12M8 2c0 5 8 5 8 10s-8 5-8 10M16 2c0 5-8 5-8 10"/></svg>';
+const TIMR_SVG  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 2h4"/><path d="M12 14v-4"/><circle cx="12" cy="14" r="8"/></svg>';
+const SWCH_SVG  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg>';
+const NOTE2_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
+const MEMO_SVG  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v12l-4 4H4z"/><path d="M8 9h8M8 13h5"/></svg>';
+const QUOT_SVG  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a4 4 0 0 1-4 4H7l-4 4V5a2 2 0 0 1 2-2h12a4 4 0 0 1 4 4z"/></svg>';
+const DROP_SVG  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2s6 7 6 12a6 6 0 0 1-12 0c0-5 6-12 6-12z"/></svg>';
+const LEAF_SVG  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 4 13c0-6 7-9 15-9 0 8-3 15-9 15z"/><path d="M4 20c3-4 6-6 10-7"/></svg>';
+const WIND_SVG  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8h11a3 3 0 1 0-3-3M3 16h14a3 3 0 1 1-3 3M3 12h18"/></svg>';
+
 const WIDGET_DEFS = [
   { id:'date', label:'날짜', icon:CAL_SVG, render(){
       const d = new Date();
@@ -6333,6 +7014,78 @@ const WIDGET_DEFS = [
   }},
   { id:'seconds', label:'초', icon:SEC_SVG, render(){
       return { head:'초', main:pad(new Date().getSeconds()), sub:'' };
+  }},
+  { id:'time', label:'시각', icon:CLK_SVG, render(){
+      const d=new Date(), h=d.getHours(), m=d.getMinutes();
+      const main = state.use24h ? `${pad(h)}:${pad(m)}` : `${((h%12)||12)}:${pad(m)}`;
+      return { head:'시각', main, sub: state.use24h ? '' : (h<12?'오전':'오후') };
+  }},
+  { id:'weekday', label:'요일', icon:CAL2_SVG, render(){
+      const d=new Date();
+      return { head:'요일', main:`${WG_DAYS[d.getDay()]}요일`, sub:`${d.getMonth()+1}월 ${d.getDate()}일` };
+  }},
+  { id:'ampm', label:'오전/오후', icon:SUN2_SVG, render(){
+      const d=new Date(), h=d.getHours();
+      return { head:'시간대', main: h<12?'오전':'오후', sub:`${((h%12)||12)}시 ${pad(d.getMinutes())}분` };
+  }},
+  { id:'dayofyear', label:'올해', icon:CAL2_SVG, render(){
+      const d=new Date(), doy=Math.floor((d-new Date(d.getFullYear(),0,0))/86400000);
+      return { head:'올해', main:`${doy}일째`, sub:`${d.getFullYear()}년` };
+  }},
+  { id:'weeknum', label:'주차', icon:CAL2_SVG, render(){
+      const d=new Date(), doy=Math.floor((d-new Date(d.getFullYear(),0,0))/86400000), wk=Math.ceil(doy/7);
+      return { head:'주차', main:`${wk}주`, sub:`올해 ${wk}번째 주` };
+  }},
+  { id:'timeleft', label:'남은 하루', icon:HOUR_SVG, render(){
+      const d=new Date(), end=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1,0,0,0);
+      const mins=Math.max(0,Math.floor((end-d)/60000)), hh=Math.floor(mins/60), mm=mins%60;
+      return { head:'오늘 남은 시간', main:`${hh}:${pad(mm)}`, sub:'자정까지' };
+  }},
+  { id:'alarmcount', label:'알람 수', icon:BELL_SVG, render(){
+      const n=(state.alarms||[]).filter(a=>a.enabled).length;
+      return { head:'알람', main:`${n}개`, sub: n?'켜진 알람':'켜진 알람 없음' };
+  }},
+  { id:'timer', label:'타이머', icon:TIMR_SVG, render(){
+      if(state.timer && state.timer.running){
+        const r=Math.max(0, Math.ceil(typeof getTimerRemaining==='function'?getTimerRemaining():(state.timer.remaining||0)));
+        return { head:'타이머', main:`${Math.floor(r/60)}:${pad(r%60)}`, sub:'남음' };
+      }
+      if(state.timer && state.timer.ringing) return { head:'타이머', main:'종료', sub:'울리는 중' };
+      return { head:'타이머', main:'꺼짐', sub:'실행 중 아님' };
+  }},
+  { id:'stopwatch', label:'스톱워치', icon:SWCH_SVG, render(){
+      const sw=state.stopwatch||{}; let ms=sw.elapsedMs||0; if(sw.running && sw.startedAt) ms += Date.now()-sw.startedAt;
+      const total=Math.floor(ms/1000);
+      return { head:'스톱워치', main:`${pad(Math.floor(total/60))}:${pad(total%60)}`, sub: sw.running?'측정 중':(ms>0?'정지됨':'0') };
+  }},
+  { id:'music', label:'음악', icon:NOTE2_SVG, render(){
+      const t = music.tracks[music.index];
+      if(!t) return { head:'음악', main:'없음', sub:'재생할 곡 없음' };
+      return { head:'음악', main: t.title||t.name||'재생 중', sub:(music.playing?'재생 중':'일시정지')+(t.artist?` · ${t.artist}`:'') };
+  }},
+  { id:'memo', label:'메모', icon:MEMO_SVG, render(){
+      const first=(state.memo||'').trim().split('\n')[0]||'';
+      return { head:'메모', main: first?'📝':'—', sub: first||'비어 있음' };
+  }},
+  { id:'quote', label:'한마디', icon:QUOT_SVG, render(){
+      const d=new Date(), doy=Math.floor((d-new Date(d.getFullYear(),0,0))/86400000);
+      const q = (typeof DAILY_QUOTES!=='undefined' && DAILY_QUOTES.length) ? DAILY_QUOTES[doy % DAILY_QUOTES.length] : '오늘도 화이팅!';
+      return { head:'오늘의 한마디', main:'💬', sub:q };
+  }},
+  { id:'weatherhl', label:'최고/최저', icon:CLOUD_SVG, render(){
+      const w=cachedWeather;
+      if(!w||w.error||w.max==null) return { head:'최고/최저', main:'—', sub:'날씨 불러오는 중' };
+      return { head:'최고/최저', main:`${w.max}°/${w.min}°`, sub: w.place||'' };
+  }},
+  { id:'humidity', label:'습도', icon:DROP_SVG, render(){
+      const w=cachedWeather;
+      if(!w||w.error||w.humidity==null) return { head:'습도', main:'—', sub:'날씨 불러오는 중' };
+      return { head:'습도', main:`${w.humidity}%`, sub:'상대 습도' };
+  }},
+  { id:'season', label:'계절', icon:LEAF_SVG, render(){
+      const mo=new Date().getMonth()+1;
+      const s = (mo<=2||mo===12)?'겨울':(mo<=5)?'봄':(mo<=8)?'여름':'가을';
+      return { head:'계절', main:s, sub:`${mo}월` };
   }}
 ];
 
@@ -6385,6 +7138,84 @@ function toggleWidget(id, force){
 
 /* 6.0: the widget feature was removed — no pickers, listeners, or data kick-off. */
 
+/* ================= 다이나믹 아일랜드 양옆 정보 칩 =================
+   WIDGET_DEFS(날짜·날씨·배터리·다음알람·초)를 재활용해, 섬 옆에
+   띄울 작은 칩을 그린다. 왼쪽/오른쪽 각각 최대 5개, 합쳐 10개. */
+function islandChipHTML(id){
+  const def = WIDGET_DEFS.find(w=>w.id===id);
+  if(!def) return '';
+  let inner;
+  if(id === 'date'){
+    const d = new Date();
+    inner = `${CAL_SVG}<span>${d.getMonth()+1}.${d.getDate()} ${WG_DAYS[d.getDay()]}</span>`;
+  } else if(id === 'weather'){
+    inner = (cachedWeather && !cachedWeather.error)
+      ? `${weatherSvg(cachedWeather.code)}<span>${cachedWeather.temp}°</span>`
+      : `${CLOUD_SVG}<span>—</span>`;
+  } else if(id === 'battery'){
+    inner = (wgBatteryLevel != null)
+      ? `${batteryGlyph(wgBatteryLevel, wgBatteryCharging)}<span>${wgBatteryLevel}%</span>`
+      : `${BATT_SVG}<span>—</span>`;
+  } else if(id === 'alarm'){
+    const n = nextAlarmInfo();
+    inner = `${BELL_SVG}<span>${esc(n.main)}</span>`;
+  } else if(id === 'seconds'){
+    inner = `${SEC_SVG}<span>${pad(new Date().getSeconds())}</span>`;
+  } else {
+    const c = def.render();
+    inner = `${def.icon}<span>${esc(c.main)}</span>`;
+  }
+  return `<div class="isl-chip isl-${id}">${inner}</div>`;
+}
+function renderIslandInfo(){
+  const l = document.getElementById('island-side-l');
+  const r = document.getElementById('island-side-r');
+  if(l) l.innerHTML = (state.islandInfoL||[]).map(islandChipHTML).join('');
+  if(r) r.innerHTML = (state.islandInfoR||[]).map(islandChipHTML).join('');
+}
+function renderIslandInfoPicker(){
+  ['l','r'].forEach(side=>{
+    const wrap = document.getElementById('isl-info-'+side);
+    if(!wrap) return;
+    const arr = (side==='l' ? state.islandInfoL : state.islandInfoR) || [];
+    wrap.innerHTML = '';
+    WIDGET_DEFS.forEach(w=>{
+      const chip = document.createElement('button');
+      chip.className = 'chip' + (arr.includes(w.id) ? ' selected' : '');
+      chip.dataset.islSide = side;
+      chip.dataset.isl = w.id;
+      chip.innerHTML = `${w.icon}<span>${esc(w.label)}</span>`;
+      wrap.appendChild(chip);
+    });
+  });
+}
+function toggleIslandInfo(side, id){
+  const arr = side==='l' ? state.islandInfoL : state.islandInfoR;
+  const i = arr.indexOf(id);
+  if(i >= 0){ arr.splice(i,1); }
+  else {
+    const total = state.islandInfoL.length + state.islandInfoR.length;
+    if(total >= 10){ if(typeof showToast === 'function') showToast('최대 10개까지 넣을 수 있어요'); return; }
+    arr.push(id);
+    if(id === 'weather') prefetchWeather().then(renderIslandInfo);
+    if(id === 'battery') initBattery();
+  }
+  renderIslandInfoPicker(); renderIslandInfo(); scheduleSave();
+}
+(function initIslandInfo(){
+  const settings = document.getElementById('sheet-settings');
+  if(settings) settings.addEventListener('click', (e)=>{
+    const b = e.target.closest('[data-isl]');
+    if(!b) return;
+    toggleIslandInfo(b.dataset.islSide, b.dataset.isl);
+  });
+  renderIslandInfoPicker();
+  renderIslandInfo();
+  const all = [...state.islandInfoL, ...state.islandInfoR];
+  if(all.includes('weather')) prefetchWeather().then(renderIslandInfo);
+  if(all.includes('battery')) initBattery();
+})();
+
 document.getElementById('edit-bg-swatches').addEventListener('click', (e)=>{
   const sw = e.target.closest('[data-bg]');
   if(!sw) return;
@@ -6433,7 +7264,7 @@ clockLayerEl.addEventListener('pointerdown', (e)=>{
   if(e.target.closest('.icon-btn, .island-wrap, .sheet, .weather-screen, #island-dot')) return;
   if(state.activePanel || islandPanel || sheetEdit.classList.contains('open')) return;
   editPressX = e.clientX; editPressY = e.clientY;
-  editPressTimer = setTimeout(()=>{ editPressTimer = null; openEditPanel(); }, 550);
+  editPressTimer = setTimeout(()=>{ editPressTimer = null; openWallpaperGallery(); }, 550);
 });
 clockLayerEl.addEventListener('pointermove', (e)=>{
   if(!editPressTimer) return;
@@ -8238,6 +9069,8 @@ function tick(){
   /* Keep the lock-screen widgets live (seconds, next-alarm countdown, date).
      Skipped mid-edit so the jiggle animation and remove badges don't reset. */
   if(!document.body.classList.contains('widgets-editing')) renderWidgets();
+  if(typeof renderIslandInfo === 'function') renderIslandInfo();
+  if(typeof todaySummaryOpen === 'function' && todaySummaryOpen() && !todayEditing) updateTodaySummaryValues();
 }
 
 function islandAnimationFrame(){
@@ -9398,7 +10231,7 @@ const GOOD_DEFAULT = {
   downSwipeAction:'lock',    // none | lock | aod | flashlight
   liveBg:'off',              // off | flow | aurora | stars | rain
   quickPanel:false,          // 오른쪽에서 왼쪽으로 쓸면 빠른 실행 패널
-  dailyQuote:true,           // 잠금화면에 '오늘의 한마디' 표시
+  dailyQuote:false,          // 잠금화면에 '오늘의 한마디' 표시 (기본 꺼짐)
 };
 const good = Object.assign({}, GOOD_DEFAULT);
 (function loadGood(){ try{ const s = JSON.parse(localStorage.getItem(GOOD_KEY)||'null'); if(s){ Object.assign(good, s); good.animOff = Object.assign({}, s.animOff||{}); } good.editIsland = false; }catch(e){} })();
@@ -11662,6 +12495,7 @@ if(restoredActive){
   });
   document.addEventListener('pointerup', (e)=>{
     if(!tracking) return; tracking=false;
+    if(typeof todaySummaryOpen === 'function' && todaySummaryOpen()) return;
     const dy = e.clientY - sy, dx = e.clientX - sx;
     if(Math.abs(dx) > Math.abs(dy)) return;
     const homeOpen = document.body.classList.contains('home-open');
@@ -11671,6 +12505,7 @@ if(restoredActive){
       if(typeof good !== 'undefined' && !good.faceLock){ unlockScreen(); openHome(); return; }
       faceUnlock().then(ok=>{ if(ok) openHome(); });
     }
+    else if(homeOpen && dy < -55 && home.scrollTop <= 2){ openTodaySummary(); }
     else if(homeOpen && dy > 55 && home.scrollTop <= 2){ closeHome(); }
     else if(!homeOpen && dy > 55){
       /* Good Mode: swipe down on the clock runs the chosen gesture. */
