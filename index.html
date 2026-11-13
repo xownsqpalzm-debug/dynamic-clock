@@ -1175,6 +1175,10 @@ body.home-open .app-tile:nth-child(n+9) .app-ico, body.home-open .app-tile:nth-c
   backdrop-filter:blur(12px) saturate(140%); -webkit-backdrop-filter:blur(12px) saturate(140%);
 }
 /* 앱 화면 기본 = 벌집 배치(2-3-2) + '앱 더보기' 버튼 */
+@keyframes honeyPop{ 0%{ opacity:0; transform:scale(.4) translateY(26px); } 60%{ opacity:1; transform:scale(1.08) translateY(-3px); } 100%{ opacity:1; transform:none; } }
+body.home-open .home-grid.honey .app-tile .app-ico{ animation:honeyPop .62s cubic-bezier(.25,1.2,.4,1) both; animation-delay:var(--d,0s); }
+body.home-open .home-grid.honey .app-tile .app-label{ animation:homeTileIn .5s cubic-bezier(.2,.9,.25,1) both; animation-delay:calc(var(--d,0s) + .12s); }
+.home-more{ animation:sbRise .6s cubic-bezier(.2,.9,.25,1) .55s both; }
 .home-grid.honey{ flex-direction:column; flex-wrap:nowrap; gap:14px; }
 .honey-row{ display:flex; justify-content:center; gap:22px; }
 .home-grid.honey .app-ico{ width:74px; height:74px; }
@@ -3703,6 +3707,10 @@ body.music-full-open.music-full-closing .music-full{ opacity:0; }
 .mf-lyl.active{ color:#fff; filter:none; opacity:1; text-shadow:0 1px 10px rgba(0,0,0,0.55); }
 .mf-ly-empty2{ font-size:14px; color:rgba(255,255,255,0.55); line-height:1.6; padding-top:10px; }
 .mf-ly-edit2{ margin-top:6px; background:rgba(255,255,255,0.12); border:none; color:#fff; font-size:12px; padding:6px 14px; border-radius:16px; cursor:pointer; font-family:-apple-system,sans-serif; }
+@keyframes lylIn{ from{ opacity:0; transform:translateX(-16px); filter:blur(7px); } }
+#music-full.lyrics-on .mf-lyl{ animation:lylIn .6s cubic-bezier(.2,.9,.25,1) both; animation-delay:calc(var(--i,0) * 45ms + .15s); }
+#music-full .mf-cover{ transition:transform .55s cubic-bezier(.2,.8,.2,1), width .55s cubic-bezier(.2,.8,.2,1); }
+#music-full .mf-inner{ transition:gap .55s ease, width .55s cubic-bezier(.2,.8,.2,1); }
 @media (orientation:portrait){ #music-full.lyrics-on .mf-cover{ width:min(40vw,170px); } #music-full.lyrics-on .mf-inner{ gap:18px; } }
 /* ---- Lyrics overlay + editor ---- */
 .mf-lyrics{
@@ -4019,6 +4027,18 @@ body.aod .standby{ background:#000; color:#fff; }
 .sb-ctrl button{ background:none; border:0; color:inherit; padding:6px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
 .sb-ctrl button svg{ width:clamp(26px,5.4vmin,46px); height:clamp(26px,5.4vmin,46px); }
 .sb-ctrl #sb-play svg{ width:clamp(34px,7.4vmin,64px); height:clamp(34px,7.4vmin,64px); }
+.standby.dragging{ transition:background .8s ease, color .8s ease !important; }
+@keyframes sbRise{ from{ opacity:0; transform:translateY(22px) scale(.96); filter:blur(8px); } to{ opacity:1; transform:none; filter:blur(0); } }
+@keyframes sbArt{ from{ opacity:0; transform:scale(.82); filter:blur(10px); } to{ opacity:1; transform:none; filter:blur(0); } }
+.standby.open .sb-left > div:nth-child(1){ animation:sbRise .7s cubic-bezier(.2,.9,.25,1) .10s both; }
+.standby.open .sb-left > div:nth-child(2){ animation:sbRise .7s cubic-bezier(.2,.9,.25,1) .22s both; }
+.standby.open .sb-art{ animation:sbArt .75s cubic-bezier(.2,.9,.25,1) .12s both; }
+.standby.open .sb-meta{ animation:sbRise .65s cubic-bezier(.2,.9,.25,1) .26s both; }
+.standby.open .sb-prog{ animation:sbRise .65s cubic-bezier(.2,.9,.25,1) .34s both; }
+.standby.open .sb-ctrl{ animation:sbRise .65s cubic-bezier(.2,.9,.25,1) .42s both; }
+.sb-ctrl button{ transition:transform .18s cubic-bezier(.3,1.1,.4,1); }
+.sb-ctrl button:active{ transform:scale(.86); }
+.sb-fill{ transition:width .9s linear; }
 .sb-empty{ text-align:center; opacity:.5; font-size:clamp(14px,2.8vmin,24px); }
 </style>
 </head>
@@ -8537,7 +8557,7 @@ function renderLyrics(){
     return;
   }
   if(!_lyricsSynced) box.classList.add('unsynced');   // 시간표시 없는 가사는 흐림 없이 또렷하게
-  box.innerHTML = _lyrics.map((l,i)=> '<div class="mf-lyl" data-i="'+i+'">' + esc(l.text || '♪') + '</div>').join('');
+  box.innerHTML = _lyrics.map((l,i)=> '<div class="mf-lyl" data-i="'+i+'" style="--i:'+Math.min(i,10)+'">' + esc(l.text || '♪') + '</div>').join('');
 }
 function syncLyrics(){
   if(!lyricsOpen) return;
@@ -12202,20 +12222,24 @@ if(restoredActive){
   function showAllApps(){ return homeMore || !!(search.value || '').trim(); }
   function renderHoney(){
     const HOME_ICO = svg('<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>');
-    const tile = (a)=>`<div class="app-tile" data-builtin="${a.key}"><div class="app-ico ${a.grad}">${a.icon}</div><div class="app-label">${esc(a.name)}</div></div>`;
+    let di = 0; const D = ()=> 'style="--d:' + (0.04 * (di++)).toFixed(2) + 's"';
+    const tile = (a)=>`<div class="app-tile" data-builtin="${a.key}" ${D()}><div class="app-ico ${a.grad}">${a.icon}</div><div class="app-label">${esc(a.name)}</div></div>`;
     const avail = BUILTIN.filter(a=> !(a.store && !isInstalled(a.key)));
     const picked = [];
     HONEY_ORDER.forEach(k=>{
-      if(k==='__home'){ picked.push('<div class="app-tile" data-home="1"><div class="app-ico grad-set">'+HOME_ICO+'</div><div class="app-label">홈</div></div>'); return; }
+      if(k==='__home'){ picked.push('<div class="app-tile" data-home="1" ' + D() + '><div class="app-ico grad-set">'+HOME_ICO+'</div><div class="app-label">홈</div></div>'); return; }
       const a = avail.find(x=>x.key===k); if(a) picked.push(tile(a));
     });
     const used = new Set(HONEY_ORDER);
     avail.filter(a=>!used.has(a.key)).forEach(a=>{ if(picked.length<7) picked.push(tile(a)); });
-    apps.forEach(a=>{ if(picked.length<7) picked.push(`<div class="app-tile" data-custom="${a.id}"><div class="app-ico">${iconHTML(a)}</div><div class="app-label">${esc(a.name)}</div></div>`); });
+    apps.forEach(a=>{ if(picked.length<7) picked.push(`<div class="app-tile" data-custom="${a.id}" ${D()}><div class="app-ico">${iconHTML(a)}</div><div class="app-label">${esc(a.name)}</div></div>`); });
     const rows = [picked.slice(0,2), picked.slice(2,5), picked.slice(5,7)].filter(r=>r.length);
     return rows.map(r=>'<div class="honey-row">'+r.join('')+'</div>').join('');
   }
-  if(moreBtn) moreBtn.addEventListener('click', ()=>{ homeMore = !homeMore; renderGrid(); });
+  if(moreBtn) moreBtn.addEventListener('click', ()=>{
+    homeMore = !homeMore; renderGrid();
+    try{ grid.animate([{ opacity:0, transform:'scale(.92) translateY(14px)' }, { opacity:1, transform:'none' }], { duration:420, easing:'cubic-bezier(.2,.9,.25,1)' }); }catch(e){}
+  });
   function renderGrid(){
     let html = '';
     if(moreBtn){ moreBtn.textContent = (homeMore || (search.value||'').trim()) ? '간단히 보기' : '앱 더보기'; moreBtn.style.display = (search.value||'').trim() ? 'none' : ''; }
@@ -13217,26 +13241,48 @@ if(restoredActive){
     a.currentTime = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * a.duration; renderMusic();
   });
 
-  /* 열기: 왼쪽 가장자리 28px 안에서 시작해 오른쪽으로 70px+ / 닫기: 왼쪽으로 70px+ */
-  let sx = 0, sy = 0, mode = null;
+  /* 열기: 왼쪽 가장자리 28px 안에서 시작해 오른쪽으로 끌면 손가락을 따라 나오고, 놓을 때 스프링으로 열림/닫힘.
+     닫기: 왼쪽으로 끌면 손가락을 따라 들어감. */
+  let sx = 0, sy = 0, mode = null, dragging = false, lastX = 0, lastT = 0, vx = 0;
   const B = document.body;
   function blocked(){
     return B.classList.contains('locked') || B.classList.contains('aod') || B.classList.contains('home-open')
       || B.classList.contains('app-open') || B.classList.contains('flashlight-on') || B.classList.contains('weather-open')
       || B.classList.contains('ambient-open') || !!document.querySelector('.sheet.open, .music-full[aria-hidden="false"], .today-sheet.open');
   }
+  function place(px){   // px = 화면 왼쪽 끝 기준 위치(−W ~ 0)
+    el.classList.add('dragging'); el.style.visibility = 'visible'; el.style.transform = 'translateX(' + px + 'px)';
+  }
+  function release(commitOpen){
+    el.classList.remove('dragging'); el.style.transform = ''; el.style.visibility = '';
+    if(commitOpen){ if(!isOpen()) open(); } else if(isOpen()) close();
+  }
   document.addEventListener('pointerdown', (e)=>{
-    sx = e.clientX; sy = e.clientY; mode = null;
+    sx = e.clientX; sy = e.clientY; lastX = sx; lastT = performance.now(); vx = 0; dragging = false; mode = null;
     if(isOpen()) mode = 'close';
     else if(e.clientX <= 28 && !blocked() && !(typeof state !== 'undefined' && state.activePanel) && !(typeof islandPanel !== 'undefined' && islandPanel)) mode = 'open';
   }, true);
-  document.addEventListener('pointerup', (e)=>{
-    const m = mode; mode = null;
-    const dx = e.clientX - sx, dy = e.clientY - sy;
-    if(!m || Math.abs(dx) < Math.abs(dy)) return;
-    if(m === 'open' && dx > 70) open();
-    else if(m === 'close' && dx < -70) close();
+  document.addEventListener('pointermove', (e)=>{
+    if(!mode) return;
+    const dx = e.clientX - sx, dy = e.clientY - sy, W = window.innerWidth;
+    if(!dragging){
+      if(Math.abs(dx) < 8 || Math.abs(dx) < Math.abs(dy)) return;
+      if((mode === 'open' && dx < 0) || (mode === 'close' && dx > 0)) return;
+      dragging = true;
+      if(mode === 'open'){ renderTime(); renderWeather(); renderMusic(); }
+    }
+    const now = performance.now(); vx = (e.clientX - lastX) / Math.max(1, now - lastT); lastX = e.clientX; lastT = now;
+    place(mode === 'open' ? -W + Math.max(0, Math.min(W, dx)) : Math.max(-W, Math.min(0, dx)));
   }, true);
+  function end(e){
+    const m = mode, was = dragging; mode = null; dragging = false;
+    if(!m || !was) return;
+    const dx = (e.type === 'pointercancel' ? lastX : e.clientX) - sx, W = window.innerWidth;
+    if(m === 'open') release(dx > W * 0.25 || vx > 0.5);
+    else release(!(dx < -W * 0.25 || vx < -0.5));
+  }
+  document.addEventListener('pointerup', end, true);
+  document.addEventListener('pointercancel', end, true);
   document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && isOpen()) close(); });
 })();
 
