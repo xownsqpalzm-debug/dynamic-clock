@@ -4005,10 +4005,13 @@ body.music-full-open.music-full-closing .music-full{ opacity:0; }
 }
 .standby.open{ transform:translateX(0); visibility:visible; transition:transform .5s cubic-bezier(.25,1.02,.35,1), background .8s ease, color .8s ease, visibility 0s 0s; }
 body.aod .standby{ background:#000; color:#fff; }
-.sb-left{ display:flex; flex-direction:column; justify-content:flex-start; align-items:flex-start; gap:clamp(10px,2.5vh,24px); min-width:0; }
-.sb-time{ font-size:clamp(44px,11vmin,120px); font-weight:300; line-height:1; letter-spacing:-.02em; font-variant-numeric:tabular-nums; white-space:nowrap; }
-.sb-time small{ font-size:.28em; font-weight:500; margin-right:.3em; letter-spacing:0; }
-.sb-date{ font-size:clamp(13px,2.4vmin,22px); opacity:.65; margin-top:.5em; }
+.sb-left{ display:grid; grid-template-rows:1fr 1fr 1fr; min-width:0; min-height:0; }
+.sb-row{ display:flex; flex-direction:column; justify-content:center; align-items:flex-start; min-height:0; min-width:0; }
+.sb-row + .sb-row{ border-top:1px solid currentColor; border-top-color:rgba(128,128,128,.3); }
+.sb-wrow{ gap:clamp(6px,1.6vh,14px); justify-content:flex-end; padding-bottom:clamp(4px,2vh,20px); }
+.sb-time{ font-size:clamp(70px,min(26vh,22vw),300px); font-weight:300; line-height:.9; letter-spacing:-.03em; font-variant-numeric:tabular-nums; white-space:nowrap; position:relative; }
+.sb-time small{ position:absolute; left:.1em; top:-.22em; font-size:.16em; font-weight:500; letter-spacing:0; opacity:.6; }
+.sb-date{ font-size:clamp(13px,2.4vmin,22px); opacity:.65; }
 .sb-weather{ display:flex; align-items:center; gap:12px; min-width:0; }
 .sb-weather svg{ width:clamp(26px,5vmin,48px); height:clamp(26px,5vmin,48px); flex:0 0 auto; fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
 .sb-wtemp{ font-size:clamp(24px,6vmin,56px); font-weight:300; line-height:1; }
@@ -4030,8 +4033,9 @@ body.aod .standby{ background:#000; color:#fff; }
 .standby.dragging{ transition:background .8s ease, color .8s ease !important; }
 @keyframes sbRise{ from{ opacity:0; transform:translateY(22px) scale(.96); filter:blur(8px); } to{ opacity:1; transform:none; filter:blur(0); } }
 @keyframes sbArt{ from{ opacity:0; transform:scale(.82); filter:blur(10px); } to{ opacity:1; transform:none; filter:blur(0); } }
-.standby.open .sb-left > div:nth-child(1){ animation:sbRise .7s cubic-bezier(.2,.9,.25,1) .10s both; }
-.standby.open .sb-left > div:nth-child(2){ animation:sbRise .7s cubic-bezier(.2,.9,.25,1) .22s both; }
+.standby.open .sb-left > div:nth-child(1){ animation:sbRise .7s cubic-bezier(.2,.9,.25,1) .08s both; }
+.standby.open .sb-left > div:nth-child(2){ animation:sbRise .7s cubic-bezier(.2,.9,.25,1) .18s both; }
+.standby.open .sb-left > div:nth-child(3){ animation:sbRise .7s cubic-bezier(.2,.9,.25,1) .28s both; }
 .standby.open .sb-art{ animation:sbArt .75s cubic-bezier(.2,.9,.25,1) .12s both; }
 .standby.open .sb-meta{ animation:sbRise .65s cubic-bezier(.2,.9,.25,1) .26s both; }
 .standby.open .sb-prog{ animation:sbRise .65s cubic-bezier(.2,.9,.25,1) .34s both; }
@@ -4210,11 +4214,12 @@ body.aod .standby{ background:#000; color:#fff; }
   <!-- 스텐바이 모드 (잠금화면에서 왼쪽 가장자리 → 오른쪽으로 스와이프) -->
   <div class="standby" id="standby" aria-hidden="true">
     <div class="sb-left">
-      <div>
-        <div class="sb-time" id="sb-time"></div>
+      <div class="sb-row"><div class="sb-time" id="sb-h"></div></div>
+      <div class="sb-row"><div class="sb-time" id="sb-m"></div></div>
+      <div class="sb-row sb-wrow">
+        <div class="sb-weather" id="sb-weather"></div>
         <div class="sb-date" id="sb-date"></div>
       </div>
-      <div class="sb-weather" id="sb-weather"></div>
     </div>
     <div class="sb-music" id="sb-music">
       <div class="sb-art" id="sb-art"></div>
@@ -13193,7 +13198,8 @@ if(restoredActive){
   function isOpen(){ return el.classList.contains('open'); }
   function renderTime(){
     const d = new Date(), h = d.getHours();
-    $('sb-time').innerHTML = '<small>' + (h<12?'오전':'오후') + '</small>' + ((h%12)||12) + ':' + String(d.getMinutes()).padStart(2,'0');
+    $('sb-h').innerHTML = '<small>' + (h<12?'오전':'오후') + '</small>' + ((h%12)||12);
+    $('sb-m').textContent = String(d.getMinutes()).padStart(2,'0');
     $('sb-date').textContent = d.toLocaleDateString('ko-KR', { month:'long', day:'numeric', weekday:'long' });
   }
   function renderWeather(){
