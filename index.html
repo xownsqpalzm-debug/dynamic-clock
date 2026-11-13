@@ -1174,6 +1174,19 @@ body.home-open .app-tile:nth-child(n+9) .app-ico, body.home-open .app-tile:nth-c
   box-shadow:none;
   backdrop-filter:blur(12px) saturate(140%); -webkit-backdrop-filter:blur(12px) saturate(140%);
 }
+/* 앱 화면 기본 = 벌집 배치(2-3-2) + '앱 더보기' 버튼 */
+.home-grid.honey{ flex-direction:column; flex-wrap:nowrap; gap:14px; }
+.honey-row{ display:flex; justify-content:center; gap:22px; }
+.home-grid.honey .app-ico{ width:74px; height:74px; }
+.home-grid.honey .app-ico svg{ width:34px; height:34px; }
+.home-more{
+  align-self:center; margin:6px 0 18px; padding:13px 34px; border-radius:26px;
+  border:1px solid rgba(255,255,255,0.28); background:rgba(255,255,255,0.12);
+  backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+  color:#fff; font-size:16px; font-weight:500; font-family:-apple-system,sans-serif; cursor:pointer;
+  transition:transform .18s cubic-bezier(.3,1.1,.4,1);
+}
+.home-more:active{ transform:scale(0.94); }
 /* Chooser sheet options (timer / alarm / stopwatch). */
 .as-opt{
   display:block; width:100%; background:none; border:none;
@@ -3669,6 +3682,28 @@ body.music-full-open.music-full-closing .music-full{ opacity:0; }
 .mf-close svg{ width:20px; height:20px; }
 .mf-settings svg{ width:18px; height:18px; }
 
+/* ---- 가사: 앨범 커버 옆(좁은 화면은 아래)에 섬과 같은 방식으로 표시 ---- */
+.mf-lyrics{ display:none !important; }   /* 예전 전체화면 가사 오버레이는 안 씀 */
+.mf-ly-side{ display:none; width:100%; position:relative; }
+#music-full.lyrics-on .mf-ly-side{ display:block; animation:mfLyIn .45s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes mfLyIn{ from{ opacity:0; transform:translateY(10px); filter:blur(8px); } to{ opacity:1; transform:none; filter:none; } }
+.mf-ly-box{
+  height:clamp(130px,30vh,280px); overflow:hidden; position:relative; text-align:left; scrollbar-width:none;
+  -webkit-mask-image:linear-gradient(to bottom, transparent 0, #000 22%, #000 78%, transparent 100%);
+          mask-image:linear-gradient(to bottom, transparent 0, #000 22%, #000 78%, transparent 100%);
+}
+.mf-ly-box::-webkit-scrollbar{ display:none; }
+.mf-ly-box.empty, .mf-ly-box.unsynced{ -webkit-mask-image:none; mask-image:none; overflow-y:auto; }
+.mf-ly-box.unsynced .mf-lyl{ filter:none; opacity:.9; }
+.mf-lyl{
+  font-size:clamp(17px,2.4vw,26px); font-weight:600; line-height:1.5; padding:3px 0;
+  color:rgba(255,255,255,0.55); filter:blur(1.6px); opacity:.65;
+  transition:filter .25s ease, opacity .25s ease, color .25s ease;
+}
+.mf-lyl.active{ color:#fff; filter:none; opacity:1; text-shadow:0 1px 10px rgba(0,0,0,0.55); }
+.mf-ly-empty2{ font-size:14px; color:rgba(255,255,255,0.55); line-height:1.6; padding-top:10px; }
+.mf-ly-edit2{ margin-top:6px; background:rgba(255,255,255,0.12); border:none; color:#fff; font-size:12px; padding:6px 14px; border-radius:16px; cursor:pointer; font-family:-apple-system,sans-serif; }
+@media (orientation:portrait){ #music-full.lyrics-on .mf-cover{ width:min(40vw,170px); } #music-full.lyrics-on .mf-inner{ gap:18px; } }
 /* ---- Lyrics overlay + editor ---- */
 .mf-lyrics{
   position:absolute; inset:0; z-index:40;
@@ -3946,6 +3981,45 @@ body.music-full-open.music-full-closing .music-full{ opacity:0; }
 
 ::-webkit-scrollbar{ width:0; height:0; }
 
+/* ============================================================
+   스텐바이 모드 (잠금화면에서 왼쪽 가장자리를 오른쪽으로 쓸면 열림)
+   평소 = 흰 바탕+검정 글씨, AOD 시작 = 검정 바탕+흰 글씨
+   ============================================================ */
+.standby{
+  position:absolute; inset:0; z-index:1500;
+  background:#fff; color:#000;
+  display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);
+  gap:clamp(12px,3vw,40px);
+  padding:calc(72px + env(safe-area-inset-top,0px)) clamp(16px,4vw,48px) calc(24px + env(safe-area-inset-bottom,0px));
+  font-family:-apple-system,system-ui,'Apple SD Gothic Neo',sans-serif;
+  transform:translateX(-100%); visibility:hidden;
+  transition:transform .5s cubic-bezier(.25,1.02,.35,1), background .8s ease, color .8s ease, visibility 0s .5s;
+}
+.standby.open{ transform:translateX(0); visibility:visible; transition:transform .5s cubic-bezier(.25,1.02,.35,1), background .8s ease, color .8s ease, visibility 0s 0s; }
+body.aod .standby{ background:#000; color:#fff; }
+.sb-left{ display:flex; flex-direction:column; justify-content:flex-start; align-items:flex-start; gap:clamp(10px,2.5vh,24px); min-width:0; }
+.sb-time{ font-size:clamp(44px,11vmin,120px); font-weight:300; line-height:1; letter-spacing:-.02em; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.sb-time small{ font-size:.28em; font-weight:500; margin-right:.3em; letter-spacing:0; }
+.sb-date{ font-size:clamp(13px,2.4vmin,22px); opacity:.65; margin-top:.5em; }
+.sb-weather{ display:flex; align-items:center; gap:12px; min-width:0; }
+.sb-weather svg{ width:clamp(26px,5vmin,48px); height:clamp(26px,5vmin,48px); flex:0 0 auto; fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
+.sb-wtemp{ font-size:clamp(24px,6vmin,56px); font-weight:300; line-height:1; }
+.sb-wdesc{ font-size:clamp(12px,2.2vmin,20px); opacity:.65; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sb-music{ display:flex; flex-direction:column; justify-content:center; align-items:stretch; gap:clamp(10px,2.4vh,22px); min-width:0; }
+.sb-art{ width:min(100%,clamp(120px,48vh,380px)); aspect-ratio:1; border-radius:clamp(14px,3vmin,28px); background:rgba(128,128,128,.18) center/cover no-repeat; align-self:center; }
+.sb-meta{ min-width:0; text-align:center; }
+.sb-title{ font-size:clamp(18px,4.4vmin,38px); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sb-artist{ font-size:clamp(13px,2.6vmin,22px); opacity:.6; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sb-prog{ display:flex; align-items:center; gap:10px; }
+.sb-ptime{ font-size:clamp(11px,2vmin,16px); opacity:.6; font-variant-numeric:tabular-nums; min-width:3.2em; }
+.sb-ptime:last-child{ text-align:right; }
+.sb-bar{ flex:1; height:6px; border-radius:3px; background:rgba(128,128,128,.3); position:relative; cursor:pointer; }
+.sb-fill{ position:absolute; left:0; top:0; bottom:0; width:0; border-radius:3px; background:currentColor; }
+.sb-ctrl{ display:flex; justify-content:center; align-items:center; gap:clamp(26px,7vmin,64px); }
+.sb-ctrl button{ background:none; border:0; color:inherit; padding:6px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.sb-ctrl button svg{ width:clamp(26px,5.4vmin,46px); height:clamp(26px,5.4vmin,46px); }
+.sb-ctrl #sb-play svg{ width:clamp(34px,7.4vmin,64px); height:clamp(34px,7.4vmin,64px); }
+.sb-empty{ text-align:center; opacity:.5; font-size:clamp(14px,2.8vmin,24px); }
 </style>
 </head>
 <body>
@@ -4113,6 +4187,28 @@ body.music-full-open.music-full-closing .music-full{ opacity:0; }
     </div>
   </div>
 
+  <!-- 스텐바이 모드 (잠금화면에서 왼쪽 가장자리 → 오른쪽으로 스와이프) -->
+  <div class="standby" id="standby" aria-hidden="true">
+    <div class="sb-left">
+      <div>
+        <div class="sb-time" id="sb-time"></div>
+        <div class="sb-date" id="sb-date"></div>
+      </div>
+      <div class="sb-weather" id="sb-weather"></div>
+    </div>
+    <div class="sb-music" id="sb-music">
+      <div class="sb-art" id="sb-art"></div>
+      <div class="sb-meta"><div class="sb-title" id="sb-title"></div><div class="sb-artist" id="sb-artist"></div></div>
+      <div class="sb-prog"><span class="sb-ptime" id="sb-cur">0:00</span><div class="sb-bar" id="sb-bar"><div class="sb-fill" id="sb-fill"></div></div><span class="sb-ptime" id="sb-dur">0:00</span></div>
+      <div class="sb-ctrl">
+        <button id="sb-prev" aria-label="이전 곡"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2.2v14H6z"/><path d="M20 5.6v12.8a1 1 0 0 1-1.55.83l-9.6-6.4a1 1 0 0 1 0-1.66l9.6-6.4A1 1 0 0 1 20 5.6z"/></svg></button>
+        <button id="sb-play" aria-label="재생/일시정지"></button>
+        <button id="sb-next" aria-label="다음 곡"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.8 5H18v14h-2.2z"/><path d="M4 5.6v12.8a1 1 0 0 0 1.55.83l9.6-6.4a1 1 0 0 0 0-1.66l-9.6-6.4A1 1 0 0 0 4 5.6z"/></svg></button>
+      </div>
+    </div>
+    <div class="sb-empty" id="sb-empty" hidden>재생 중인 음악이 없어요</div>
+  </div>
+
   <!-- 오늘 요약 (홈에서 위로 스와이프) -->
   <div class="today-sheet" id="today-sheet" aria-hidden="true">
     <div class="today-grab"></div>
@@ -4209,6 +4305,7 @@ body.music-full-open.music-full-closing .music-full{ opacity:0; }
       <input type="text" id="home-search" placeholder="검색" autocomplete="off" spellcheck="false">
     </div>
     <div class="home-grid" id="home-grid"></div>
+    <button class="home-more" id="home-more" type="button">앱 더보기</button>
     <div class="home-hint">아래로 쓸어내려 잠금화면으로</div>
     <input type="file" id="app-file-input" accept=".html,.htm,text/html" style="display:none;">
   </div>
@@ -4607,6 +4704,10 @@ body.music-full-open.music-full-closing .music-full{ opacity:0; }
           <div class="mf-queue" id="mf-queue"></div>
           <div class="mf-title" id="mf-title">—</div>
           <div class="mf-artist" id="mf-artist"></div>
+        </div>
+        <div class="mf-ly-side" id="mf-ly-side">
+          <div class="mf-ly-box" id="mf-ly-box"></div>
+          <button class="mf-ly-edit2" id="mf-ly-edit2" type="button">가사 편집</button>
         </div>
         <div class="mf-controls">
           <button class="mf-btn mini" data-mf="shuffle" id="mf-shuffle" aria-label="셔플"></button>
@@ -8425,15 +8526,18 @@ function parseLyrics(raw){
   return out.filter(l => l.text !== '' || l.t != null);
 }
 function renderLyrics(){
-  const scroll = document.getElementById('mf-ly-scroll');
+  const box = document.getElementById('mf-ly-box');
   _lyrics = parseLyrics(getRawLyrics());
   _lyricsSynced = _lyrics.some(l => l.t != null);
   _lyricsActiveIdx = -1;
+  box.classList.remove('empty','unsynced');
   if(!_lyrics.length){
-    scroll.innerHTML = '<div class="mf-ly-empty">가사가 없어요.<br>위 ‘편집’을 눌러 붙여넣어 보세요.</div>';
+    box.classList.add('empty');
+    box.innerHTML = '<div class="mf-ly-empty2">가사가 없어요.<br>아래 ‘가사 편집’을 눌러 붙여넣어 보세요.</div>';
     return;
   }
-  scroll.innerHTML = _lyrics.map((l,i)=> '<div class="mf-ly-line" data-i="'+i+'">' + esc(l.text || '♪') + '</div>').join('');
+  if(!_lyricsSynced) box.classList.add('unsynced');   // 시간표시 없는 가사는 흐림 없이 또렷하게
+  box.innerHTML = _lyrics.map((l,i)=> '<div class="mf-lyl" data-i="'+i+'">' + esc(l.text || '♪') + '</div>').join('');
 }
 function syncLyrics(){
   if(!lyricsOpen) return;
@@ -8447,22 +8551,19 @@ function syncLyrics(){
   }
   if(idx === _lyricsActiveIdx) return;
   _lyricsActiveIdx = idx;
-  const scroll = document.getElementById('mf-ly-scroll');
-  scroll.querySelectorAll('.mf-ly-line.active').forEach(el=> el.classList.remove('active'));
-  if(idx >= 0){
-    const el = scroll.querySelector('.mf-ly-line[data-i="'+idx+'"]');
-    if(el){ el.classList.add('active'); el.scrollIntoView({ block:'center' }); }
-  }
+  const box = document.getElementById('mf-ly-box');
+  const lines = box.querySelectorAll('.mf-lyl');
+  lines.forEach((el,i)=> el.classList.toggle('active', i===idx));
+  const act = lines[idx];
+  if(act){ try{ box.scrollTo({ top: act.offsetTop - box.clientHeight/2 + act.offsetHeight/2, behavior:'smooth' }); }catch(e){ box.scrollTop = act.offsetTop - box.clientHeight/2; } }
 }
 function openLyrics(){
   _lyricsKey = lyKey(); renderLyrics();
-  const p = document.getElementById('mf-lyrics');
-  p.classList.add('on'); p.setAttribute('aria-hidden','false');
+  document.getElementById('music-full').classList.add('lyrics-on');
   lyricsOpen = true; _lyricsActiveIdx = -1; syncLyrics();
 }
 function closeLyrics(){
-  const p = document.getElementById('mf-lyrics');
-  p.classList.remove('on'); p.setAttribute('aria-hidden','true');
+  document.getElementById('music-full').classList.remove('lyrics-on');
   lyricsOpen = false;
 }
 function toggleLyrics(){ lyricsOpen ? closeLyrics() : openLyrics(); }
@@ -8476,6 +8577,7 @@ function toggleLyrics(){ lyricsOpen ? closeLyrics() : openLyrics(); }
   document.getElementById('mf-ly-cancel').addEventListener('click', closeEditor);
   document.getElementById('mf-ly-save').addEventListener('click', ()=>{ setRawLyrics(ta.value); renderLyrics(); _lyricsActiveIdx = -1; syncLyrics(); closeEditor(); });
   document.getElementById('mf-ly-close').addEventListener('click', closeLyrics);
+  document.getElementById('mf-ly-edit2').addEventListener('click', openEditor);
 })();
 /* Any touch on the docked controller keeps it open, restarting the 5s fold. */
 document.querySelector('#music-full .mf-right').addEventListener('pointerdown', resetVideoControlsTimer);
@@ -12093,8 +12195,32 @@ if(restoredActive){
     return esc((app.name||'앱').slice(0,1));
   }
 
+  /* 벌집 배치: 홈·손전등 / 펫·검색·음악 / 굿모드·날씨 (없는 앱은 다른 앱으로 채움) */
+  const HONEY_ORDER = ['__home','flashlight','pet','search','music','goodmode','weather'];
+  let homeMore = false;
+  const moreBtn = document.getElementById('home-more');
+  function showAllApps(){ return homeMore || !!(search.value || '').trim(); }
+  function renderHoney(){
+    const HOME_ICO = svg('<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>');
+    const tile = (a)=>`<div class="app-tile" data-builtin="${a.key}"><div class="app-ico ${a.grad}">${a.icon}</div><div class="app-label">${esc(a.name)}</div></div>`;
+    const avail = BUILTIN.filter(a=> !(a.store && !isInstalled(a.key)));
+    const picked = [];
+    HONEY_ORDER.forEach(k=>{
+      if(k==='__home'){ picked.push('<div class="app-tile" data-home="1"><div class="app-ico grad-set">'+HOME_ICO+'</div><div class="app-label">홈</div></div>'); return; }
+      const a = avail.find(x=>x.key===k); if(a) picked.push(tile(a));
+    });
+    const used = new Set(HONEY_ORDER);
+    avail.filter(a=>!used.has(a.key)).forEach(a=>{ if(picked.length<7) picked.push(tile(a)); });
+    apps.forEach(a=>{ if(picked.length<7) picked.push(`<div class="app-tile" data-custom="${a.id}"><div class="app-ico">${iconHTML(a)}</div><div class="app-label">${esc(a.name)}</div></div>`); });
+    const rows = [picked.slice(0,2), picked.slice(2,5), picked.slice(5,7)].filter(r=>r.length);
+    return rows.map(r=>'<div class="honey-row">'+r.join('')+'</div>').join('');
+  }
+  if(moreBtn) moreBtn.addEventListener('click', ()=>{ homeMore = !homeMore; renderGrid(); });
   function renderGrid(){
     let html = '';
+    if(moreBtn){ moreBtn.textContent = (homeMore || (search.value||'').trim()) ? '간단히 보기' : '앱 더보기'; moreBtn.style.display = (search.value||'').trim() ? 'none' : ''; }
+    if(!showAllApps()){ grid.classList.add('honey'); grid.innerHTML = renderHoney(); return; }
+    grid.classList.remove('honey');
     BUILTIN.forEach(a=>{
       /* 스토어 앱(검색·무드등 등)은 '받기'로 설치해야 홈에 뜸. 핵심 앱은 항상. */
       if(a.store && !isInstalled(a.key)) return;
@@ -12139,10 +12265,10 @@ if(restoredActive){
       t.classList.toggle('hide', q && label.indexOf(q) < 0);
     });
   }
-  search.addEventListener('input', applyFilter);
+  search.addEventListener('input', ()=>{ renderGrid(); });
 
   function openHome(){ if(aodActiveGuard()) return; document.body.classList.add('home-open'); home.setAttribute('aria-hidden','false'); resetAutoOff(); }
-  function closeHome(){ document.body.classList.remove('home-open'); home.setAttribute('aria-hidden','true'); search.value=''; applyFilter(); grid.classList.remove('editing'); }
+  function closeHome(){ document.body.classList.remove('home-open'); home.setAttribute('aria-hidden','true'); search.value=''; homeMore=false; renderGrid(); grid.classList.remove('editing'); }
   function aodActiveGuard(){ return document.body.classList.contains('aod'); }
 
   /* ---- grid taps ---- */
@@ -12171,6 +12297,7 @@ if(restoredActive){
     if(lpFired){ lpFired=false; return; }   // the long-press already handled it
     const tile = e.target.closest('.app-tile');
     if(!tile) return;
+    if(tile.dataset.home){ closeHome(); return; }
     const ico = tile.querySelector('.app-ico');
     if(ico){ const r = ico.getBoundingClientRect(); setAppOrigin(r.left + r.width/2, r.top + r.height/2); }
     if(tile.dataset.add){ addToStore = false; fileIn.click(); return; }
@@ -12506,10 +12633,21 @@ if(restoredActive){
   });
   document.addEventListener('pointerup', (e)=>{
     if(!tracking) return; tracking=false;
-    if(typeof todaySummaryOpen === 'function' && todaySummaryOpen()) return;
     const dy = e.clientY - sy, dx = e.clientX - sx;
+    /* 아래 가장자리에서 위로 쓸기: 잠금화면 → 현재 요약, 한 번 더 → 앱 화면 */
+    const fromBottom = sy >= window.innerHeight - 40 && dy < -55 && Math.abs(dx) < Math.abs(dy);
+    if(typeof todaySummaryOpen === 'function' && todaySummaryOpen()){
+      if(fromBottom && !document.body.classList.contains('home-open')){
+        closeTodaySummary();
+        if(faceBusy) return;
+        if(typeof good !== 'undefined' && !good.faceLock){ unlockScreen(); openHome(); return; }
+        faceUnlock().then(ok=>{ if(ok) openHome(); });
+      }
+      return;
+    }
     if(Math.abs(dx) > Math.abs(dy)) return;
     const homeOpen = document.body.classList.contains('home-open');
+    if(fromBottom && !homeOpen && typeof openTodaySummary === 'function'){ openTodaySummary(); return; }
     if(!homeOpen && dy < -55){
       if(faceBusy) return;
       /* Good Mode: Face ID lock can be switched off — then just open up. */
@@ -12983,7 +13121,7 @@ if(restoredActive){
 
   /* ---- 가장자리 스와이프 ---- */
   let tracking=false, sx=0, sy=0, openAtStart=false;
-  function down(x,y){ if(!enabled()) return; const W=window.innerWidth; if(isOpen()){ tracking=true; sx=x; sy=y; openAtStart=true; return; } if(x >= W-30){ tracking=true; sx=x; sy=y; openAtStart=false; } }
+  function down(x,y){ if(!enabled()) return; const W=window.innerWidth; if(isOpen()){ tracking=true; sx=x; sy=y; openAtStart=true; return; } if(x >= W-30 && y >= window.innerHeight*0.5){ tracking=true; sx=x; sy=y; openAtStart=false; } }
   function move(x,y){ if(!tracking) return; const dx=x-sx, dy=y-sy; if(Math.abs(dy) > Math.abs(dx)+40){ tracking=false; return; } if(!openAtStart && dx < -48){ openQ(); tracking=false; } else if(openAtStart && dx > 48){ closeQ(); tracking=false; } }
   function up(){ tracking=false; }
   document.addEventListener('touchstart', e=>{ const t=e.touches[0]; if(t) down(t.clientX,t.clientY); }, {passive:true});
@@ -12994,6 +13132,112 @@ if(restoredActive){
   document.addEventListener('mouseup', up);
   document.addEventListener('pointerdown', (e)=>{ if(isOpen() && !panel.contains(e.target) && !editEl.contains(e.target)) closeQ(); }, true);
   if(typeof music!=='undefined' && music.el){ ['play','pause'].forEach(ev=> music.el.addEventListener(ev, ()=>{ if(isOpen()) render(); })); }
+})();
+
+/* ================= 오른쪽 위 가장자리 → 음악 =================
+   오른쪽 가장자리 위쪽 절반에서 왼쪽으로 쓸면 음악(전체화면 플레이어). 아래쪽 절반은 빠른 실행창. */
+(function edgeMusic(){
+  let on=false, sx=0, sy=0;
+  const B=document.body;
+  function blocked(){ return B.classList.contains('locked')||B.classList.contains('aod')||B.classList.contains('home-open')||B.classList.contains('app-open')||B.classList.contains('flashlight-on')||B.classList.contains('weather-open')||B.classList.contains('ambient-open')||(typeof musicFullOpen!=='undefined'&&musicFullOpen)||(typeof todaySummaryOpen==='function'&&todaySummaryOpen())||!!document.querySelector('.sheet.open, .music-full[aria-hidden="false"]')||!!state.activePanel||!!islandPanel; }
+  function down(x,y){ on = x >= window.innerWidth-30 && y < window.innerHeight*0.5 && !blocked(); sx=x; sy=y; }
+  function move(x,y){
+    if(!on) return; const dx=x-sx, dy=y-sy;
+    if(Math.abs(dy) > Math.abs(dx)+40){ on=false; return; }
+    if(dx < -60){ on=false;
+      if(window.standbyOpen && window.standbyOpen()) window.closeStandby();
+      if(music.index >= 0) openMusicFull(); else if(typeof showToast==='function') showToast('재생할 음악이 없어요');
+    }
+  }
+  document.addEventListener('touchstart', e=>{ const t=e.touches[0]; if(t) down(t.clientX,t.clientY); }, {passive:true});
+  document.addEventListener('touchmove',  e=>{ const t=e.touches[0]; if(t) move(t.clientX,t.clientY); }, {passive:true});
+  document.addEventListener('touchend', ()=>{ on=false; }, {passive:true});
+  document.addEventListener('mousedown', e=> down(e.clientX,e.clientY));
+  document.addEventListener('mousemove', e=>{ if(on) move(e.clientX,e.clientY); });
+  document.addEventListener('mouseup', ()=>{ on=false; });
+})();
+
+/* ================= 스텐바이 모드 =================
+   잠금화면(시계 화면)에서 왼쪽 가장자리를 오른쪽으로 쓸면 열림, 왼쪽으로 쓸거나 Esc로 닫힘.
+   왼쪽 위 시계 + 아래 날씨, 오른쪽 = 현재 재생 중인 음악 위젯.
+   평소 흰 바탕+검정 글씨, AOD 시작 시 검정 바탕+흰 글씨(CSS body.aod). */
+(function(){
+  const el = document.getElementById('standby');
+  if(!el) return;
+  const $ = id=>document.getElementById(id);
+  let tick = null, wxT = null;
+  function isOpen(){ return el.classList.contains('open'); }
+  function renderTime(){
+    const d = new Date(), h = d.getHours();
+    $('sb-time').innerHTML = '<small>' + (h<12?'오전':'오후') + '</small>' + ((h%12)||12) + ':' + String(d.getMinutes()).padStart(2,'0');
+    $('sb-date').textContent = d.toLocaleDateString('ko-KR', { month:'long', day:'numeric', weekday:'long' });
+  }
+  function renderWeather(){
+    const w = (typeof cachedWeather !== 'undefined') ? cachedWeather : null, box = $('sb-weather');
+    if(!w){ box.innerHTML = ''; return; }
+    if(w.error){ box.innerHTML = '<div class="sb-wdesc">' + weatherErrorText(w.reason) + '</div>'; return; }
+    box.innerHTML = '<svg viewBox="0 0 24 24">' + weatherIconSvg(w.code) + '</svg><div><div class="sb-wtemp">' + w.temp + '°</div>'
+      + '<div class="sb-wdesc">' + weatherDesc(w.code) + (w.max!=null ? ' · ' + w.min + '°/' + w.max + '°' : '') + '</div></div>';
+  }
+  function renderMusic(){
+    const t = (typeof currentTrack === 'function') ? currentTrack() : null;
+    $('sb-music').hidden = !t; $('sb-empty').hidden = !!t;
+    if(!t) return;
+    $('sb-title').textContent = t.title || '재생 중';
+    $('sb-artist').textContent = t.artist || '';
+    $('sb-art').style.backgroundImage = t.art ? 'url("' + t.art + '")' : '';
+    const a = music.el, playing = a && !a.paused;
+    $('sb-play').innerHTML = playing ? PAUSE_SVG : PLAY_SVG;
+    const dur = (a && isFinite(a.duration)) ? a.duration : 0, cur = (a && a.currentTime) || 0;
+    $('sb-fill').style.width = (dur ? cur/dur*100 : 0).toFixed(2) + '%';
+    $('sb-cur').textContent = fmtMMSS(Math.floor(cur));
+    $('sb-dur').textContent = dur ? '-' + fmtMMSS(Math.ceil(dur - cur)) : '0:00';
+  }
+  function open(){
+    if(isOpen()) return;
+    renderTime(); renderWeather(); renderMusic();
+    if(typeof prefetchWeather === 'function') prefetchWeather().then(()=>{ if(isOpen()) renderWeather(); });
+    el.classList.add('open'); el.setAttribute('aria-hidden', 'false');
+    tick = setInterval(()=>{ renderTime(); renderMusic(); }, 1000);
+    wxT = setInterval(()=>{ if(isOpen()) renderWeather(); }, 60000);
+  }
+  function close(){
+    if(!isOpen()) return;
+    el.classList.remove('open'); el.setAttribute('aria-hidden', 'true');
+    clearInterval(tick); clearInterval(wxT);
+  }
+  window.openStandby = open; window.closeStandby = close; window.standbyOpen = isOpen;
+
+  $('sb-play').addEventListener('click', ()=>{ toggleMusic(); setTimeout(renderMusic, 50); });
+  $('sb-prev').addEventListener('click', ()=>{ prevTrack(); setTimeout(renderMusic, 80); });
+  $('sb-next').addEventListener('click', ()=>{ nextTrack(false); setTimeout(renderMusic, 80); });
+  $('sb-bar').addEventListener('click', (e)=>{
+    const a = music.el; if(!a || !isFinite(a.duration)) return;
+    const r = $('sb-bar').getBoundingClientRect();
+    a.currentTime = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * a.duration; renderMusic();
+  });
+
+  /* 열기: 왼쪽 가장자리 28px 안에서 시작해 오른쪽으로 70px+ / 닫기: 왼쪽으로 70px+ */
+  let sx = 0, sy = 0, mode = null;
+  const B = document.body;
+  function blocked(){
+    return B.classList.contains('locked') || B.classList.contains('aod') || B.classList.contains('home-open')
+      || B.classList.contains('app-open') || B.classList.contains('flashlight-on') || B.classList.contains('weather-open')
+      || B.classList.contains('ambient-open') || !!document.querySelector('.sheet.open, .music-full[aria-hidden="false"], .today-sheet.open');
+  }
+  document.addEventListener('pointerdown', (e)=>{
+    sx = e.clientX; sy = e.clientY; mode = null;
+    if(isOpen()) mode = 'close';
+    else if(e.clientX <= 28 && !blocked() && !(typeof state !== 'undefined' && state.activePanel) && !(typeof islandPanel !== 'undefined' && islandPanel)) mode = 'open';
+  }, true);
+  document.addEventListener('pointerup', (e)=>{
+    const m = mode; mode = null;
+    const dx = e.clientX - sx, dy = e.clientY - sy;
+    if(!m || Math.abs(dx) < Math.abs(dy)) return;
+    if(m === 'open' && dx > 70) open();
+    else if(m === 'close' && dx < -70) close();
+  }, true);
+  document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && isOpen()) close(); });
 })();
 
 })();
